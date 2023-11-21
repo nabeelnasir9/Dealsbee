@@ -1,0 +1,43 @@
+{
+  "name": "shhanchak-scraper-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "start src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "prettier --check .",
+    "format": "prettier --write .",
+    "prepare": "husky install"
+  },
+  "author": "@imrancs058",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.4.0",
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5",
+    "cron": "^2.4.0",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "helmet": "^4.6.0",
+    "husky": "^8.0.3",
+    "joi": "^17.5.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.0.13",
+    "password-hash": "^1.2.2"
+  },
+  "devDependencies": {
+    "husky": "^8.0.0",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.8.7"
+  },
+  "husky": {
+    "hooks": {
+      "applypatch-msg": "echo \"[Husky] applypatch-msg\"",
+      "pre-applypatch": "echo \"[Husky] pre-applypatch\"",
+      "post-applypatch": "echo \"[Husky] post-applypatch\"",
+      "pre-commit": "prettier --check . && git add -A ."
+    }
+  }
+}
