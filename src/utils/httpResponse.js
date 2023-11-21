@@ -56,7 +56,7 @@ export const httpResponse = {
     res.status(400).json({
       status: 400,
       message: "Bad Request",
-      response: data,
+      // response: data,
     });
   },
   UNAUTHORIZED: (res, data = {}) => {

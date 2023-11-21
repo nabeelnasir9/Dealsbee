@@ -1,10 +1,64 @@
 import cheerio from "cheerio";
 import axios from "axios";
 import { RecordModel } from "../models/index.js";
+import config from "../config/index.js";
 const MAX_LINKS = 2;
 const MAX_TIME_LIMIT = 20000;
 
 export const ScraperService = {
+  scrapeAmazonProduct: async (productId) => {
+    const oxylabsData =
+      config.env.oxylabxUsername + ":" + config.env.oxylabsPassword;
+    try {
+      let buff = new Buffer(oxylabsData);
+      let oxylabsConfig = buff.toString("base64");
+
+      let data = JSON.stringify({
+        source: "amazon_product",
+        domain: "com",
+        query: productId,
+        parse: true,
+        context: [
+          {
+            key: "autoselect_variant",
+            value: true,
+          },
+        ],
+      });
+
+      let config = {
+        method: "post",
+        url: "https://realtime.oxylabs.io/v1/queries",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${oxylabsConfig}`,
+        },
+        data: data,
+      };
+
+      await axios
+        .request(config)
+        .then((response) => {
+          return {
+            status: 200,
+            message: "Successfull",
+            response: "Record Fetched Successfully",
+            data: response,
+          };
+        })
+        .catch((error) => {
+          throw {
+            status: error?.status ? error.status : 400,
+            message: error.message ? error.message : "Error in OXYLABS API",
+          };
+        });
+    } catch (error) {
+      throw {
+        status: error?.status ? error?.status : 500,
+        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+      };
+    }
+  },
   scraper: async (body) => {
     const { url } = body;
     let isScrapingError = false;
@@ -836,16 +890,16 @@ export const ScraperService = {
         facebook,
         discord,
         linkedin,
-      }
+      },
     };
     try {
       let brandData = await RecordModel.find({
-        company_name: brand.company_name
+        company_name: brand.company_name,
       });
       if (brandData.length > 0) {
         brandData = await RecordModel.findOneAndUpdate(
           {
-            company_name: brand.company_name
+            company_name: brand.company_name,
           },
           {
             ...brand,

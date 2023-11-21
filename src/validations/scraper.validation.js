@@ -3,7 +3,7 @@ import Joi from "joi";
 export const scraperValidationSchema = {
   post: {
     body: Joi.object().keys({
-      url: Joi.string().required()
+      url: Joi.string().required(),
     }),
   },
   patch: {
@@ -16,7 +16,7 @@ export const scraperValidationSchema = {
       text: Joi.array(),
       industry: Joi.string().allow(""),
       products: Joi.array(),
-      services: Joi.array()
+      services: Joi.array(),
     }),
   },
 };

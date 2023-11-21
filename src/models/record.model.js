@@ -24,6 +24,6 @@ const schema = mongoose.Schema({
   text: { type: Array },
   industry: { type: String },
   products: { type: Array },
-  services: { type: Array }
+  services: { type: Array },
 });
 export const RecordModel = mongoose.model("Record", schema);

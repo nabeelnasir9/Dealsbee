@@ -5,6 +5,7 @@ import { validate } from "../../middleware/index.js";
 
 const router = express.Router();
 router.post("/", validate(scraperValidationSchema.post), controller.scrape);
+router.post("/amazon", controller.scrapeAmazonProduct);
 router.get("/:id", controller.getRecord);
 router.patch(
   "/:id",
