@@ -36,15 +36,10 @@ export const ScraperService = {
         data: data,
       };
 
-      await axios
+      const response = await axios
         .request(config)
-        .then((response) => {
-          return {
-            status: 200,
-            message: "Successfull",
-            response: "Record Fetched Successfully",
-            data: response,
-          };
+        .then(async (response) => {
+          return response;
         })
         .catch((error) => {
           throw {
@@ -52,6 +47,12 @@ export const ScraperService = {
             message: error.message ? error.message : "Error in OXYLABS API",
           };
         });
+      return {
+        status: 200,
+        message: "Successfull",
+        response: "Record Fetched Successfully",
+        data: response?.data,
+      };
     } catch (error) {
       throw {
         status: error?.status ? error?.status : 500,
