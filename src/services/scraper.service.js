@@ -60,6 +60,53 @@ export const ScraperService = {
       };
     }
   },
+  scrapeFlipkartProduct: async (url) => {
+    const oxylabsData =
+      config.env.oxylabxUsername + ":" + config.env.oxylabsPassword;
+    try {
+      let buff = new Buffer(oxylabsData);
+      let oxylabsConfig = buff.toString("base64");
+
+      let data = JSON.stringify({
+        source: "universal_ecommerce",
+        parse: true,
+        url: url,
+      });
+
+      let config = {
+        method: "post",
+        url: "https://realtime.oxylabs.io/v1/queries",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${oxylabsConfig}`,
+        },
+        data: data,
+      };
+
+      const response = await axios
+        .request(config)
+        .then(async (response) => {
+          return response;
+        })
+        .catch((error) => {
+          throw {
+            status: error?.status ? error.status : 400,
+            message: error.message ? error.message : "Error in OXYLABS API",
+          };
+        });
+      return {
+        status: 200,
+        message: "Successfull",
+        response: "Record Fetched Successfully",
+        data: response?.data,
+      };
+    } catch (error) {
+      throw {
+        status: error?.status ? error?.status : 500,
+        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+      };
+    }
+  },
   scraper: async (body) => {
     const { url } = body;
     let isScrapingError = false;

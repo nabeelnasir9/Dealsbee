@@ -16,6 +16,20 @@ const controller = {
       return httpResponse.INTERNAL_SERVER_ERROR(res, error);
     }
   },
+  scrapeFlipkartProduct: async (req, res) => {
+    try {
+      const data = await ScraperService.scrapeFlipkartProduct(req.body.url);
+      if (data?.status == 204) {
+        return httpResponse.SUCCESS(res, data);
+      }
+      return httpResponse.SUCCESS(res, data);
+    } catch (error) {
+      if (error?.status == 400) {
+        return httpResponse.BAD_REQUEST(res, error.response);
+      }
+      return httpResponse.INTERNAL_SERVER_ERROR(res, error);
+    }
+  },
   scrape: async (req, res) => {
     try {
       const data = await ScraperService.scraper(req.body);
