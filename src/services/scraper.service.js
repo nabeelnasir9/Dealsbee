@@ -1,6 +1,6 @@
 import cheerio from "cheerio";
 import axios from "axios";
-import { RecordModel } from "../models/index.js";
+import { ProductModel, RecordModel } from "../models/index.js";
 import config from "../config/index.js";
 const MAX_LINKS = 2;
 const MAX_TIME_LIMIT = 20000;
@@ -24,6 +24,83 @@ export const ScraperService = {
             value: true,
           },
         ],
+      });
+
+      let config = {
+        method: "post",
+        url: "https://realtime.oxylabs.io/v1/queries",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${oxylabsConfig}`,
+        },
+        data: data,
+      };
+
+      const response = await axios
+        .request(config)
+        .then(async (response) => {
+          return response;
+        })
+        .catch((error) => {
+          throw {
+            status: error?.status ? error.status : 400,
+            message: error.message ? error.message : "Error in OXYLABS API",
+          };
+        });
+      if (
+        response?.status == 200 &&
+        response.data?.results?.length &&
+        response.data.results[0]["content"]
+      ) {
+        const responseData = response.data.results[0]["content"];
+        let productData = {
+          title: responseData.product_name,
+          asin: responseData.asin,
+          price: responseData.price,
+          currency: responseData.currency,
+          rating: responseData.ratings,
+          product_details: responseData.product_details,
+          url: responseData.url,
+        };
+        let product;
+        product = await ProductModel.findOne({ asin: productData.asin });
+        if (!product) {
+          product = await ProductModel.create(productData);
+        } else {
+          product = await ProductModel.updateOne(
+            { asin: productData.asin },
+            productData
+          );
+        }
+        if (product) {
+          response.data["saved_data"] = product;
+        }
+      }
+      return {
+        status: 200,
+        message: "Successfull",
+        response: "Record Fetched Successfully",
+        data: response?.data,
+      };
+    } catch (error) {
+      throw {
+        status: error?.status ? error?.status : 500,
+        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+      };
+    }
+  },
+  searchAmazonProducts: async (query) => {
+    const oxylabsData =
+      config.env.oxylabxUsername + ":" + config.env.oxylabsPassword;
+    try {
+      let buff = new Buffer(oxylabsData);
+      let oxylabsConfig = buff.toString("base64");
+
+      let data = JSON.stringify({
+        source: "amazon_search",
+        domain: "com",
+        query,
+        parse: true,
       });
 
       let config = {
