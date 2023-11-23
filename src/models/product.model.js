@@ -7,5 +7,6 @@ const schema = mongoose.Schema({
   rating: { type: String },
   product_details: { type: Object },
   url: { type: String },
+  category_id: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
 });
 export const ProductModel = mongoose.model("Product", schema);

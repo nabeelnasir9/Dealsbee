@@ -1,6 +1,6 @@
 import cheerio from "cheerio";
 import axios from "axios";
-import { ProductModel, RecordModel } from "../models/index.js";
+import { CategoryModel, ProductModel, RecordModel } from "../models/index.js";
 import config from "../config/index.js";
 const MAX_LINKS = 2;
 const MAX_TIME_LIMIT = 20000;
@@ -53,6 +53,27 @@ export const ScraperService = {
         response.data.results[0]["content"]
       ) {
         const responseData = response.data.results[0]["content"];
+        let categoryData = responseData?.category[0]?.ladder;
+        let categoryId = [];
+        for (let i = 0; i < categoryData.length; i++) {
+          const amazon_id = categoryData[i]["url"].split("node=")[1];
+          let categoryResponse = await CategoryModel.findOne({ amazon_id });
+          if (categoryResponse) {
+            (categoryResponse.url = categoryData[i]["url"]),
+              (categoryResponse.title = categoryData[i]["name"]),
+              await categoryResponse.save();
+          } else {
+            categoryResponse = await CategoryModel.create({
+              title: categoryData[i].name,
+              amazon_id,
+              url: categoryData[i].url,
+            });
+          }
+          categoryId.push(categoryResponse._id);
+          // response.data.results[0]["content"]?.category[0]?.ladder[i]['_id']=categoryResponse._id
+          // response.data.results[0]["content"]?.category[0]?.ladder[i]['amazon_id']=amazon_id
+        }
+
         let productData = {
           title: responseData.product_name,
           asin: responseData.asin,
@@ -61,6 +82,7 @@ export const ScraperService = {
           rating: responseData.ratings,
           product_details: responseData.product_details,
           url: responseData.url,
+          category_id: categoryId,
         };
         let product;
         product = await ProductModel.findOne({ asin: productData.asin });
@@ -101,6 +123,12 @@ export const ScraperService = {
         domain: "com",
         query,
         parse: true,
+        context: [
+          {
+            key: "category_id",
+            value: "3011391011",
+          },
+        ],
       });
 
       let config = {
