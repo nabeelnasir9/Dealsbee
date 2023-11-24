@@ -111,7 +111,114 @@ export const ScraperService = {
       };
     }
   },
-  searchAmazonProducts: async (query) => {
+  scrapeAmazonProductList: async (productIdList) => {
+    const resultData = [];
+    const oxylabsData =
+      config.env.oxylabxUsername + ":" + config.env.oxylabsPassword;
+    try {
+      let buff = new Buffer(oxylabsData);
+      let oxylabsConfig = buff.toString("base64");
+      for (let i = 0; i < productIdList.length; i++) {
+        let data = JSON.stringify({
+          source: "amazon_product",
+          domain: "com",
+          query: productIdList[i],
+          parse: true,
+          context: [
+            {
+              key: "autoselect_variant",
+              value: true,
+            },
+          ],
+        });
+        let config = {
+          method: "post",
+          url: "https://realtime.oxylabs.io/v1/queries",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Basic ${oxylabsConfig}`,
+          },
+          data: data,
+        };
+        const response = await axios
+          .request(config)
+          .then(async (response) => {
+            return response;
+          })
+          .catch((error) => {
+            return false;
+          });
+        if (
+          response?.status == 200 &&
+          response.data?.results?.length &&
+          response.data.results[0]["content"]
+        ) {
+          const responseData = response.data.results[0]["content"];
+          let categoryData = responseData?.category[0]?.ladder;
+          let categoryId = [];
+          for (let i = 0; i < categoryData.length; i++) {
+            const amazon_id = categoryData[i]["url"].split("node=")[1];
+            let categoryResponse = await CategoryModel.findOne({ amazon_id });
+            if (categoryResponse) {
+              (categoryResponse.url = categoryData[i]["url"]),
+                (categoryResponse.title = categoryData[i]["name"]),
+                await categoryResponse.save();
+            } else {
+              categoryResponse = await CategoryModel.create({
+                title: categoryData[i].name,
+                amazon_id,
+                url: categoryData[i].url,
+              });
+            }
+            categoryId.push(categoryResponse._id);
+            // response.data.results[0]["content"]?.category[0]?.ladder[i]['_id']=categoryResponse._id
+            // response.data.results[0]["content"]?.category[0]?.ladder[i]['amazon_id']=amazon_id
+          }
+
+          let productData = {
+            title: responseData.product_name,
+            asin: responseData.asin,
+            price: responseData.price,
+            currency: responseData.currency,
+            rating: responseData.ratings,
+            product_details: responseData.product_details,
+            url: responseData.url,
+            category_id: categoryId,
+          };
+          let product;
+          product = await ProductModel.findOne({ asin: productData.asin });
+          if (!product) {
+            product = await ProductModel.create(productData);
+          } else {
+            product = await ProductModel.updateOne(
+              { asin: productData.asin },
+              productData
+            );
+          }
+          if (product) {
+            response.data["saved_data"] = product;
+          }
+        }
+        if (response?.data) {
+          resultData.push(response.data);
+        }
+      }
+
+      return {
+        status: 200,
+        message: "Successfull",
+        response: "Record Fetched Successfully",
+        data: resultData,
+      };
+    } catch (error) {
+      throw {
+        status: error?.status ? error?.status : 500,
+        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+      };
+    }
+  },
+
+  searchAmazonProducts: async ({ query, category_id }) => {
     const oxylabsData =
       config.env.oxylabxUsername + ":" + config.env.oxylabsPassword;
     try {
@@ -126,7 +233,7 @@ export const ScraperService = {
         context: [
           {
             key: "category_id",
-            value: "3011391011",
+            value: category_id,
           },
         ],
       });
@@ -144,7 +251,28 @@ export const ScraperService = {
       const response = await axios
         .request(config)
         .then(async (response) => {
-          return response;
+          const products = [];
+          if (
+            response?.data?.results?.length &&
+            response.data.results[0].content?.results?.organic?.length
+          ) {
+            let { organic } = response.data.results[0].content.results;
+            for (let i = 0; i < organic.length; i++) {
+              const responseData = await ProductModel({
+                title: organic[i].title,
+                asin: organic[i].asin,
+                price: organic[i].price,
+                currency: organic[i].currency,
+                rating: organic[i].rating,
+                url: organic[i].url,
+                img_url: organic[i].url_image,
+              });
+              if (responseData) {
+                products.push(responseData);
+              }
+            }
+          }
+          return products;
         })
         .catch((error) => {
           throw {
@@ -156,7 +284,7 @@ export const ScraperService = {
         status: 200,
         message: "Successfull",
         response: "Record Fetched Successfully",
-        data: response?.data,
+        data: response,
       };
     } catch (error) {
       throw {
