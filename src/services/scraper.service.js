@@ -221,6 +221,7 @@ export const ScraperService = {
   searchAmazonProducts: async ({ query, category_id }) => {
     const oxylabsData =
       config.env.oxylabxUsername + ":" + config.env.oxylabsPassword;
+    const category = await CategoryModel.findById(category_id);
     try {
       let buff = new Buffer(oxylabsData);
       let oxylabsConfig = buff.toString("base64");
@@ -233,7 +234,7 @@ export const ScraperService = {
         context: [
           {
             key: "category_id",
-            value: category_id,
+            value: category.amazon_id,
           },
         ],
       });
@@ -258,7 +259,25 @@ export const ScraperService = {
           ) {
             let { organic } = response.data.results[0].content.results;
             for (let i = 0; i < organic.length; i++) {
-              const responseData = await ProductModel({
+              let responseData = await ProductModel.findOne({
+                asin: organic[i].asin,
+              });
+              if (responseData) {
+                responseData = await ProductModel.updateOne(
+                  { _id: responseData._id },
+                  {
+                    title: organic[i].title,
+                    asin: organic[i].asin,
+                    price: organic[i].price,
+                    currency: organic[i].currency,
+                    rating: organic[i].rating,
+                    url: organic[i].url,
+                    img_url: organic[i].url_image,
+                    category_id: category_id,
+                  }
+                );
+              }
+              responseData = await ProductModel.create({
                 title: organic[i].title,
                 asin: organic[i].asin,
                 price: organic[i].price,
@@ -266,6 +285,7 @@ export const ScraperService = {
                 rating: organic[i].rating,
                 url: organic[i].url,
                 img_url: organic[i].url_image,
+                category_id: category_id,
               });
               if (responseData) {
                 products.push(responseData);
@@ -1203,6 +1223,31 @@ export const ScraperService = {
         status: 500,
         message: "Internal Server Error",
         response: "Internal Server Error",
+      };
+    }
+  },
+  getProducts: async (query) => {
+    try {
+      const data = await ProductModel.find(query);
+      if (data) {
+        return {
+          status: 200,
+          message: "Successfull",
+          response: "Record Fetched Successfully",
+          data,
+        };
+      }
+      return {
+        status: 200,
+        message: "Successfull",
+        response: "No Record Exits",
+        data: {},
+      };
+    } catch (error) {
+      throw {
+        status: 500,
+        message: "Internal Server Error",
+        response: "Database Error",
       };
     }
   },

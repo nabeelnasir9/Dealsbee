@@ -75,6 +75,17 @@ const controller = {
       return httpResponse.INTERNAL_SERVER_ERROR(res, error);
     }
   },
+  getProducts: async (req, res) => {
+    try {
+      const data = await ScraperService.getProducts(req.query);
+      return httpResponse.SUCCESS(res, data);
+    } catch (error) {
+      if (error.status == 400) {
+        return httpResponse.BAD_REQUEST(res, error.response);
+      }
+      return httpResponse.INTERNAL_SERVER_ERROR(res, error);
+    }
+  },
   getRecord: async (req, res) => {
     try {
       const data = await ScraperService.getRecord(req.params.id);

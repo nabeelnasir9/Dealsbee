@@ -9,7 +9,7 @@ const schema = mongoose.Schema(
     product_details: { type: Object },
     url: { type: String },
     img_url: { type: String },
-    category_id: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
+    category_id: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
   },
   {
     timestamps: true,

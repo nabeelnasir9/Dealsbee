@@ -9,6 +9,7 @@ router.post("/amazon", controller.scrapeAmazonProduct);
 router.post("/amazonList", controller.scrapeAmazonProductList);
 router.post("/amazon/search", controller.searchAmazonProducts);
 router.post("/flipkart", controller.scrapeFlipkartProduct);
+router.get("/products", controller.getProducts);
 router.get("/:id", controller.getRecord);
 router.patch(
   "/:id",
