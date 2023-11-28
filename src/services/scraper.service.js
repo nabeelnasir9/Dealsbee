@@ -56,13 +56,13 @@ export const ScraperService = {
         const responseData = response.data.results[0]["content"];
         const ladder = responseData?.category[0]?.ladder;
         for (let i = 0; i < ladder.length; i++) {
-          ladder[i]['amazon_id'] = ladder[i]["url"].split("node=")[1];
+          ladder[i]["amazon_id"] = ladder[i]["url"].split("node=")[1];
         }
-        let category=await CategoryModel.findOne({ladder})
-        if(!category){
-          category = await CategoryModel.create({ladder});
+        let category = await CategoryModel.findOne({ ladder });
+        if (!category) {
+          category = await CategoryModel.create({ ladder });
         }
-        let img_url=responseData.images.length?responseData.images:[]
+        let img_url = responseData.images.length ? responseData.images : [];
 
         let productData = {
           title: responseData.product_name,
@@ -73,7 +73,7 @@ export const ScraperService = {
           product_details: responseData.product_details,
           url: responseData.url,
           category_id: category._id,
-          img_url
+          img_url,
         };
         let product;
         product = await ProductModel.findOne({ asin: productData.asin });
@@ -263,7 +263,7 @@ export const ScraperService = {
                     currency: organic[i].currency,
                     rating: organic[i].rating,
                     url: organic[i].url,
-                    img_url: organic[i].url_image
+                    img_url: organic[i].url_image,
                   }
                 );
               }
@@ -274,7 +274,7 @@ export const ScraperService = {
                 currency: organic[i].currency,
                 rating: organic[i].rating,
                 url: organic[i].url,
-                img_url: organic[i].url_image
+                img_url: organic[i].url_image,
               });
               if (responseData) {
                 products.push(responseData);
@@ -1216,24 +1216,23 @@ export const ScraperService = {
     }
   },
   getProducts: async (query) => {
-    let pipeline=[]
-    if(query){
-      if(query.category_id){
+    let pipeline = [];
+    if (query) {
+      if (query.category_id) {
         pipeline.push({
-          $match:{
-          category_id: mongoose.Types.ObjectId(query.category_id),
-          }
-        })
+          $match: {
+            category_id: mongoose.Types.ObjectId(query.category_id),
+          },
+        });
       }
-      if(query.brand){
-        pipeline[0]['$match']['product_details.brand']={ $regex: new RegExp(query.brand, 'i') }
+      if (query.brand) {
+        pipeline[0]["$match"]["product_details.brand"] = {
+          $regex: new RegExp(query.brand, "i"),
+        };
       }
       if (query.price?.lt) {
-        pipeline[0]['$match']['$expr'] = {
-          $lt: [
-            { $toDouble: "$price" },
-            +query.price.lt
-          ]
+        pipeline[0]["$match"]["$expr"] = {
+          $lt: [{ $toDouble: "$price" }, +query.price.lt],
         };
       }
     }
