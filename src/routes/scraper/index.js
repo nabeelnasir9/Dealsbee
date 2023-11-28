@@ -4,6 +4,7 @@ import { scraperValidationSchema } from "../../validations/index.js";
 import { validate } from "../../middleware/index.js";
 
 const router = express.Router();
+router.get("/htmlamazone", controller.scrapHtmlamazone);
 router.post("/", validate(scraperValidationSchema.post), controller.scrape);
 router.post("/amazon", controller.scrapeAmazonProduct);
 router.post("/amazonList", controller.scrapeAmazonProductList);

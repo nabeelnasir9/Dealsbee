@@ -1,3 +1,4 @@
+import puppeteer from "puppeteer";
 import cheerio from "cheerio";
 import axios from "axios";
 import { CategoryModel, ProductModel, RecordModel } from "../models/index.js";
@@ -1334,6 +1335,104 @@ export const ScraperService = {
         status: 500,
         message: "Internal Server Error",
         response: "Database Error",
+      };
+    }
+  },
+  scrapHtmlamazone: async () => {
+    try {
+      const browser = await puppeteer.launch({
+        headless: false,
+        defaultViewport: null,
+      });
+
+      const page = await browser.newPage();
+      await page.goto("https://www.amazon.com", {
+        waitUntil: "domcontentloaded",
+      });
+
+      await page.waitForSelector("#nav-hamburger-menu", { visible: true });
+      await page.click("#nav-hamburger-menu");
+      const hmenuVisible = await page.waitForSelector("#hmenu-content", {
+        visible: true,
+      });
+
+      let data = [];
+
+      if (hmenuVisible) {
+        const firstElement = await hmenuVisible.waitForSelector(
+          "ul:nth-child(1)",
+          { visible: true }
+        );
+        const seventhElement = await firstElement.$("li:nth-child(7)");
+        if (seventhElement) {
+          await seventhElement.click();
+          await page.waitForSelector(".hmenu", { visible: true });
+          const dataElem = await page.$$eval(".hmenu", (elements) => {
+            return elements.map((element, index) => {
+              if (index > 3) {
+                element.map((list, index) => {
+                  if (index > 3) {
+                    list.map((item) => {
+                      return item;
+                    });
+                  }
+                });
+              }
+            });
+          });
+
+          console.log("dataElem", dataElem);
+          if (menuList) {
+            await page.waitForSelector(".a-link-normal", { visible: true });
+            const hrefArray = await page.$$eval(
+              ".a-link-normal",
+              (elements) => {
+                return elements.map((element) => element.getAttribute("href"));
+              }
+            );
+            data.push(hrefArray);
+          }
+        }
+        //     await page.waitForSelector('#nav-hamburger-menu', { visible: true });
+        //     await page.click('#nav-hamburger-menu');
+        //     const hmenuVis = await page.waitForSelector('#hmenu-content', { visible: true });
+        //     if(hmenuVis){
+        //       const firstElem =  await hmenuVis.waitForSelector('ul:nth-child(1)', { visible: true });
+        //       const seventhElem = await firstElem.$('li:nth-child(7)');
+        //        if (seventhElem) {
+        //          await seventhElem.click();
+        //          const fiveEle = await hmenuVis.waitForSelector('ul:nth-child(5)');
+        //          const fourElem = await fiveEle.$('li:nth-child(4)');
+        //          if (fourElem) {
+        //               await fourElem.click();
+        //                await page.waitForSelector('.a-link-normal');
+        //                const hrefArr = await page.$$eval('.a-link-normal', (elements) => {
+        //                return elements.map(element => element.getAttribute('href'));
+        //             });
+        //             let concatenatedArray = [...data , ...hrefArr ];
+        //             data.push(concatenatedArray);
+        //        }
+        //    }
+        //  }
+
+        const links = data.toString();
+        const matchLink = links.split("dp/");
+        matchLink.shift();
+        const extractedStrings = matchLink.map((link) => {
+          const endIndex = link.indexOf("/ref=");
+          return endIndex !== -1 ? link.substring(0, endIndex) : link;
+        });
+
+        return {
+          status: 200,
+          message: "Successfully fetched href URLs",
+          data: extractedStrings,
+        };
+      }
+    } catch (error) {
+      throw {
+        status: error?.status ? error?.status : 500,
+        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
       };
     }
   },

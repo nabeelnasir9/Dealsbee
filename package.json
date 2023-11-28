@@ -25,7 +25,8 @@
     "joi": "^17.5.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.0.13",
-    "password-hash": "^1.2.2"
+    "password-hash": "^1.2.2",
+    "puppeteer": "^21.5.2"
   },
   "devDependencies": {
     "husky": "^8.0.0",
