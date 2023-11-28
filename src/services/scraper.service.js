@@ -2,6 +2,7 @@ import cheerio from "cheerio";
 import axios from "axios";
 import { CategoryModel, ProductModel, RecordModel } from "../models/index.js";
 import config from "../config/index.js";
+import mongoose from "mongoose";
 const MAX_LINKS = 2;
 const MAX_TIME_LIMIT = 20000;
 
@@ -53,26 +54,15 @@ export const ScraperService = {
         response.data.results[0]["content"]
       ) {
         const responseData = response.data.results[0]["content"];
-        let categoryData = responseData?.category[0]?.ladder;
-        let categoryId = [];
-        for (let i = 0; i < categoryData.length; i++) {
-          const amazon_id = categoryData[i]["url"].split("node=")[1];
-          let categoryResponse = await CategoryModel.findOne({ amazon_id });
-          if (categoryResponse) {
-            (categoryResponse.url = categoryData[i]["url"]),
-              (categoryResponse.title = categoryData[i]["name"]),
-              await categoryResponse.save();
-          } else {
-            categoryResponse = await CategoryModel.create({
-              title: categoryData[i].name,
-              amazon_id,
-              url: categoryData[i].url,
-            });
-          }
-          categoryId.push(categoryResponse._id);
-          // response.data.results[0]["content"]?.category[0]?.ladder[i]['_id']=categoryResponse._id
-          // response.data.results[0]["content"]?.category[0]?.ladder[i]['amazon_id']=amazon_id
+        const ladder = responseData?.category[0]?.ladder;
+        for (let i = 0; i < ladder.length; i++) {
+          ladder[i]['amazon_id'] = ladder[i]["url"].split("node=")[1];
         }
+        let category=await CategoryModel.findOne({ladder})
+        if(!category){
+          category = await CategoryModel.create({ladder});
+        }
+        let img_url=responseData.images.length?responseData.images:[]
 
         let productData = {
           title: responseData.product_name,
@@ -82,7 +72,8 @@ export const ScraperService = {
           rating: responseData.ratings,
           product_details: responseData.product_details,
           url: responseData.url,
-          category_id: categoryId,
+          category_id: category._id,
+          img_url
         };
         let product;
         product = await ProductModel.findOne({ asin: productData.asin });
@@ -272,8 +263,7 @@ export const ScraperService = {
                     currency: organic[i].currency,
                     rating: organic[i].rating,
                     url: organic[i].url,
-                    img_url: organic[i].url_image,
-                    category_id: category_id,
+                    img_url: organic[i].url_image
                   }
                 );
               }
@@ -284,8 +274,7 @@ export const ScraperService = {
                 currency: organic[i].currency,
                 rating: organic[i].rating,
                 url: organic[i].url,
-                img_url: organic[i].url_image,
-                category_id: category_id,
+                img_url: organic[i].url_image
               });
               if (responseData) {
                 products.push(responseData);
@@ -1227,8 +1216,29 @@ export const ScraperService = {
     }
   },
   getProducts: async (query) => {
+    let pipeline=[]
+    if(query){
+      if(query.category_id){
+        pipeline.push({
+          $match:{
+          category_id: mongoose.Types.ObjectId(query.category_id),
+          }
+        })
+      }
+      if(query.brand){
+        pipeline[0]['$match']['product_details.brand']={ $regex: new RegExp(query.brand, 'i') }
+      }
+      if (query.price?.lt) {
+        pipeline[0]['$match']['$expr'] = {
+          $lt: [
+            { $toDouble: "$price" },
+            +query.price.lt
+          ]
+        };
+      }
+    }
     try {
-      const data = await ProductModel.find(query);
+      const data = await ProductModel.aggregate(pipeline);
       if (data) {
         return {
           status: 200,

@@ -8,7 +8,10 @@ const schema = mongoose.Schema(
     rating: { type: String },
     product_details: { type: Object },
     url: { type: String },
-    img_url: { type: String },
+    img_url: {
+      type:mongoose.Schema.Types.Array,
+      default:[]
+    },
     category_id: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
   },
   {
