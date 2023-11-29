@@ -1,4 +1,5 @@
 import puppeteer from "puppeteer";
+import * as chromeLauncher from "chrome-launcher";
 import cheerio from "cheerio";
 import axios from "axios";
 import { CategoryModel, ProductModel, RecordModel } from "../models/index.js";
@@ -1340,9 +1341,13 @@ export const ScraperService = {
   },
   scrapHtmlamazone: async () => {
     try {
-      const browser = await puppeteer.launch({
-        headless: false,
-        defaultViewport: null,
+      const chrome = await chromeLauncher.launch({});
+      const response = await axios.get(
+        `http://localhost:${chrome.port}/json/version`
+      );
+      const { webSocketDebuggerUrl } = response.data;
+      const browser = await puppeteer.connect({
+        browserWSEndpoint: webSocketDebuggerUrl,
       });
 
       const page = await browser.newPage();
@@ -1350,83 +1355,83 @@ export const ScraperService = {
         waitUntil: "domcontentloaded",
       });
 
-      await page.waitForSelector("#nav-hamburger-menu", { visible: true });
-      await page.click("#nav-hamburger-menu");
-      const hmenuVisible = await page.waitForSelector("#hmenu-content", {
+      const menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
         visible: true,
       });
-
-      let data = [];
-
-      if (hmenuVisible) {
-        const firstElement = await hmenuVisible.waitForSelector(
-          "ul:nth-child(1)",
-          { visible: true }
-        );
-        const seventhElement = await firstElement.$("li:nth-child(7)");
-        if (seventhElement) {
-          await seventhElement.click();
-          await page.waitForSelector(".hmenu", { visible: true });
-          const dataElem = await page.$$eval(".hmenu", (elements) => {
-            return elements.map((element, index) => {
-              if (index > 3) {
-                element.map((list, index) => {
-                  if (index > 3) {
-                    list.map((item) => {
-                      return item;
-                    });
-                  }
-                });
-              }
-            });
-          });
-
-          console.log("dataElem", dataElem);
-          if (menuList) {
-            await page.waitForSelector(".a-link-normal", { visible: true });
-            const hrefArray = await page.$$eval(
-              ".a-link-normal",
-              (elements) => {
-                return elements.map((element) => element.getAttribute("href"));
-              }
-            );
-            data.push(hrefArray);
-          }
-        }
-        //     await page.waitForSelector('#nav-hamburger-menu', { visible: true });
-        //     await page.click('#nav-hamburger-menu');
-        //     const hmenuVis = await page.waitForSelector('#hmenu-content', { visible: true });
-        //     if(hmenuVis){
-        //       const firstElem =  await hmenuVis.waitForSelector('ul:nth-child(1)', { visible: true });
-        //       const seventhElem = await firstElem.$('li:nth-child(7)');
-        //        if (seventhElem) {
-        //          await seventhElem.click();
-        //          const fiveEle = await hmenuVis.waitForSelector('ul:nth-child(5)');
-        //          const fourElem = await fiveEle.$('li:nth-child(4)');
-        //          if (fourElem) {
-        //               await fourElem.click();
-        //                await page.waitForSelector('.a-link-normal');
-        //                const hrefArr = await page.$$eval('.a-link-normal', (elements) => {
-        //                return elements.map(element => element.getAttribute('href'));
-        //             });
-        //             let concatenatedArray = [...data , ...hrefArr ];
-        //             data.push(concatenatedArray);
-        //        }
-        //    }
-        //  }
-
-        const links = data.toString();
-        const matchLink = links.split("dp/");
-        matchLink.shift();
-        const extractedStrings = matchLink.map((link) => {
-          const endIndex = link.indexOf("/ref=");
-          return endIndex !== -1 ? link.substring(0, endIndex) : link;
+      if (menuBtn) {
+        menuBtn.click();
+        const menu = await page.waitForSelector("#hmenu-content", {
+          visible: true,
         });
 
+        let urls = {};
+        if (menu) {
+          async function getLinks(number) {
+            let list = [];
+            try {
+              const element = await menu.waitForSelector(
+                `ul:nth-child(${number})`
+              );
+              list = await element.$$eval("a", (elements) => {
+                return elements.map((element, index) => {
+                  if (index > 0) {
+                    return { title: element.textContent, link: element.href };
+                  }
+                });
+              });
+              list = list.filter((item) => item);
+            } catch (error) {
+              console.log("error while scraping list", error);
+            }
+            return list;
+          }
+          const electonicList = await getLinks(5);
+          urls.Electronics = electonicList.splice(0, 3);
+          const computerList = await getLinks(6);
+          urls.Computers = computerList.splice(0, 3);
+          const delayBetweenPages = 2000;
+          const keys = Object.keys(urls);
+          for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            for (let j = 0; j < urls[`${key}`].length; j++) {
+              await page.goto(urls[`${key}`][j]["link"], {
+                waitUntil: "domcontentloaded",
+              });
+              await page.waitForSelector(".a-link-normal", { visible: true });
+              console.log(
+                "1-  urls[`${key}`]['title']",
+                urls[`${key}`][j]["title"]
+              );
+              const hrefArray = await page.$$eval(
+                ".a-link-normal",
+                (elements) => {
+                  return elements.map((element) =>
+                    element.getAttribute("href")
+                  );
+                }
+              );
+              //Duplication Removal
+              const links = hrefArray.toString();
+              const matchLink = links.split("dp/");
+              let extractedStrings = matchLink.map((link) => {
+                const endIndex = link.indexOf("/");
+                return endIndex !== -1 ? link.substring(0, endIndex) : link;
+              });
+              if (extractedStrings.length > 0) {
+                extractedStrings.filter((item) => {
+                  return item ? true : false;
+                });
+              }
+              extractedStrings = extractedStrings.filter((item) => item);
+              urls[`${key}`][j]["id"] = extractedStrings;
+              await page.waitForTimeout(delayBetweenPages);
+            }
+          }
+        }
         return {
           status: 200,
           message: "Successfully fetched href URLs",
-          data: extractedStrings,
+          data: urls,
         };
       }
     } catch (error) {
