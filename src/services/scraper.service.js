@@ -3,6 +3,7 @@ import axios from "axios";
 import { CategoryModel, ProductModel, RecordModel } from "../models/index.js";
 import config from "../config/index.js";
 import mongoose from "mongoose";
+import { ApifyClient } from "apify-client";
 const MAX_LINKS = 2;
 const MAX_TIME_LIMIT = 20000;
 
@@ -303,44 +304,38 @@ export const ScraperService = {
     }
   },
   scrapeFlipkartProduct: async (url) => {
-    const oxylabsData =
-      config.env.oxylabxUsername + ":" + config.env.oxylabsPassword;
     try {
-      let buff = new Buffer(oxylabsData);
-      let oxylabsConfig = buff.toString("base64");
-
-      let data = JSON.stringify({
-        source: "universal_ecommerce",
-        parse: true,
-        url: url,
+      const client = new ApifyClient({
+        token: "apify_api_EsbBYiltezUU11bjxwr8uxVTVQY0P61c0gKP",
       });
 
-      let config = {
-        method: "post",
-        url: "https://realtime.oxylabs.io/v1/queries",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${oxylabsConfig}`,
+      const input = {
+        start_urls: [
+          {
+            url: url,
+          },
+        ],
+        max_items_count: 30,
+        proxySettings: {
+          useApifyProxy: true,
+          apifyProxyGroups: [],
+          apifyProxyCountry: "US",
         },
-        data: data,
       };
 
-      const response = await axios
-        .request(config)
-        .then(async (response) => {
-          return response;
-        })
-        .catch((error) => {
-          throw {
-            status: error?.status ? error.status : 400,
-            message: error.message ? error.message : "Error in OXYLABS API",
-          };
-        });
+      const run = await client
+        .actor("natanielsantos/flipkart-scraper")
+        .call(input);
+      const { items } = await client.dataset(run.defaultDatasetId).listItems();
+      items.forEach((item) => {
+        return item;
+      });
+
       return {
         status: 200,
         message: "Successfull",
         response: "Record Fetched Successfully",
-        data: response?.data,
+        data: items,
       };
     } catch (error) {
       throw {
