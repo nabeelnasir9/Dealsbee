@@ -330,6 +330,35 @@ export const ScraperService = {
       items.forEach((item) => {
         return item;
       });
+      const responseData = items[0];
+      const productData = responseData.current_variant.specs;
+      let productInfo = {
+        info_1: productData[0],
+        info_2: productData[1],
+      };
+
+      if (items.length !== 0) {
+        let productData = {
+          title: responseData.breadcrumbs[4].title,
+          asin: responseData.current_variant.product_id,
+          price: responseData.current_variant.prices[0].amount,
+          currency: responseData.current_variant.prices[0].currency,
+          rating: responseData.seller_info.rating,
+          product_details: productInfo,
+          url: responseData.current_variant.url,
+          img_url: responseData.attributes[0].options,
+        };
+        let product;
+        product = await ProductModel.findOne({ asin: productData.asin });
+        if (!product) {
+          product = await ProductModel.create(productData);
+        } else {
+          product = await ProductModel.updateOne(
+            { asin: productData.asin },
+            productData
+          );
+        }
+      }
 
       return {
         status: 200,
