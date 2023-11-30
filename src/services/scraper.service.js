@@ -1,10 +1,10 @@
 import puppeteer from "puppeteer";
-import * as chromeLauncher from "chrome-launcher";
 import cheerio from "cheerio";
 import axios from "axios";
 import { CategoryModel, ProductModel, RecordModel } from "../models/index.js";
 import config from "../config/index.js";
 import mongoose from "mongoose";
+import { ScraperHelper } from "../helpers/index.js";
 const MAX_LINKS = 2;
 const MAX_TIME_LIMIT = 20000;
 
@@ -1341,19 +1341,18 @@ export const ScraperService = {
   },
   scrapHtmlamazone: async () => {
     try {
-      const chrome = await chromeLauncher.launch({});
-      const response = await axios.get(
-        `http://localhost:${chrome.port}/json/version`
-      );
-      const { webSocketDebuggerUrl } = response.data;
-      const browser = await puppeteer.connect({
-        browserWSEndpoint: webSocketDebuggerUrl,
+      const browser = await puppeteer.launch({
+        headless: false,
+        defaultViewport: null,
       });
 
       const page = await browser.newPage();
-      await page.goto("https://www.amazon.com", {
+      await page.goto("https://www.amazon.com/", {
+        waitUntil: "load",
         waitUntil: "domcontentloaded",
+        visible: true,
       });
+      await Promise.all([page.waitForNavigation()]);
 
       const menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
         visible: true,
@@ -1386,48 +1385,68 @@ export const ScraperService = {
             return list;
           }
           const electonicList = await getLinks(5);
-          urls.Electronics = electonicList.splice(0, 3);
+          urls.Electronics = electonicList;
           const computerList = await getLinks(6);
-          urls.Computers = computerList.splice(0, 3);
+          urls.Computers = computerList;
           const delayBetweenPages = 2000;
           const keys = Object.keys(urls);
           for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
-            for (let j = 0; j < urls[`${key}`].length; j++) {
-              await page.goto(urls[`${key}`][j]["link"], {
-                waitUntil: "domcontentloaded",
-              });
-              await page.waitForSelector(".a-link-normal", { visible: true });
-              console.log(
-                "1-  urls[`${key}`]['title']",
-                urls[`${key}`][j]["title"]
-              );
-              const hrefArray = await page.$$eval(
-                ".a-link-normal",
-                (elements) => {
-                  return elements.map((element) =>
-                    element.getAttribute("href")
+            try {
+              for (let j = 0; j < urls[`${key}`].length; j++) {
+                try {
+                  await page.goto(urls[`${key}`][j]["link"], {
+                    waitUntil: "domcontentloaded",
+                  });
+                  await page.waitForSelector(".a-link-normal", {
+                    visible: true,
+                  });
+                  const hrefArray = await page.$$eval(
+                    ".a-link-normal",
+                    (elements) => {
+                      return elements.map((element) =>
+                        element.getAttribute("href")
+                      );
+                    }
+                  );
+                  const links = hrefArray.toString();
+                  const matchLink = links.split("dp/");
+                  let extractedStrings = matchLink.map((link) => {
+                    const endIndex = link.indexOf("/");
+                    return endIndex !== -1 ? link.substring(0, endIndex) : link;
+                  });
+                  let uniqueArr = Array.from(new Set(extractedStrings));
+                  if (uniqueArr.length > 0) {
+                    uniqueArr.filter((item) => {
+                      return item ? true : false;
+                    });
+                  }
+                  uniqueArr = uniqueArr.filter((item) => item);
+                  for (let j = 0; j < uniqueArr.length > 0; j++) {
+                    try {
+                      const data = await ScraperHelper.scrapeAmazonProduct(
+                        uniqueArr[j]
+                      );
+                    } catch (error) {
+                      console.log(
+                        "error in amazon product asin = " + uniqueArr[j]
+                      );
+                    }
+                  }
+                  urls[`${key}`][j]["id"] = uniqueArr;
+                  await page.waitForTimeout(delayBetweenPages);
+                } catch (error) {
+                  console.log(
+                    "Error in Sub-Catgory " + urls[`${key}`][j]["title"]
                   );
                 }
-              );
-              //Duplication Removal
-              const links = hrefArray.toString();
-              const matchLink = links.split("dp/");
-              let extractedStrings = matchLink.map((link) => {
-                const endIndex = link.indexOf("/");
-                return endIndex !== -1 ? link.substring(0, endIndex) : link;
-              });
-              if (extractedStrings.length > 0) {
-                extractedStrings.filter((item) => {
-                  return item ? true : false;
-                });
               }
-              extractedStrings = extractedStrings.filter((item) => item);
-              urls[`${key}`][j]["id"] = extractedStrings;
-              await page.waitForTimeout(delayBetweenPages);
+            } catch (error) {
+              console.log("Error in " + key);
             }
           }
         }
+        await browser.close();
         return {
           status: 200,
           message: "Successfully fetched href URLs",
