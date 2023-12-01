@@ -18,9 +18,7 @@ const controller = {
   },
   scrapeAmazonProductList: async (req, res) => {
     try {
-      const data = await ScraperService.scrapeAmazonProductList(
-        req.body.productIdList
-      );
+      const data = await ScraperService.scrapeAmazonProductList();
       if (data?.status == 204) {
         return httpResponse.SUCCESS(res, data);
       }
