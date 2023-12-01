@@ -391,6 +391,78 @@ export const ScraperService = {
       };
     }
   },
+  scrapeSnapdealProduct: async (url) => {
+    try {
+      const browser = await puppeteer.launch({
+        headless: false,
+        defaultViewport: null,
+      });
+
+      const page = await browser.newPage();
+      await page.goto(url, {
+        waitUntil: "domcontentloaded",
+      });
+
+      let data = [];
+      const productImg = await page.waitForSelector("#imgProduct", {
+        visible: true,
+      });
+      const productName = await page.waitForSelector("#spnProductName", {
+        visible: true,
+      });
+      const productPrice = await page.waitForSelector("#spnCurrentPrice", {
+        visible: true,
+      });
+      const productBrand = await page.waitForSelector("#spnBrand", {
+        visible: true,
+      });
+
+      if (productImg) {
+        const myLink = await page.evaluate((element) => {
+          return element.src;
+        }, productImg);
+
+        if (productName) {
+          const prodTitle = await page.evaluate((element) => {
+            return element.textContent;
+          }, productName);
+
+          if (productPrice) {
+            const prodPrice = await page.evaluate((element) => {
+              return element.textContent;
+            }, productPrice);
+
+            if (productBrand) {
+              const prodBrand = await page.evaluate((element) => {
+                return element.textContent;
+              }, productBrand);
+
+              data.push({
+                product: {
+                  title: prodTitle,
+                  brand: prodBrand,
+                  Url: myLink,
+                  price: prodPrice,
+                },
+              });
+            }
+          }
+        }
+      }
+
+      return {
+        status: 200,
+        message: "Successfull",
+        response: "Record Fetched Successfully",
+        data: data,
+      };
+    } catch (error) {
+      throw {
+        status: error?.status ? error?.status : 500,
+        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+      };
+    }
+  },
 
   getProducts: async (query) => {
     let pipeline = [];
