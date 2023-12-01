@@ -1351,12 +1351,40 @@ export const ScraperService = {
         waitUntil: "load",
         waitUntil: "domcontentloaded",
         visible: true,
+        timeout: 10000,
       });
+      await page.waitForTimeout(2000);
+      let attempt = 0;
+      async function gotoPage(page, attempt) {
+        attempt = attempt + 1;
+        await page.goto("https://www.amazon.com/", {
+          waitUntil: "load",
+          waitUntil: "domcontentloaded",
+          visible: true,
+        });
+      }
+      const captchImg = await page.waitForSelector("form img");
+      if (captchImg) {
+        if (attempt == 5) {
+          browser.close();
+        }
+        gotoPage(page, attempt);
+      }
       await Promise.all([page.waitForNavigation()]);
-
-      const menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
-        visible: true,
-      });
+      let menuBtn;
+      try {
+        menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
+          visible: true,
+        });
+      } catch (error) {
+        const logoBtn = await page.waitForSelector("nav-bb-logo", {
+          visible: true,
+        });
+        logoBtn.click();
+        menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
+          visible: true,
+        });
+      }
       if (menuBtn) {
         menuBtn.click();
         const menu = await page.waitForSelector("#hmenu-content", {
