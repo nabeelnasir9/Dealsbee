@@ -59,20 +59,6 @@ const controller = {
       return httpResponse.INTERNAL_SERVER_ERROR(res, error);
     }
   },
-  scrape: async (req, res) => {
-    try {
-      const data = await ScraperService.scraper(req.body);
-      if (data.status == 204) {
-        return httpResponse.SUCCESS(res, data);
-      }
-      return httpResponse.SUCCESS(res, data);
-    } catch (error) {
-      if (error.status == 400) {
-        return httpResponse.BAD_REQUEST(res, error.response);
-      }
-      return httpResponse.INTERNAL_SERVER_ERROR(res, error);
-    }
-  },
   getProducts: async (req, res) => {
     try {
       const data = await ScraperService.getProducts(req.query);
@@ -84,9 +70,9 @@ const controller = {
       return httpResponse.INTERNAL_SERVER_ERROR(res, error);
     }
   },
-  getRecord: async (req, res) => {
+  getProductById: async (req, res) => {
     try {
-      const data = await ScraperService.getRecord(req.params.id);
+      const data = await ScraperService.getProductById(req.params.id);
       return httpResponse.SUCCESS(res, data);
     } catch (error) {
       if (error.status == 400) {
@@ -95,9 +81,9 @@ const controller = {
       return httpResponse.INTERNAL_SERVER_ERROR(res, error);
     }
   },
-  patchRecord: async (req, res) => {
+  updateProduct: async (req, res) => {
     try {
-      const data = await ScraperService.patchRecord(req.params.id, req.body);
+      const data = await ScraperService.updateProduct(req.params.id, req.body);
       return httpResponse.SUCCESS(res, data);
     } catch (error) {
       if (error.status == 400) {
@@ -106,9 +92,9 @@ const controller = {
       return httpResponse.INTERNAL_SERVER_ERROR(res, error);
     }
   },
-  deleteRecord: async (req, res) => {
+  deleteProduct: async (req, res) => {
     try {
-      const data = await ScraperService.deleteRecord(req.params.id);
+      const data = await ScraperService.deleteProduct(req.params.id);
       return httpResponse.SUCCESS(res, data);
     } catch (error) {
       if (error.status == 400) {

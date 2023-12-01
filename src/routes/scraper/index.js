@@ -1,20 +1,13 @@
 import express from "express";
 import controller from "./controller.js";
-import { scraperValidationSchema } from "../../validations/index.js";
-import { validate } from "../../middleware/index.js";
 
 const router = express.Router();
-router.post("/", validate(scraperValidationSchema.post), controller.scrape);
 router.post("/amazon", controller.scrapeAmazonProduct);
 router.post("/amazon/list", controller.scrapeAmazonProductList);
 router.post("/amazon/search", controller.searchAmazonProducts);
 router.post("/flipkart", controller.scrapeFlipkartProduct);
 router.get("/products", controller.getProducts);
-router.get("/:id", controller.getRecord);
-router.patch(
-  "/:id",
-  validate(scraperValidationSchema.patch),
-  controller.patchRecord
-);
-router.delete("/:id", controller.deleteRecord);
+router.get("/product/:id", controller.getProductById);
+router.patch("/product/:id", controller.updateProduct);
+router.delete("/product/:id", controller.deleteProduct);
 export default router;
