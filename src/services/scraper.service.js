@@ -449,7 +449,7 @@ export const ScraperService = {
           }
         }
       }
-
+      await browser.close();
       return {
         status: 200,
         message: "Successfull",
