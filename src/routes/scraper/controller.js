@@ -18,9 +18,7 @@ const controller = {
   },
   scrapeAmazonProductList: async (req, res) => {
     try {
-      const data = await ScraperService.scrapeAmazonProductList(
-        req.body.productIdList
-      );
+      const data = await ScraperService.scrapeAmazonProductList();
       if (data?.status == 204) {
         return httpResponse.SUCCESS(res, data);
       }
@@ -111,17 +109,6 @@ const controller = {
   deleteRecord: async (req, res) => {
     try {
       const data = await ScraperService.deleteRecord(req.params.id);
-      return httpResponse.SUCCESS(res, data);
-    } catch (error) {
-      if (error.status == 400) {
-        return httpResponse.BAD_REQUEST(res, error.response);
-      }
-      return httpResponse.INTERNAL_SERVER_ERROR(res, error);
-    }
-  },
-  scrapHtmlamazone: async (req, res) => {
-    try {
-      const data = await ScraperService.scrapHtmlamazone();
       return httpResponse.SUCCESS(res, data);
     } catch (error) {
       if (error.status == 400) {

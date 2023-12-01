@@ -104,105 +104,148 @@ export const ScraperService = {
       };
     }
   },
-  scrapeAmazonProductList: async (productIdList) => {
-    const resultData = [];
-    const oxylabsData =
-      config.env.oxylabxUsername + ":" + config.env.oxylabsPassword;
+  scrapeAmazonProductList: async () => {
     try {
-      let buff = new Buffer(oxylabsData);
-      let oxylabsConfig = buff.toString("base64");
-      for (let i = 0; i < productIdList.length; i++) {
-        let data = JSON.stringify({
-          source: "amazon_product",
-          domain: "com",
-          query: productIdList[i],
-          parse: true,
-          context: [
-            {
-              key: "autoselect_variant",
-              value: true,
-            },
-          ],
+      const browser = await puppeteer.launch({
+        headless: false,
+        defaultViewport: null,
+      });
+
+      const page = await browser.newPage();
+      await page.goto("https://www.amazon.com/", {
+        waitUntil: "load",
+        waitUntil: "domcontentloaded",
+        visible: true,
+        timeout: 10000,
+      });
+      await page.waitForTimeout(2000);
+      let attempt = 0;
+      async function gotoPage(page, attempt) {
+        attempt = attempt + 1;
+        await page.goto("https://www.amazon.com/", {
+          waitUntil: "load",
+          waitUntil: "domcontentloaded",
+          visible: true,
         });
-        let config = {
-          method: "post",
-          url: "https://realtime.oxylabs.io/v1/queries",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Basic ${oxylabsConfig}`,
-          },
-          data: data,
-        };
-        const response = await axios
-          .request(config)
-          .then(async (response) => {
-            return response;
-          })
-          .catch((error) => {
-            return false;
-          });
-        if (
-          response?.status == 200 &&
-          response.data?.results?.length &&
-          response.data.results[0]["content"]
-        ) {
-          const responseData = response.data.results[0]["content"];
-          let categoryData = responseData?.category[0]?.ladder;
-          let categoryId = [];
-          for (let i = 0; i < categoryData.length; i++) {
-            const amazon_id = categoryData[i]["url"].split("node=")[1];
-            let categoryResponse = await CategoryModel.findOne({ amazon_id });
-            if (categoryResponse) {
-              (categoryResponse.url = categoryData[i]["url"]),
-                (categoryResponse.title = categoryData[i]["name"]),
-                await categoryResponse.save();
-            } else {
-              categoryResponse = await CategoryModel.create({
-                title: categoryData[i].name,
-                amazon_id,
-                url: categoryData[i].url,
-              });
-            }
-            categoryId.push(categoryResponse._id);
-            // response.data.results[0]["content"]?.category[0]?.ladder[i]['_id']=categoryResponse._id
-            // response.data.results[0]["content"]?.category[0]?.ladder[i]['amazon_id']=amazon_id
-          }
-
-          let productData = {
-            title: responseData.product_name,
-            asin: responseData.asin,
-            price: responseData.price,
-            currency: responseData.currency,
-            rating: responseData.ratings,
-            product_details: responseData.product_details,
-            url: responseData.url,
-            category_id: categoryId,
-          };
-          let product;
-          product = await ProductModel.findOne({ asin: productData.asin });
-          if (!product) {
-            product = await ProductModel.create(productData);
-          } else {
-            product = await ProductModel.updateOne(
-              { asin: productData.asin },
-              productData
-            );
-          }
-          if (product) {
-            response.data["saved_data"] = product;
-          }
-        }
-        if (response?.data) {
-          resultData.push(response.data);
-        }
       }
+      const captchImg = await page.waitForSelector("form img");
+      if (captchImg) {
+        if (attempt == 5) {
+          browser.close();
+        }
+        gotoPage(page, attempt);
+      }
+      await Promise.all([page.waitForNavigation()]);
+      let menuBtn;
+      try {
+        menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
+          visible: true,
+        });
+      } catch (error) {
+        const logoBtn = await page.waitForSelector("nav-bb-logo", {
+          visible: true,
+        });
+        logoBtn.click();
+        menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
+          visible: true,
+        });
+      }
+      if (menuBtn) {
+        menuBtn.click();
+        const menu = await page.waitForSelector("#hmenu-content", {
+          visible: true,
+        });
 
-      return {
-        status: 200,
-        message: "Successfull",
-        response: "Record Fetched Successfully",
-        data: resultData,
-      };
+        let urls = {};
+        if (menu) {
+          async function getLinks(number) {
+            let list = [];
+            try {
+              const element = await menu.waitForSelector(
+                `ul:nth-child(${number})`
+              );
+              list = await element.$$eval("a", (elements) => {
+                return elements.map((element, index) => {
+                  if (index > 0) {
+                    return { title: element.textContent, link: element.href };
+                  }
+                });
+              });
+              list = list.filter((item) => item);
+            } catch (error) {
+              console.log("error while scraping list", error);
+            }
+            return list;
+          }
+          const electonicList = await getLinks(5);
+          urls.Electronics = electonicList;
+          const computerList = await getLinks(6);
+          urls.Computers = computerList;
+          const delayBetweenPages = 2000;
+          const keys = Object.keys(urls);
+          for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            try {
+              for (let j = 0; j < urls[`${key}`].length; j++) {
+                try {
+                  await page.goto(urls[`${key}`][j]["link"], {
+                    waitUntil: "domcontentloaded",
+                  });
+                  await page.waitForSelector(".a-link-normal", {
+                    visible: true,
+                  });
+                  const hrefArray = await page.$$eval(
+                    ".a-link-normal",
+                    (elements) => {
+                      return elements.map((element) =>
+                        element.getAttribute("href")
+                      );
+                    }
+                  );
+                  const links = hrefArray.toString();
+                  const matchLink = links.split("dp/");
+                  let extractedStrings = matchLink.map((link) => {
+                    const endIndex = link.indexOf("/");
+                    return endIndex !== -1 ? link.substring(0, endIndex) : link;
+                  });
+                  let uniqueArr = Array.from(new Set(extractedStrings));
+                  if (uniqueArr.length > 0) {
+                    uniqueArr.filter((item) => {
+                      return item ? true : false;
+                    });
+                  }
+                  uniqueArr = uniqueArr.filter((item) => item);
+                  for (let j = 0; j < uniqueArr.length > 0; j++) {
+                    try {
+                      const data = await ScraperHelper.scrapeAmazonProduct(
+                        uniqueArr[j]
+                      );
+                    } catch (error) {
+                      console.log(
+                        "error in amazon product asin = " + uniqueArr[j]
+                      );
+                    }
+                  }
+                  urls[`${key}`][j]["id"] = uniqueArr;
+                  await page.waitForTimeout(delayBetweenPages);
+                } catch (error) {
+                  console.log(
+                    "Error in Sub-Catgory " + urls[`${key}`][j]["title"]
+                  );
+                }
+              }
+            } catch (error) {
+              console.log("Error in " + key);
+            }
+          }
+        }
+        await browser.close();
+        return {
+          status: 200,
+          message: "Successfully fetched href URLs",
+          data: urls,
+        };
+      }
     } catch (error) {
       throw {
         status: error?.status ? error?.status : 500,
@@ -1336,155 +1379,6 @@ export const ScraperService = {
         status: 500,
         message: "Internal Server Error",
         response: "Database Error",
-      };
-    }
-  },
-  scrapHtmlamazone: async () => {
-    try {
-      const browser = await puppeteer.launch({
-        headless: false,
-        defaultViewport: null,
-      });
-
-      const page = await browser.newPage();
-      await page.goto("https://www.amazon.com/", {
-        waitUntil: "load",
-        waitUntil: "domcontentloaded",
-        visible: true,
-        timeout: 10000,
-      });
-      await page.waitForTimeout(2000);
-      let attempt = 0;
-      async function gotoPage(page, attempt) {
-        attempt = attempt + 1;
-        await page.goto("https://www.amazon.com/", {
-          waitUntil: "load",
-          waitUntil: "domcontentloaded",
-          visible: true,
-        });
-      }
-      const captchImg = await page.waitForSelector("form img");
-      if (captchImg) {
-        if (attempt == 5) {
-          browser.close();
-        }
-        gotoPage(page, attempt);
-      }
-      await Promise.all([page.waitForNavigation()]);
-      let menuBtn;
-      try {
-        menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
-          visible: true,
-        });
-      } catch (error) {
-        const logoBtn = await page.waitForSelector("nav-bb-logo", {
-          visible: true,
-        });
-        logoBtn.click();
-        menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
-          visible: true,
-        });
-      }
-      if (menuBtn) {
-        menuBtn.click();
-        const menu = await page.waitForSelector("#hmenu-content", {
-          visible: true,
-        });
-
-        let urls = {};
-        if (menu) {
-          async function getLinks(number) {
-            let list = [];
-            try {
-              const element = await menu.waitForSelector(
-                `ul:nth-child(${number})`
-              );
-              list = await element.$$eval("a", (elements) => {
-                return elements.map((element, index) => {
-                  if (index > 0) {
-                    return { title: element.textContent, link: element.href };
-                  }
-                });
-              });
-              list = list.filter((item) => item);
-            } catch (error) {
-              console.log("error while scraping list", error);
-            }
-            return list;
-          }
-          const electonicList = await getLinks(5);
-          urls.Electronics = electonicList;
-          const computerList = await getLinks(6);
-          urls.Computers = computerList;
-          const delayBetweenPages = 2000;
-          const keys = Object.keys(urls);
-          for (let i = 0; i < keys.length; i++) {
-            const key = keys[i];
-            try {
-              for (let j = 0; j < urls[`${key}`].length; j++) {
-                try {
-                  await page.goto(urls[`${key}`][j]["link"], {
-                    waitUntil: "domcontentloaded",
-                  });
-                  await page.waitForSelector(".a-link-normal", {
-                    visible: true,
-                  });
-                  const hrefArray = await page.$$eval(
-                    ".a-link-normal",
-                    (elements) => {
-                      return elements.map((element) =>
-                        element.getAttribute("href")
-                      );
-                    }
-                  );
-                  const links = hrefArray.toString();
-                  const matchLink = links.split("dp/");
-                  let extractedStrings = matchLink.map((link) => {
-                    const endIndex = link.indexOf("/");
-                    return endIndex !== -1 ? link.substring(0, endIndex) : link;
-                  });
-                  let uniqueArr = Array.from(new Set(extractedStrings));
-                  if (uniqueArr.length > 0) {
-                    uniqueArr.filter((item) => {
-                      return item ? true : false;
-                    });
-                  }
-                  uniqueArr = uniqueArr.filter((item) => item);
-                  for (let j = 0; j < uniqueArr.length > 0; j++) {
-                    try {
-                      const data = await ScraperHelper.scrapeAmazonProduct(
-                        uniqueArr[j]
-                      );
-                    } catch (error) {
-                      console.log(
-                        "error in amazon product asin = " + uniqueArr[j]
-                      );
-                    }
-                  }
-                  urls[`${key}`][j]["id"] = uniqueArr;
-                  await page.waitForTimeout(delayBetweenPages);
-                } catch (error) {
-                  console.log(
-                    "Error in Sub-Catgory " + urls[`${key}`][j]["title"]
-                  );
-                }
-              }
-            } catch (error) {
-              console.log("Error in " + key);
-            }
-          }
-        }
-        await browser.close();
-        return {
-          status: 200,
-          message: "Successfully fetched href URLs",
-          data: urls,
-        };
-      }
-    } catch (error) {
-      throw {
-        status: error?.status ? error?.status : 500,
-        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
       };
     }
   },
