@@ -347,66 +347,95 @@ export const ScraperService = {
   },
   scrapeFlipkartProduct: async (url) => {
     try {
-      const client = new ApifyClient({
-        token: "apify_api_EsbBYiltezUU11bjxwr8uxVTVQY0P61c0gKP",
+      const browser = await puppeteer.launch({
+        headless: true,
+        defaultViewport: null,
       });
 
-      const input = {
-        start_urls: [
-          {
-            url: url,
-          },
-        ],
-        max_items_count: 30,
-        proxySettings: {
-          useApifyProxy: true,
-          apifyProxyGroups: [],
-          apifyProxyCountry: "US",
-        },
-      };
-
-      const run = await client
-        .actor("natanielsantos/flipkart-scraper")
-        .call(input);
-      const { items } = await client.dataset(run.defaultDatasetId).listItems();
-      items.forEach((item) => {
-        return item;
+      const page = await browser.newPage();
+      await page.goto(url, {
+        waitUntil: "domcontentloaded",
       });
-      const responseData = items[0];
-      const productData = responseData.current_variant.specs;
-      let productInfo = {
-        info_1: productData[0],
-        info_2: productData[1],
-      };
 
-      if (items.length !== 0) {
-        let productData = {
-          title: responseData.breadcrumbs[4].title,
-          asin: responseData.current_variant.product_id,
-          price: responseData.current_variant.prices[0].amount,
-          currency: responseData.current_variant.prices[0].currency,
-          rating: responseData.seller_info.rating,
-          product_details: productInfo,
-          url: responseData.current_variant.url,
-          img_url: responseData.attributes[0].options,
-        };
-        let product;
-        product = await ProductModel.findOne({ asin: productData.asin });
-        if (!product) {
-          product = await ProductModel.create(productData);
-        } else {
-          product = await ProductModel.updateOne(
-            { asin: productData.asin },
-            productData
+      let data = [];
+
+      const getElementText = async (selector) => {
+        try {
+          const element = await page.$eval(selector, (element) =>
+            element ? element.innerText : null
           );
+          return element;
+        } catch (error) {
+          return null;
+        }
+      };
+
+      const getElementLink = async (selector) => {
+        try {
+          const element = await page.$$eval(selector, (element) =>
+            element ? element.slice(0, 6)?.map((item) => item.src) : null
+          );
+          return element;
+        } catch (error) {
+          return null;
+        }
+      };
+
+      const prodName = await getElementText(
+        "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(1) > h1 > span"
+      );
+
+      const prodRating = await getElementText(
+        "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > div:nth-child(1) > div > span:nth-child(1) > div"
+      );
+
+      let prodPrice = await getElementText(
+        "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(4) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1)"
+      );
+
+      if (!prodPrice) {
+        prodPrice = await getElementText(
+          "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(3) > div:nth-child(1) > div > div"
+        );
+      }
+
+      const prodCategory = await getElementText(
+        "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(3) > a"
+      );
+
+      const prodImages = await getElementLink("ul li img");
+
+      const prodDetails = await page.$$eval("table tbody tr", (rows) => {
+        return Array.from(rows, (row) => {
+          const columns = row.querySelectorAll("td");
+          return Array.from(columns, (column) => column.innerText);
+        });
+      });
+      const detailsObject = {};
+
+      for (let i = 0; i < prodDetails.length; i++) {
+        if (prodDetails[i]?.length?.toString() && prodDetails[i].length > 1) {
+          detailsObject[prodDetails[i][0]] = prodDetails[i][1];
         }
       }
+
+      data.push({
+        product: {
+          title: prodName,
+          price: prodPrice,
+          category: prodCategory,
+          rating: prodRating,
+          images: prodImages,
+          details: detailsObject,
+        },
+      });
+      await browser.close();
 
       return {
         status: 200,
         message: "Successfull",
         response: "Record Fetched Successfully",
-        data: items,
+        data: data,
       };
     } catch (error) {
       throw {
