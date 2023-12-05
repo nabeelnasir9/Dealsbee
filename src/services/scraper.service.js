@@ -404,52 +404,85 @@ export const ScraperService = {
       });
 
       let data = [];
-      const productImg = await page.waitForSelector("#imgProduct", {
-        visible: true,
-      });
-      const productName = await page.waitForSelector("#spnProductName", {
-        visible: true,
-      });
-      const productPrice = await page.waitForSelector("#spnCurrentPrice", {
-        visible: true,
-      });
-      const productBrand = await page.waitForSelector("#spnBrand", {
-        visible: true,
-      });
+
+      const extractData = async (selector) => {
+        try {
+          const element = await page.waitForSelector(selector, {
+            visible: true,
+          });
+          if (element) {
+            const textContent = await page.evaluate(
+              (item) => item.textContent,
+              element
+            );
+            return textContent !== "" ? textContent.trim() : "";
+          }
+          return null;
+        } catch (error) {
+          return null;
+        }
+      };
+
+      const extractAllData = async (selector) => {
+        try {
+          const elements = await page.$$eval(selector, (items) =>
+            items.map((item) => item.textContent.trim())
+          );
+          const nonEmptyElements = elements.filter(
+            (textContent) => textContent !== ""
+          );
+          return nonEmptyElements.length > 0 ? nonEmptyElements : null;
+        } catch (error) {
+          return null;
+        }
+      };
+
+      const extractNthChild = async (selector, index) => {
+        try {
+          const element = await page.$$eval(
+            selector,
+            (items, i) => items[i].textContent.trim(),
+            index
+          );
+          return element !== "" ? element : null;
+        } catch (error) {
+          return null;
+        }
+      };
+      const extractImageLink = async (selector) => {
+        try {
+          const element = await page.waitForSelector(selector, {
+            visible: true,
+          });
+          return element
+            ? await page.evaluate((item) => item.src, element)
+            : null;
+        } catch (error) {
+          return null;
+        }
+      };
+
+      const productImg = await extractImageLink(".cloudzoom");
+      const productName = await extractData(".pdp-e-i-head");
+      const productPrice = await extractData(".payBlkBig");
+      const category = await extractNthChild(".bCrumbOmniTrack > span", 1);
+      const productDetails = await extractAllData(".h-content");
+      const productRating = await extractData(".avrg-rating");
 
       if (productImg) {
-        const myLink = await page.evaluate((element) => {
-          return element.src;
-        }, productImg);
-
-        if (productName) {
-          const prodTitle = await page.evaluate((element) => {
-            return element.textContent;
-          }, productName);
-
-          if (productPrice) {
-            const prodPrice = await page.evaluate((element) => {
-              return element.textContent;
-            }, productPrice);
-
-            if (productBrand) {
-              const prodBrand = await page.evaluate((element) => {
-                return element.textContent;
-              }, productBrand);
-
-              data.push({
-                product: {
-                  title: prodTitle,
-                  brand: prodBrand,
-                  Url: myLink,
-                  price: prodPrice,
-                },
-              });
-            }
-          }
-        }
+        data.push({
+          product: {
+            title: productName,
+            category: category,
+            Url: productImg,
+            price: productPrice,
+            rating: productRating,
+            details: productDetails,
+          },
+        });
       }
       await browser.close();
+
       return {
         status: 200,
         message: "Successfull",
