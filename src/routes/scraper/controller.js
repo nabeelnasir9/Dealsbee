@@ -44,7 +44,6 @@ const controller = {
       return httpResponse.INTERNAL_SERVER_ERROR(res, error);
     }
   },
-
   scrapeFlipkartProduct: async (req, res) => {
     try {
       const data = await ScraperService.scrapeFlipkartProduct(req.body.url);
@@ -68,50 +67,6 @@ const controller = {
       return httpResponse.SUCCESS(res, data);
     } catch (error) {
       if (error?.status == 400) {
-        return httpResponse.BAD_REQUEST(res, error.response);
-      }
-      return httpResponse.INTERNAL_SERVER_ERROR(res, error);
-    }
-  },
-  getProducts: async (req, res) => {
-    try {
-      const data = await ScraperService.getProducts(req.query);
-      return httpResponse.SUCCESS(res, data);
-    } catch (error) {
-      if (error.status == 400) {
-        return httpResponse.BAD_REQUEST(res, error.response);
-      }
-      return httpResponse.INTERNAL_SERVER_ERROR(res, error);
-    }
-  },
-  getProductById: async (req, res) => {
-    try {
-      const data = await ScraperService.getProductById(req.params.id);
-      return httpResponse.SUCCESS(res, data);
-    } catch (error) {
-      if (error.status == 400) {
-        return httpResponse.BAD_REQUEST(res, error.response);
-      }
-      return httpResponse.INTERNAL_SERVER_ERROR(res, error);
-    }
-  },
-  updateProduct: async (req, res) => {
-    try {
-      const data = await ScraperService.updateProduct(req.params.id, req.body);
-      return httpResponse.SUCCESS(res, data);
-    } catch (error) {
-      if (error.status == 400) {
-        return httpResponse.BAD_REQUEST(res, error.response);
-      }
-      return httpResponse.INTERNAL_SERVER_ERROR(res, error);
-    }
-  },
-  deleteProduct: async (req, res) => {
-    try {
-      const data = await ScraperService.deleteProduct(req.params.id);
-      return httpResponse.SUCCESS(res, data);
-    } catch (error) {
-      if (error.status == 400) {
         return httpResponse.BAD_REQUEST(res, error.response);
       }
       return httpResponse.INTERNAL_SERVER_ERROR(res, error);
