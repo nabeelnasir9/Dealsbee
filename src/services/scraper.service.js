@@ -378,29 +378,37 @@ export const ScraperService = {
         }
       };
 
-      const prodName = await getElementText(
+      const title = await getElementText(
         "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(1) > h1 > span"
       );
 
-      const prodRating = await getElementText(
+      let rating = await getElementText(
         "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > div:nth-child(1) > div > span:nth-child(1) > div"
       );
 
-      let prodPrice = await getElementText(
+      if (!rating) {
+        rating = await getElementText(
+          "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(4) > div:nth-child(1) > div > span:nth-child(1) > div"
+        );
+      }
+      let price = await getElementText(
         "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(4) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1)"
       );
 
-      if (!prodPrice) {
-        prodPrice = await getElementText(
+      if (!price) {
+        price = await getElementText(
           "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(3) > div:nth-child(1) > div > div"
         );
       }
 
-      const prodCategory = await getElementText(
+      const category_1 = await getElementText(
+        "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(2) > a"
+      );
+      const category_2 = await getElementText(
         "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(3) > a"
       );
 
-      const prodImages = await getElementLink("ul li img");
+      const img_url = await getElementLink("ul li img");
 
       const prodDetails = await page.$$eval("table tbody tr", (rows) => {
         return Array.from(rows, (row) => {
@@ -408,24 +416,57 @@ export const ScraperService = {
           return Array.from(columns, (column) => column.innerText);
         });
       });
-      const detailsObject = {};
+      let product_details = {};
 
       for (let i = 0; i < prodDetails.length; i++) {
         if (prodDetails[i]?.length?.toString() && prodDetails[i].length > 1) {
-          detailsObject[prodDetails[i][0]] = prodDetails[i][1];
+          product_details[prodDetails[i][0]] = prodDetails[i][1];
         }
       }
 
-      data.push({
-        product: {
-          title: prodName,
-          price: prodPrice,
-          category: prodCategory,
-          rating: prodRating,
-          images: prodImages,
-          details: detailsObject,
-        },
-      });
+      const detailsLowerize = (obj) =>
+        Object.keys(obj).reduce((acc, k) => {
+          acc[k.toLowerCase()] = obj[k];
+          return acc;
+        }, {});
+      product_details = detailsLowerize(product_details);
+      let brand = "";
+      if (!product_details.brand) {
+        brand = await getElementText(
+          "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-last-child(2) > a"
+        );
+        if (brand) {
+          const verifyBrand = await getElementText(
+            "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-last-child(3) > a"
+          );
+          brand = brand.replace(verifyBrand, "");
+          product_details.brand = brand;
+        }
+      }
+      const ladder = [{ name: category_1 }, { name: category_2 }];
+      let category = await CategoryModel.findOne({ ladder });
+      if (!category) {
+        category = await CategoryModel.create({ ladder });
+      }
+      let productData = {
+        title,
+        price,
+        rating,
+        product_details,
+        url,
+        category_id: category._id,
+        img_url,
+      };
+      let product;
+      product = await ProductModel.findOne({ asin: productData.asin });
+      if (!product) {
+        product = await ProductModel.create(productData);
+      } else {
+        product = await ProductModel.updateOne(
+          { asin: productData.asin },
+          productData
+        );
+      }
       await browser.close();
 
       return {
