@@ -388,4 +388,43 @@ export const ScraperService = {
       };
     }
   },
+  scrapeFlipkartProductList: async () => {
+    try {
+      const browser = await puppeteer.launch({
+        headless: false,
+        defaultViewport: null,
+      });
+
+      const page = await browser.newPage();
+      await page.goto("https://www.flipkart.com/", {
+        waitUntil: "domcontentloaded",
+      });
+
+      let data = "";
+      const loginModal = await page.waitForSelector('span[role="button"]');
+      await loginModal.click();
+      const divElementHandle = await page.waitForSelector(
+        'div[aria-label="Electronics"]'
+      );
+      const divContent = await page.$eval(
+        'div[aria-label="Electronics"]',
+        (div) => div.textContent
+      );
+      await divElementHandle.hover();
+      console.log("Div content:", divContent);
+      await browser.close();
+
+      return {
+        status: 200,
+        message: "Successfull",
+        response: "Record Fetched Successfully",
+        data: data,
+      };
+    } catch (error) {
+      throw {
+        status: error?.status ? error?.status : 500,
+        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+      };
+    }
+  },
 };

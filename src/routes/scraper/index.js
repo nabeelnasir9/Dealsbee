@@ -6,4 +6,5 @@ router.post("/amazon", controller.scrapeAmazonProduct);
 router.post("/amazon/list", controller.scrapeAmazonProductList);
 router.post("/amazon/search", controller.searchAmazonProducts);
 router.post("/flipkart", controller.scrapeFlipkartProduct);
+router.post("/flipkart/list", controller.scrapeFlipkartProductList);
 export default router;
