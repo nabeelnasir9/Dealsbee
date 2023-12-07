@@ -3,6 +3,8 @@ import axios from "axios";
 import { CategoryModel, ProductModel } from "../models/index.js";
 import config from "../config/index.js";
 import { ScraperHelper } from "../helpers/index.js";
+import { KnownDevices } from "puppeteer";
+const iPhone = KnownDevices["iPhone 6"];
 
 export const ScraperService = {
   scrapeAmazonProduct: ScraperHelper.scrapeAmazonProduct,
@@ -390,28 +392,178 @@ export const ScraperService = {
   },
   scrapeFlipkartProductList: async () => {
     try {
+      const pageLink = "https://www.flipkart.com";
+      const categoriesLink = {
+        Electronics: {},
+      };
       const browser = await puppeteer.launch({
         headless: false,
         defaultViewport: null,
       });
 
       const page = await browser.newPage();
-      await page.goto("https://www.flipkart.com/", {
-        waitUntil: "domcontentloaded",
+      await page.emulate(iPhone);
+      await page.goto(pageLink, {
+        waitUntil: "networkidle0",
       });
 
       let data = "";
-      const loginModal = await page.waitForSelector('span[role="button"]');
-      await loginModal.click();
-      const divElementHandle = await page.waitForSelector(
-        'div[aria-label="Electronics"]'
+      const electronicsCategory = await page.waitForSelector(
+        "#_parentCtr_>div>div>div>div>div>div>div>div>div>div>div>div:nth-child(5)",
+        { visible: true }
       );
-      const divContent = await page.$eval(
-        'div[aria-label="Electronics"]',
-        (div) => div.textContent
+      await electronicsCategory.click();
+      try {
+        await page.waitForNavigation("networkidle2", { timeout: 30000 });
+      } catch (err) {
+        console.log(err);
+      }
+      const url = page.url();
+      categoriesLink["Electronics"]["link"] = url;
+
+      //sub-category
+      const subCategory_1 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(6)>div>div>div>div>div:nth-child(1)",
+        { visble: true }
       );
-      await divElementHandle.hover();
-      console.log("Div content:", divContent);
+      await subCategory_1.click();
+      await page.waitForNavigation("networkidle2");
+      let url_1 = page.url();
+      categoriesLink["Electronics"]["category"] = [{ link: url_1 }];
+      await page.goBack();
+      const subCategory_2 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(6)>div>div>div>div>div:nth-child(2)"
+      );
+      await subCategory_2.click();
+      await page.waitForNavigation("networkidle2");
+      let url_2 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_2 });
+      await page.goBack();
+      const subCategory_3 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(6)>div>div>div>div>div:nth-child(3)"
+      );
+      await subCategory_3.click();
+      await page.waitForNavigation("networkidle2");
+      let url_3 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_3 });
+      await page.goBack();
+      const subCategory_4 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(6)>div>div>div>div>div:nth-child(4)"
+      );
+      await subCategory_4.click();
+      await page.waitForNavigation("networkidle2");
+      let url_4 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_4 });
+      await page.goBack();
+      //sub-category
+
+      //sub-category
+      const subCategory_5 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(7)>div>div>div>div>div:nth-child(1)",
+        { visble: true }
+      );
+      await subCategory_5.click();
+      await page.waitForNavigation("networkidle2");
+      let url_5 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_5 });
+      await page.goBack();
+      const subCategory_6 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(7)>div>div>div>div>div:nth-child(2)"
+      );
+      await subCategory_6.click();
+      await page.waitForNavigation("networkidle2");
+      let url_6 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_6 });
+      await page.goBack();
+      const subCategory_7 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(7)>div>div>div>div>div:nth-child(3)"
+      );
+      await subCategory_7.click();
+      await page.waitForNavigation("networkidle2");
+      let url_7 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_7 });
+      await page.goBack();
+      const subCategory_8 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(7)>div>div>div>div>div:nth-child(4)"
+      );
+      await subCategory_8.click();
+      await page.waitForNavigation("networkidle2");
+      let url_8 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_8 });
+      await page.goBack();
+      //sub-category
+
+      //sub-category
+      const subCategory_9 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(8)>div>div>div>div>div:nth-child(1)",
+        { visble: true }
+      );
+      await subCategory_9.click();
+      await page.waitForNavigation("networkidle2");
+      let url_9 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_9 });
+      await page.goBack();
+      const subCategory_10 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(8)>div>div>div>div>div:nth-child(2)"
+      );
+      await subCategory_10.click();
+      await page.waitForNavigation("networkidle2");
+      let url_10 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_10 });
+      await page.goBack();
+      const subCategory_11 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(8)>div>div>div>div>div:nth-child(3)"
+      );
+      await subCategory_11.click();
+      await page.waitForNavigation("networkidle2");
+      let url_11 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_11 });
+      await page.goBack();
+      const subCategory_12 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(8)>div>div>div>div>div:nth-child(4)"
+      );
+      await subCategory_12.click();
+      await page.waitForNavigation("networkidle2");
+      let url_12 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_12 });
+      await page.goBack();
+      //sub-category
+
+      //sub-category
+      const subCategory_13 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(9)>div>div>div>div>div:nth-child(1)",
+        { visble: true }
+      );
+      await subCategory_13.click();
+      await page.waitForNavigation("networkidle2");
+      let url_13 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_13 });
+      await page.goBack();
+      const subCategory_14 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(9)>div>div>div>div>div:nth-child(2)"
+      );
+      await subCategory_14.click();
+      await page.waitForNavigation("networkidle2");
+      let url_14 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_14 });
+      await page.goBack();
+      const subCategory_15 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(9)>div>div>div>div>div:nth-child(3)"
+      );
+      await subCategory_15.click();
+      await page.waitForNavigation("networkidle2");
+      let url_15 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_15 });
+      await page.goBack();
+      const subCategory_16 = await page.waitForSelector(
+        "#_parentCtr_>div:nth-child(9)>div>div>div>div>div:nth-child(4)"
+      );
+      await subCategory_16.click();
+      await page.waitForNavigation("networkidle2");
+      let url_16 = page.url();
+      categoriesLink["Electronics"]["category"].push({ link: url_16 });
+      await page.goBack();
+      //sub-category
       await browser.close();
 
       return {
