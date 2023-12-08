@@ -543,19 +543,32 @@ export const ScraperService = {
         waitUntil: "domcontentloaded",
       });
 
-      const timeout = 500;
+      const timeout = 10000;
 
-      let element = await page.waitForSelector("#see-more-products  ", {
+      let element = await page.waitForSelector("#see-more-products", {
         timeout,
       });
       let visibilityStyle = await page.evaluate((el) => {
         const computedStyle = window.getComputedStyle(el);
         return computedStyle.visibility;
       }, element);
-      while (visibilityStyle == "visible") {
-        element.click();
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        element = await page.waitForSelector("#see-more-products  ", {
+      let isLoading = await page.evaluate((el) => {
+        return el.getAttribute("class").indexOf("hidden") < 0;
+      }, element);
+      while (visibilityStyle == "visible" || isLoading) {
+        if (visibilityStyle == "visible") element.click();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        try {
+          element = await page.waitForSelector(".sd-loader-see-more", {
+            timeout,
+          });
+          isLoading = await page.evaluate((el) => {
+            return el.getAttribute("class").indexOf("hidden") < 0;
+          }, element);
+        } catch {
+          
+        }
+        element = await page.waitForSelector("#see-more-products", {
           timeout,
         });
         visibilityStyle = await page.evaluate((el) => {
