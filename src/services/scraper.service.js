@@ -389,6 +389,7 @@ export const ScraperService = {
       };
     }
   },
+
   scrapeSnapdealProduct: async (url) => {
     try {
       const browser = await puppeteer.launch({
@@ -402,106 +403,49 @@ export const ScraperService = {
       });
 
       let data = [];
-
-      const extractData = async (selector) => {
-        try {
-          const element = await page.waitForSelector(selector, {
-            visible: true,
-          });
-          if (element) {
-            const textContent = await page.evaluate(
-              (item) => item.textContent,
-              element
-            );
-            return textContent !== "" ? textContent.trim() : "";
-          }
-          return null;
-        } catch (error) {
-          return null;
-        }
-      };
-
-      const extractAllData = async (selector) => {
-        try {
-          const elements = await page.$$eval(selector, (items) =>
-            items.map((item) => item.textContent.trim())
-          );
-          const nonEmptyElements = elements.filter(
-            (textContent) => textContent !== ""
-          );
-          return nonEmptyElements.length > 0 ? nonEmptyElements : null;
-        } catch (error) {
-          return null;
-        }
-      };
-
-      const extractNthChild = async (selector, index) => {
-        try {
-          const element = await page.$$eval(
-            selector,
-            (items, i) => items[i].textContent.trim(),
-            index
-          );
-          return element !== "" ? element : null;
-        } catch (error) {
-          return null;
-        }
-      };
-
-      const extractImageLinks = async (selector) => {
-        try {
-          await page.waitForSelector(selector, {
-            visible: true,
-          });
-          const elements = await page.$$eval(selector, (items) =>
-            items.map((item) => item.getAttribute("bigsrc"))
-          );
-          return elements;
-        } catch (error) {
-          return null;
-        }
-      };
-
-      const extractSUPC = async (selector) => {
-        try {
-          const element = await page.waitForSelector(selector, {
-            visible: true,
-          });
-          return element
-            ? await page.evaluate(
-                (item) => item.textContent.replace("SUPC:", "").trim(),
-                element
-              )
-            : null;
-        } catch (error) {
-          return null;
-        }
-      };
-
-      const extractCurrency = async (selector) => {
-        try {
-          const element = await page.waitForSelector(selector, {
-            visible: true,
-          });
-          return element
-            ? await page.$eval(selector, (metaTag) =>
-                metaTag.getAttribute("content")
-              )
-            : null;
-        } catch (error) {
-          return null;
-        }
-      };
-      const productSUPC = await extractSUPC("#highlightSupc .h-content");
-      const productImg = await extractImageLinks(".cloudzoom");
-      const productName = await extractData(".pdp-e-i-head");
-      const productPrice = await extractData(".payBlkBig");
-      const productCurrency = await extractCurrency(
-        "meta[itemprop='priceCurrency']"
+      const timeout = 500;
+      let element = await page.waitForSelector("#highlightSupc .h-content", {
+        visible: true,
+        timeout,
+      });
+      const productSUPC = await page.evaluate(
+        (item) => item.textContent.replace("SUPC:", "").trim(),
+        element
       );
-      const category = await extractNthChild(".bCrumbOmniTrack > span", 1);
-      const productDetailsData = await extractAllData(
-        ".highlightsTileContent .h-content"
+      const productImg = await page.$$eval(".cloudzoom", (items) =>
+        items.map((item) => item.getAttribute("bigsrc"))
+      );
+      element = await page.waitForSelector(".pdp-e-i-head", {
+        visible: true,
+        timeout,
+      });
+      const productName = await page.evaluate(
+        (item) => item.textContent.trim(),
+        element
+      );
+      element = await page.waitForSelector(".payBlkBig", {
+        visible: true,
+        timeout,
+      });
+      const productPrice = await page.evaluate(
+        (item) => item.textContent,
+        element
+      );
+      const productCurrency = await page.$eval(
+        "meta[itemprop='priceCurrency']",
+        (item) => item.getAttribute("content")
+      );
+      element = await page.$$eval(
+        ".bCrumbOmniTrack > span",
+        (items, i) => items[i].textContent.trim(),
+        1
+      );
+      let elements = await page.$$eval(
+        ".highlightsTileContent .h-content",
+        (items) => items.map((item) => item.textContent.trim())
+      );
+      const productDetailsData = elements.filter(
+        (textContent) => textContent !== ""
       );
       const productDetails = {};
       for (let i = 0; i < productDetailsData.length; i++) {
@@ -510,17 +454,49 @@ export const ScraperService = {
           productDetails[data[0]] = data[1];
         }
       }
-      const productRatingText = await extractData(".avrg-rating");
+      let productRatingText = null;
+      try {
+        element = await page.waitForSelector(".avrg-rating", {
+          visible: true,
+          timeout,
+        });
+        productRatingText = await page.evaluate(
+          (item) => item.textContent,
+          element
+        );
+      } catch {}
       const matches = productRatingText
         ? productRatingText.match(/[0-9.]+/g)
         : [];
       const productRating = matches.length ? matches[0] : null;
 
+      element = await page.waitForSelector("#breadCrumbLabelIds", { timeout });
+      const catIDsText = await page.evaluate(
+        (item) => item.textContent,
+        element
+      );
+      const catIDs = catIDsText.split(",");
+      elements = await page.$$eval(
+        "#breadCrumbWrapper2 .containerBreadcrumb a",
+        (items) => items.map((item) => item.textContent.trim())
+      );
+      const catLadder = [];
+      for (let i = 0; i < elements.length; i++) {
+        catLadder.push({
+          id: catIDs[i].trim(),
+          name: elements[i],
+        });
+      }
+      let category = await CategoryModel.findOne({ ladder: catLadder });
+      if (!category) {
+        category = await CategoryModel.create({ ladder: catLadder });
+      }
+
       if ((productName != "") & (productSUPC != "")) {
         const productData = {
           upc: productSUPC,
           title: productName,
-          category: category,
+          category_id: category,
           img_url: productImg,
           price: productPrice,
           currency: productCurrency,
@@ -554,6 +530,72 @@ export const ScraperService = {
       };
     }
   },
+
+  scrapeSnapdealProductList: async (url) => {
+    try {
+      const browser = await puppeteer.launch({
+        headless: false,
+        defaultViewport: null,
+      });
+
+      const page = await browser.newPage();
+      await page.goto(url, {
+        waitUntil: "domcontentloaded",
+      });
+
+      const timeout = 500;
+
+      let element = await page.waitForSelector("#see-more-products  ", {
+        timeout,
+      });
+      let visibilityStyle = await page.evaluate((el) => {
+        const computedStyle = window.getComputedStyle(el);
+        return computedStyle.visibility;
+      }, element);
+      while (visibilityStyle == "visible") {
+        element.click();
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        element = await page.waitForSelector("#see-more-products  ", {
+          timeout,
+        });
+        visibilityStyle = await page.evaluate((el) => {
+          const computedStyle = window.getComputedStyle(el);
+          return computedStyle.visibility;
+        }, element);
+      }
+
+      const products = await page.$$eval(
+        "section .product-tuple-listing",
+        (items) => {
+          return items.map((item) => {
+            const productId = item.getAttribute("id").trim();
+            const supc = item.getAttribute("supc").trim();
+            const linkElem = item.querySelector(".product-tuple-image a");
+            const link = linkElem ? linkElem.href : null;
+            return {
+              productId,
+              supc,
+              link,
+            };
+          });
+        }
+      );
+
+      await browser.close();
+      return {
+        status: 200,
+        message: "Successfull",
+        response: "Record Fetched Successfully",
+        data: products,
+      };
+    } catch (error) {
+      throw {
+        status: error?.status ? error?.status : 500,
+        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+      };
+    }
+  },
+
   scrapeSnapdealCategory: async (url) => {
     try {
       const browser = await puppeteer.launch({
@@ -567,8 +609,10 @@ export const ScraperService = {
       });
 
       let data = [];
-
-      await page.waitForSelector(".leftNavigationLeftContainer li.navlink");
+      const timeout = 500;
+      await page.waitForSelector(".leftNavigationLeftContainer li.navlink", {
+        timeout,
+      });
       const elementHandles = await page.$$(
         ".leftNavigationLeftContainer li.navlink"
       );
@@ -582,19 +626,36 @@ export const ScraperService = {
           let headingText = "";
           let catText = "";
           let link = "";
+          let swCatText = 1;
           for (let subitem of catChildren) {
-            link = subitem.href;
+            link = subitem.href + "?sort=plrty";
+            if (link.indexOf("https") < 0) {
+              continue;
+            }
             const catTextElem = subitem.querySelector("span");
             if (catTextElem.getAttribute("class").indexOf("heading") >= 0) {
+              swCatText = 0;
               headingText = catTextElem.textContent.trim();
-            } else if (catTextElem.getAttribute("class").indexOf("link") >= 0) {
+              if (headingText != "") {
+                categories.push({
+                  mainCat: mainCatText,
+                  catText: headingText,
+                  catLink: link,
+                });
+              }
+            } else if (
+              swCatText &&
+              catTextElem.getAttribute("class").indexOf("link") >= 0
+            ) {
               catText = catTextElem.textContent.trim();
-              categories.push({
-                mainCat: mainCatText,
-                heading: headingText,
-                catText: catText,
-                catLink: link,
-              });
+              if (catText != "") {
+                categories.push({
+                  mainCat: mainCatText,
+                  catText: catText,
+                  catLink: link,
+                });
+              }
+            } else if (catTextElem.getAttribute("class").indexOf("view") >= 0) {
             }
           }
           return categories;
