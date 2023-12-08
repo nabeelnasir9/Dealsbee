@@ -565,9 +565,7 @@ export const ScraperService = {
           isLoading = await page.evaluate((el) => {
             return el.getAttribute("class").indexOf("hidden") < 0;
           }, element);
-        } catch {
-          
-        }
+        } catch {}
         element = await page.waitForSelector("#see-more-products", {
           timeout,
         });
