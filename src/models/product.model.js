@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 const schema = mongoose.Schema(
   {
+    upc: { type: String, required: true },
     title: { type: String, required: true },
     asin: { type: String },
     price: { type: String },

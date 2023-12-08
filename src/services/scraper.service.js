@@ -447,40 +447,147 @@ export const ScraperService = {
           return null;
         }
       };
-      const extractImageLink = async (selector) => {
+
+      const extractImageLinks = async (selector) => {
+        try {
+          await page.waitForSelector(selector, {
+            visible: true,
+          });
+          const elements = await page.$$eval(selector, (items) =>
+            items.map((item) => item.getAttribute('bigsrc'))
+          );
+          return elements
+        } catch (error) {
+          return null;
+        }
+      };
+
+      const extractSUPC = async (selector) => {
         try {
           const element = await page.waitForSelector(selector, {
             visible: true,
           });
           return element
-            ? await page.evaluate((item) => item.src, element)
+            ? await page.evaluate((item) => item.textContent.replace("SUPC:", "").trim(), element)
             : null;
         } catch (error) {
           return null;
         }
       };
 
-      const productImg = await extractImageLink(".cloudzoom");
+      const extractCurrency = async (selector) => {
+        try {
+          const element = await page.waitForSelector(selector, {
+            visible: true,
+          });
+          return element
+            ? await page.$eval(selector, metaTag => metaTag.getAttribute('content'))
+            : null;
+        } catch (error) {
+          return null;
+        }
+      };
+      const productSUPC = await extractSUPC("#highlightSupc .h-content");
+      const productImg = await extractImageLinks(".cloudzoom");
       const productName = await extractData(".pdp-e-i-head");
       const productPrice = await extractData(".payBlkBig");
+      const productCurrency = await extractCurrency("meta[itemprop='priceCurrency']");
       const category = await extractNthChild(".bCrumbOmniTrack > span", 1);
-      const productDetails = await extractAllData(".h-content");
-      const productRating = await extractData(".avrg-rating");
+      const productDetailsData = await extractAllData(".highlightsTileContent .h-content");
+      const productDetails = {}
+      for (let i = 0; i < productDetailsData.length; i++) {
+        const data = productDetailsData[i].split(":");
+        if (data.length >= 2) {
+          productDetails[data[0]] = data[1];
+        }
+      }
+      const productRatingText = await extractData(".avrg-rating");
+      const matches = productRatingText ? productRatingText.match(/[0-9.]+/g) : [];
+      const productRating = matches.length ? matches[0] : null
 
-      if (productImg) {
+      if (productName != "" & productSUPC != "") {
+        const productData = {
+          upc: productSUPC,
+          title: productName,
+          category: category,
+          img_url: productImg,
+          price: productPrice,
+          currency: productCurrency,
+          rating: productRating,
+          product_details: productDetails,
+        }
+        let product = await ProductModel.findOne({ upc: productSUPC });
+        if (!product) {
+          product = await ProductModel.create(productData);
+        } else {
+          product = await ProductModel.updateOne(
+            { upc: productSUPC },
+            productData
+          );
+        }
         data.push({
-          product: {
-            title: productName,
-            category: category,
-            Url: productImg,
-            price: productPrice,
-            rating: productRating,
-            details: productDetails,
-          },
+          product: productData
         });
+
       }
       await browser.close();
+      return {
+        status: 200,
+        message: "Successfull",
+        response: "Record Fetched Successfully",
+        data: data,
+      };
+    } catch (error) {
+      throw {
+        status: error?.status ? error?.status : 500,
+        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+      };
+    }
+  },
+  scrapeSnapdealCategory: async (url) => {
+    try {
+      const browser = await puppeteer.launch({
+        headless: false,
+        defaultViewport: null,
+      });
 
+      const page = await browser.newPage();
+      await page.goto(url, {
+        waitUntil: "domcontentloaded",
+      });
+
+      let data = [];
+
+      await page.waitForSelector(".leftNavigationLeftContainer li.navlink");
+      const elementHandles = await page.$$(".leftNavigationLeftContainer li.navlink");
+      for (let handle of elementHandles) {
+        const subdata = await page.evaluate(element => {
+          const mainCatText = element.querySelector("a span.catText").textContent.trim();
+          const catChildren = element.querySelectorAll(".colDataInnerBlk a");
+          let categories = [];
+          let headingText = ""
+          let catText = ""
+          let link = "";
+          for (let subitem of catChildren) {
+            link = subitem.href;
+            const catTextElem = subitem.querySelector("span");
+            if (catTextElem.getAttribute("class").indexOf("heading") >= 0) {
+              headingText = catTextElem.textContent.trim();
+            } else if (catTextElem.getAttribute("class").indexOf("link") >= 0) {
+              catText = catTextElem.textContent.trim();
+              categories.push({
+                mainCat: mainCatText,
+                heading: headingText,
+                catText: catText,
+                catLink: link
+              });
+            }
+          }
+          return categories;
+        }, handle);
+        data.push(...subdata)
+      }
+      await browser.close();
       return {
         status: 200,
         message: "Successfull",
