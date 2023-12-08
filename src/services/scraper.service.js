@@ -454,9 +454,9 @@ export const ScraperService = {
             visible: true,
           });
           const elements = await page.$$eval(selector, (items) =>
-            items.map((item) => item.getAttribute('bigsrc'))
+            items.map((item) => item.getAttribute("bigsrc"))
           );
-          return elements
+          return elements;
         } catch (error) {
           return null;
         }
@@ -468,7 +468,10 @@ export const ScraperService = {
             visible: true,
           });
           return element
-            ? await page.evaluate((item) => item.textContent.replace("SUPC:", "").trim(), element)
+            ? await page.evaluate(
+                (item) => item.textContent.replace("SUPC:", "").trim(),
+                element
+              )
             : null;
         } catch (error) {
           return null;
@@ -481,7 +484,9 @@ export const ScraperService = {
             visible: true,
           });
           return element
-            ? await page.$eval(selector, metaTag => metaTag.getAttribute('content'))
+            ? await page.$eval(selector, (metaTag) =>
+                metaTag.getAttribute("content")
+              )
             : null;
         } catch (error) {
           return null;
@@ -491,10 +496,14 @@ export const ScraperService = {
       const productImg = await extractImageLinks(".cloudzoom");
       const productName = await extractData(".pdp-e-i-head");
       const productPrice = await extractData(".payBlkBig");
-      const productCurrency = await extractCurrency("meta[itemprop='priceCurrency']");
+      const productCurrency = await extractCurrency(
+        "meta[itemprop='priceCurrency']"
+      );
       const category = await extractNthChild(".bCrumbOmniTrack > span", 1);
-      const productDetailsData = await extractAllData(".highlightsTileContent .h-content");
-      const productDetails = {}
+      const productDetailsData = await extractAllData(
+        ".highlightsTileContent .h-content"
+      );
+      const productDetails = {};
       for (let i = 0; i < productDetailsData.length; i++) {
         const data = productDetailsData[i].split(":");
         if (data.length >= 2) {
@@ -502,10 +511,12 @@ export const ScraperService = {
         }
       }
       const productRatingText = await extractData(".avrg-rating");
-      const matches = productRatingText ? productRatingText.match(/[0-9.]+/g) : [];
-      const productRating = matches.length ? matches[0] : null
+      const matches = productRatingText
+        ? productRatingText.match(/[0-9.]+/g)
+        : [];
+      const productRating = matches.length ? matches[0] : null;
 
-      if (productName != "" & productSUPC != "") {
+      if ((productName != "") & (productSUPC != "")) {
         const productData = {
           upc: productSUPC,
           title: productName,
@@ -515,7 +526,7 @@ export const ScraperService = {
           currency: productCurrency,
           rating: productRating,
           product_details: productDetails,
-        }
+        };
         let product = await ProductModel.findOne({ upc: productSUPC });
         if (!product) {
           product = await ProductModel.create(productData);
@@ -526,9 +537,8 @@ export const ScraperService = {
           );
         }
         data.push({
-          product: productData
+          product: productData,
         });
-
       }
       await browser.close();
       return {
@@ -559,14 +569,18 @@ export const ScraperService = {
       let data = [];
 
       await page.waitForSelector(".leftNavigationLeftContainer li.navlink");
-      const elementHandles = await page.$$(".leftNavigationLeftContainer li.navlink");
+      const elementHandles = await page.$$(
+        ".leftNavigationLeftContainer li.navlink"
+      );
       for (let handle of elementHandles) {
-        const subdata = await page.evaluate(element => {
-          const mainCatText = element.querySelector("a span.catText").textContent.trim();
+        const subdata = await page.evaluate((element) => {
+          const mainCatText = element
+            .querySelector("a span.catText")
+            .textContent.trim();
           const catChildren = element.querySelectorAll(".colDataInnerBlk a");
           let categories = [];
-          let headingText = ""
-          let catText = ""
+          let headingText = "";
+          let catText = "";
           let link = "";
           for (let subitem of catChildren) {
             link = subitem.href;
@@ -579,13 +593,13 @@ export const ScraperService = {
                 mainCat: mainCatText,
                 heading: headingText,
                 catText: catText,
-                catLink: link
+                catLink: link,
               });
             }
           }
           return categories;
         }, handle);
-        data.push(...subdata)
+        data.push(...subdata);
       }
       await browser.close();
       return {

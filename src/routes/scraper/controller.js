@@ -74,7 +74,9 @@ const controller = {
   },
   scrapeSnapdealCategory: async (req, res) => {
     try {
-      const data = await ScraperService.scrapeSnapdealCategory("https://www.snapdeal.com/");
+      const data = await ScraperService.scrapeSnapdealCategory(
+        "https://www.snapdeal.com/"
+      );
       if (data?.status == 204) {
         return httpResponse.SUCCESS(res, data);
       }
