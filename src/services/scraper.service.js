@@ -390,145 +390,160 @@ export const ScraperService = {
     }
   },
 
-  scrapeSnapdealProduct: async ({ url, supc, productId }) => {
+  // scrapeSnapdealProduct: async ({ url, supc, productId }) => {
+  scrapeSnapdealProduct: async ({ products }) => {
+    let browser;
+    let data = [];
     try {
-      const browser = await puppeteer.launch({
+      browser = await puppeteer.launch({
         headless: false,
         defaultViewport: null,
       });
 
       const page = await browser.newPage();
-      await page.goto(url, {
-        waitUntil: "domcontentloaded",
-      });
-
-      let data = [];
-      const timeout = 500;
-      let element = await page.waitForSelector("#highlightSupc .h-content", {
-        visible: true,
-        timeout,
-      });
-      // const productSUPC = await page.evaluate(
-      //   (item) => item.textContent.replace("SUPC:", "").trim(),
-      //   element
-      // );
-      const productSUPC = supc;
-      const productImg = await page.$$eval(".cloudzoom", (items) =>
-        items.map((item) => item.getAttribute("bigsrc"))
-      );
-      element = await page.waitForSelector(".pdp-e-i-head", {
-        visible: true,
-        timeout,
-      });
-      const productName = await page.evaluate(
-        (item) => item.textContent.trim(),
-        element
-      );
-      element = await page.waitForSelector(".payBlkBig", {
-        visible: true,
-        timeout,
-      });
-      const productPrice = await page.evaluate(
-        (item) => item.textContent,
-        element
-      );
-      const productCurrency = await page.$eval(
-        "meta[itemprop='priceCurrency']",
-        (item) => item.getAttribute("content")
-      );
-      element = await page.$$eval(
-        ".bCrumbOmniTrack > span",
-        (items, i) => items[i].textContent.trim(),
-        1
-      );
-      let elements = await page.$$eval(
-        ".highlightsTileContent .h-content",
-        (items) => items.map((item) => item.textContent.trim())
-      );
-      const productDetailsData = elements.filter(
-        (textContent) => textContent !== ""
-      );
-      const productDetails = {};
-      for (let i = 0; i < productDetailsData.length; i++) {
-        const data = productDetailsData[i].split(":");
-        if (data.length >= 2) {
-          productDetails[data[0]] = data[1];
-        }
-      }
-      // productDetails["productId"] = productId;
-      let productRatingText = null;
-      try {
-        element = await page.waitForSelector(".avrg-rating", {
-          visible: true,
-          timeout,
+      for (let i = 0; i < products.length; i++) {
+        const url = products[i].link;
+        const supc = products[i].supc;
+        const productId = products[i].productId;
+        await page.goto(url, {
+          waitUntil: "domcontentloaded",
         });
-        productRatingText = await page.evaluate(
-          (item) => item.textContent,
-          element
-        );
-      } catch {}
-      const matches = productRatingText
-        ? productRatingText.match(/[0-9.]+/g)
-        : [];
-      const productRating = matches.length ? matches[0] : null;
 
-      element = await page.waitForSelector("#breadCrumbLabelIds", { timeout });
-      const catIDsText = await page.evaluate(
-        (item) => item.textContent,
-        element
-      );
-      const catIDs = catIDsText.split(",");
-      elements = await page.$$eval(
-        "#breadCrumbWrapper2 .containerBreadcrumb a",
-        (items) => items.map((item) => item.textContent.trim())
-      );
-      const catLadder = [];
-      for (let i = 0; i < elements.length; i++) {
-        catLadder.push({
-          id: catIDs[i].trim(),
-          name: elements[i],
-        });
-      }
-      let category = await CategoryModel.findOne({ ladder: catLadder });
-      if (!category) {
-        category = await CategoryModel.create({ ladder: catLadder });
-      }
-
-      if ((productName != "") & (productSUPC != "")) {
-        const productData = {
-          supc: productSUPC,
-          title: productName,
-          category_id: category,
-          img_url: productImg,
-          price: productPrice,
-          currency: productCurrency,
-          rating: productRating,
-          product_details: productDetails,
-          url: url,
-          store: "Snapdeal",
-          productId: productId,
-        };
-        let product = await ProductModel.findOne({ supc: productSUPC });
-        if (!product) {
-          product = await ProductModel.create(productData);
-        } else {
-          product = await ProductModel.updateOne(
-            { supc: productSUPC },
-            productData
+        const timeout = 500;
+        try {
+          let element = await page.waitForSelector(
+            "#highlightSupc .h-content",
+            {
+              visible: true,
+              timeout,
+            }
           );
-        }
-        data.push({
-          product: productData,
-        });
+          // const productSUPC = await page.evaluate(
+          //   (item) => item.textContent.replace("SUPC:", "").trim(),
+          //   element
+          // );
+          const productSUPC = supc;
+          const productImg = await page.$$eval(".cloudzoom", (items) =>
+            items.map((item) => item.getAttribute("bigsrc"))
+          );
+          element = await page.waitForSelector(".pdp-e-i-head", {
+            visible: true,
+            timeout,
+          });
+          const productName = await page.evaluate(
+            (item) => item.textContent.trim(),
+            element
+          );
+          element = await page.waitForSelector(".payBlkBig", {
+            visible: true,
+            timeout,
+          });
+          const productPrice = await page.evaluate(
+            (item) => item.textContent,
+            element
+          );
+          const productCurrency = await page.$eval(
+            "meta[itemprop='priceCurrency']",
+            (item) => item.getAttribute("content")
+          );
+          element = await page.$$eval(
+            ".bCrumbOmniTrack > span",
+            (items, i) => items[i].textContent.trim(),
+            1
+          );
+          let elements = await page.$$eval(
+            ".highlightsTileContent .h-content",
+            (items) => items.map((item) => item.textContent.trim())
+          );
+          const productDetailsData = elements.filter(
+            (textContent) => textContent !== ""
+          );
+          const productDetails = {};
+          for (let i = 0; i < productDetailsData.length; i++) {
+            const data = productDetailsData[i].split(":");
+            if (data.length >= 2) {
+              productDetails[data[0]] = data[1];
+            }
+          }
+          // productDetails["productId"] = productId;
+          let productRatingText = null;
+          try {
+            element = await page.waitForSelector(".avrg-rating", {
+              visible: true,
+              timeout,
+            });
+            productRatingText = await page.evaluate(
+              (item) => item.textContent,
+              element
+            );
+          } catch {}
+          const matches = productRatingText
+            ? productRatingText.match(/[0-9.]+/g)
+            : [];
+          const productRating = matches.length ? matches[0] : null;
+
+          element = await page.waitForSelector("#breadCrumbLabelIds", {
+            timeout,
+          });
+          const catIDsText = await page.evaluate(
+            (item) => item.textContent,
+            element
+          );
+          const catIDs = catIDsText.split(",");
+          elements = await page.$$eval(
+            "#breadCrumbWrapper2 .containerBreadcrumb a",
+            (items) => items.map((item) => item.textContent.trim())
+          );
+          const catLadder = [];
+          for (let i = 0; i < elements.length; i++) {
+            catLadder.push({
+              id: catIDs[i].trim(),
+              name: elements[i],
+            });
+          }
+          let category = await CategoryModel.findOne({ ladder: catLadder });
+          if (!category) {
+            category = await CategoryModel.create({ ladder: catLadder });
+          }
+
+          if ((productName != "") & (productSUPC != "")) {
+            const productData = {
+              supc: productSUPC,
+              title: productName,
+              category_id: category,
+              img_url: productImg,
+              price: productPrice,
+              currency: productCurrency,
+              rating: productRating,
+              product_details: productDetails,
+              url: url,
+              store: "Snapdeal",
+              productId: productId,
+            };
+            let product = await ProductModel.findOne({ supc: productSUPC });
+            if (!product) {
+              product = await ProductModel.create(productData);
+            } else {
+              product = await ProductModel.updateOne(
+                { supc: productSUPC },
+                productData
+              );
+            }
+            data.push({
+              product: productData,
+            });
+          }
+        } catch (error) {}
       }
       await browser.close();
       return {
         status: 200,
         message: "Successfull",
         response: "Record Fetched Successfully",
-        data: data,
+        data: data.length,
       };
     } catch (error) {
+      browser && (await browser.close());
       throw {
         status: error?.status ? error?.status : 500,
         message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
@@ -537,8 +552,9 @@ export const ScraperService = {
   },
 
   scrapeSnapdealProductList: async (url) => {
+    let browser;
     try {
-      const browser = await puppeteer.launch({
+      browser = await puppeteer.launch({
         headless: false,
         defaultViewport: null,
       });
@@ -549,8 +565,10 @@ export const ScraperService = {
       });
 
       const timeout = 600000;
-
-      let element = await page.waitForSelector("#see-more-products", {
+      let element = await page.waitForSelector("#products", {
+        timeout: 3000,
+      });
+      element = await page.waitForSelector("#see-more-products", {
         timeout,
       });
       let visibilityStyle = await page.evaluate((el) => {
@@ -605,6 +623,7 @@ export const ScraperService = {
         data: products,
       };
     } catch (error) {
+      browser && (await browser.close());
       throw {
         status: error?.status ? error?.status : 500,
         message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
@@ -644,7 +663,10 @@ export const ScraperService = {
           let link = "";
           let swCatText = 1;
           for (let subitem of catChildren) {
-            link = subitem.href + "?sort=plrty";
+            link =
+              subitem.href.indexOf("sort=plrty") >= 0
+                ? subitem.href
+                : subitem.href + "?sort=plrty";
             if (link.indexOf("https") < 0) {
               continue;
             }
