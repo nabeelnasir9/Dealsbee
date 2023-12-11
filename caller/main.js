@@ -1,7 +1,7 @@
 // main.js
 import axios from "axios";
 
-let isDone = 1;
+let isDone = 0;
 const productList = [];
 
 async function fetchCategoryData() {
@@ -63,7 +63,7 @@ async function processProduct(params) {
   //         console.error(error);
   //     }
   // }
-  isDone = 1;
+  // isDone = 1;
 }
 
 async function subprocess() {
@@ -72,6 +72,9 @@ async function subprocess() {
     if (products) {
       await processProduct({ products });
     } else {
+      if (isDone) {
+        break;
+      }
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
@@ -99,7 +102,8 @@ async function subprocess() {
       }
     }
   }
-  // await new Promise((resolve) => setTimeout(resolve, 3000));
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+  isDone = 1;
   // while (!isDone);
   // console.log("Main Process is ended");
 })();
