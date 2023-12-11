@@ -86,8 +86,8 @@ async function subprocess() {
   for (let i = 0; i < categories.length; i++) {
     const category = categories[i];
     if (category.mainCat == "Electronics") {
-      console.log(category);
       const products = await processCategory(category);
+      console.log(category, products.length);
       // while (!isDone) {
       //     await new Promise((resolve) => setTimeout(resolve, 1000));
       // }
@@ -95,10 +95,13 @@ async function subprocess() {
       let tempList = [];
       for (let j = 0; j < products.length; j++) {
         tempList.push(products[j]);
-        if (j % 500 == 0) {
+        if (j && j % 500 == 0) {
           productList.push(tempList);
           tempList = [];
         }
+      }
+      if (tempList.length) {
+        productList.push(tempList);
       }
     }
   }
