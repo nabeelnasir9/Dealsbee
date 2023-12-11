@@ -82,13 +82,15 @@ async function subprocess() {
   const categories = await fetchCategoryData();
   for (let i = 0; i < categories.length; i++) {
     const category = categories[i];
-    console.log(category);
-    const products = await processCategory(category);
-    // while (!isDone) {
-    //     await new Promise((resolve) => setTimeout(resolve, 1000));
-    // }
-    // isDone = 0;
-    productList.push(products);
+    if (category.mainCat == "Electronics") {
+      console.log(category);
+      const products = await processCategory(category);
+      // while (!isDone) {
+      //     await new Promise((resolve) => setTimeout(resolve, 1000));
+      // }
+      // isDone = 0;
+      productList.push(products);
+    }
   }
   // await new Promise((resolve) => setTimeout(resolve, 3000));
   // while (!isDone);
