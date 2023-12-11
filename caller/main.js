@@ -89,7 +89,14 @@ async function subprocess() {
       //     await new Promise((resolve) => setTimeout(resolve, 1000));
       // }
       // isDone = 0;
-      productList.push(products);
+      let tempList = [];
+      for (let j = 0; j < products.length; j++) {
+        tempList.push(products[j]);
+        if (j % 500 == 0) {
+          productList.push(tempList);
+          tempList = [];
+        }
+      }
     }
   }
   // await new Promise((resolve) => setTimeout(resolve, 3000));

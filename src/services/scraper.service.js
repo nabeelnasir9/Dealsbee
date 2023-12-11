@@ -651,7 +651,8 @@ export const ScraperService = {
       const elementHandles = await page.$$(
         ".leftNavigationLeftContainer li.navlink"
       );
-      for (let handle of elementHandles) {
+      for (let i = 0; i < elementHandles.length; i++) {
+        const handle = elementHandles[i];
         const subdata = await page.evaluate((element) => {
           const mainCatText = element
             .querySelector("a span.catText")
@@ -662,19 +663,29 @@ export const ScraperService = {
           let catText = "";
           let link = "";
           let swCatText = 1;
-          for (let subitem of catChildren) {
-            link =
-              subitem.href.indexOf("sort=plrty") >= 0
-                ? subitem.href
-                : subitem.href + "?sort=plrty";
-            if (link.indexOf("https") < 0) {
+          for (let j = 0; j < catChildren.length; j++) {
+            const subitem = catChildren[j];
+            if (subitem.href.indexOf("sort=plrty") >= 0) {
+              link = subitem.href;
+            } else {
+              const idx = subitem.href.indexOf("#bcrumbLabelId");
+              if (idx < 0) {
+                link = subitem.href + "?sort=plrty";
+              } else {
+                link =
+                  subitem.href.slice(0, idx) +
+                  substring +
+                  subitem.href.slice(idx);
+              }
+            }
+            if (link.indexOf("http") < 0) {
               continue;
             }
             const catTextElem = subitem.querySelector("span");
             if (catTextElem.getAttribute("class").indexOf("heading") >= 0) {
-              swCatText = 0;
               headingText = catTextElem.textContent.trim();
               if (headingText != "") {
+                swCatText = 0;
                 categories.push({
                   mainCat: mainCatText,
                   catText: headingText,
