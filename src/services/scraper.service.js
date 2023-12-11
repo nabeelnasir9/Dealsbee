@@ -390,7 +390,7 @@ export const ScraperService = {
     }
   },
 
-  scrapeSnapdealProduct: async (url) => {
+  scrapeSnapdealProduct: async ({ url, supc, productId }) => {
     try {
       const browser = await puppeteer.launch({
         headless: false,
@@ -408,10 +408,11 @@ export const ScraperService = {
         visible: true,
         timeout,
       });
-      const productSUPC = await page.evaluate(
-        (item) => item.textContent.replace("SUPC:", "").trim(),
-        element
-      );
+      // const productSUPC = await page.evaluate(
+      //   (item) => item.textContent.replace("SUPC:", "").trim(),
+      //   element
+      // );
+      const productSUPC = supc;
       const productImg = await page.$$eval(".cloudzoom", (items) =>
         items.map((item) => item.getAttribute("bigsrc"))
       );
@@ -454,6 +455,7 @@ export const ScraperService = {
           productDetails[data[0]] = data[1];
         }
       }
+      // productDetails["productId"] = productId;
       let productRatingText = null;
       try {
         element = await page.waitForSelector(".avrg-rating", {
@@ -494,7 +496,7 @@ export const ScraperService = {
 
       if ((productName != "") & (productSUPC != "")) {
         const productData = {
-          upc: productSUPC,
+          supc: productSUPC,
           title: productName,
           category_id: category,
           img_url: productImg,
@@ -502,13 +504,16 @@ export const ScraperService = {
           currency: productCurrency,
           rating: productRating,
           product_details: productDetails,
+          url: url,
+          store: "Snapdeal",
+          productId: productId,
         };
-        let product = await ProductModel.findOne({ upc: productSUPC });
+        let product = await ProductModel.findOne({ supc: productSUPC });
         if (!product) {
           product = await ProductModel.create(productData);
         } else {
           product = await ProductModel.updateOne(
-            { upc: productSUPC },
+            { supc: productSUPC },
             productData
           );
         }
@@ -543,7 +548,7 @@ export const ScraperService = {
         waitUntil: "domcontentloaded",
       });
 
-      const timeout = 10000;
+      const timeout = 600000;
 
       let element = await page.waitForSelector("#see-more-products", {
         timeout,

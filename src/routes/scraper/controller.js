@@ -60,7 +60,7 @@ const controller = {
   },
   scrapeSnapdealProduct: async (req, res) => {
     try {
-      const data = await ScraperService.scrapeSnapdealProduct(req.body.url);
+      const data = await ScraperService.scrapeSnapdealProduct(req.body);
       if (data?.status == 204) {
         return httpResponse.SUCCESS(res, data);
       }
