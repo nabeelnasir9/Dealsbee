@@ -12,7 +12,7 @@ async function fetchCategoryData() {
     );
     return response.data.data;
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     return []; // Return an empty array on error
   }
 }
