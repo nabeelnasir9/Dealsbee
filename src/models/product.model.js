@@ -3,7 +3,7 @@ const schema = mongoose.Schema(
   {
     title: { type: String, required: true },
     asin: { type: String },
-    price: { type: String },
+    price: { type: Number, float: true },
     currency: { type: String },
     rating: { type: String },
     product_details: { type: Object },

@@ -165,7 +165,7 @@ export const ScraperService = {
 
       let data = JSON.stringify({
         source: "amazon_search",
-        domain: "com",
+        domain: "in",
         query,
         parse: true,
         context: [
@@ -205,7 +205,7 @@ export const ScraperService = {
                   {
                     title: organic[i].title,
                     asin: organic[i].asin,
-                    price: organic[i].price,
+                    price: parseFloat(organic[i].price),
                     currency: organic[i].currency,
                     rating: organic[i].rating,
                     url: organic[i].url,
@@ -216,7 +216,7 @@ export const ScraperService = {
               responseData = await ProductModel.create({
                 title: organic[i].title,
                 asin: organic[i].asin,
-                price: organic[i].price,
+                price: parseFloat(organic[i].price),
                 currency: organic[i].currency,
                 rating: organic[i].rating,
                 url: organic[i].url,
@@ -356,7 +356,7 @@ export const ScraperService = {
       }
       let productData = {
         title,
-        price,
+        price: parseFloat(price),
         rating,
         product_details,
         url,
