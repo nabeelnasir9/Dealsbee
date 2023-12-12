@@ -2,7 +2,8 @@ import { ProductModel } from "../models/index.js";
 import mongoose from "mongoose";
 
 export const ProductService = {
-  getProducts: async (query) => {
+  getProducts: async ({ page = 1, limit = 10, ...query }) => {
+    const skip = (page - 1) * limit;
     let pipeline = [];
     if (query) {
       if (query.category_id) {
@@ -17,11 +18,23 @@ export const ProductService = {
           $regex: new RegExp(query.brand, "i"),
         };
       }
-      if (query.price?.lt) {
-        pipeline[0]["$match"]["$expr"] = {
-          $lt: [{ $toDouble: "$price" }, +query.price.lt],
-        };
+      if (query.price?.lt || query.price?.gt) {
+        const priceFilter = {};
+        if (query.price?.lt) {
+          priceFilter.$lt = +query.price?.lt;
+        }
+        if (query.price?.gt) {
+          priceFilter.$gt = +query.price?.gt;
+        }
+
+        pipeline.push({
+          $match: {
+            price: priceFilter,
+          },
+        });
       }
+      pipeline.push({ $skip: +skip });
+      pipeline.push({ $limit: +limit });
     }
     try {
       const data = await ProductModel.aggregate(pipeline);
