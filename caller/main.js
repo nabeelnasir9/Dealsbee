@@ -23,6 +23,7 @@ async function processCategory(category) {
       "http://localhost:8000/scraper/snapdeal/list",
       {
         url: category.catLink,
+        limit: 300,
       }
     );
     return response.data.data;

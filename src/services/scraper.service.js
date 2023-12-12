@@ -551,7 +551,7 @@ export const ScraperService = {
     }
   },
 
-  scrapeSnapdealProductList: async (url) => {
+  scrapeSnapdealProductList: async ({ url, limit }) => {
     let browser;
     try {
       browser = await puppeteer.launch({
@@ -578,7 +578,43 @@ export const ScraperService = {
       let isLoading = await page.evaluate((el) => {
         return el.getAttribute("class").indexOf("hidden") < 0;
       }, element);
-      while (visibilityStyle == "visible" || isLoading) {
+      let products = await page.$$eval(
+        "section .product-tuple-listing",
+        (items) => {
+          return items.map((item) => {
+            const productId = item.getAttribute("id").trim();
+            const supc = item.getAttribute("supc").trim();
+            const linkElem = item.querySelector(".product-tuple-image a");
+            const link = linkElem ? linkElem.href : null;
+            return {
+              productId,
+              supc,
+              link,
+            };
+          });
+        }
+      );
+      while (
+        (visibilityStyle == "visible" || isLoading) &&
+        products.length < limit
+      ) {
+        products = await page.$$eval(
+          "section .product-tuple-listing",
+          (items) => {
+            return items.map((item) => {
+              const productId = item.getAttribute("id").trim();
+              const supc = item.getAttribute("supc").trim();
+              const linkElem = item.querySelector(".product-tuple-image a");
+              const link = linkElem ? linkElem.href : null;
+              return {
+                productId,
+                supc,
+                link,
+              };
+            });
+          }
+        );
+
         if (visibilityStyle == "visible") element.click();
         await new Promise((resolve) => setTimeout(resolve, 1000));
         try {
@@ -598,22 +634,22 @@ export const ScraperService = {
         }, element);
       }
 
-      const products = await page.$$eval(
-        "section .product-tuple-listing",
-        (items) => {
-          return items.map((item) => {
-            const productId = item.getAttribute("id").trim();
-            const supc = item.getAttribute("supc").trim();
-            const linkElem = item.querySelector(".product-tuple-image a");
-            const link = linkElem ? linkElem.href : null;
-            return {
-              productId,
-              supc,
-              link,
-            };
-          });
-        }
-      );
+      // const products = await page.$$eval(
+      //   "section .product-tuple-listing",
+      //   (items) => {
+      //     return items.map((item) => {
+      //       const productId = item.getAttribute("id").trim();
+      //       const supc = item.getAttribute("supc").trim();
+      //       const linkElem = item.querySelector(".product-tuple-image a");
+      //       const link = linkElem ? linkElem.href : null;
+      //       return {
+      //         productId,
+      //         supc,
+      //         link,
+      //       };
+      //     });
+      //   }
+      // );
 
       await browser.close();
       return {
@@ -683,15 +719,15 @@ export const ScraperService = {
             }
             const catTextElem = subitem.querySelector("span");
             if (catTextElem.getAttribute("class").indexOf("heading") >= 0) {
-              headingText = catTextElem.textContent.trim();
-              if (headingText != "") {
-                swCatText = 0;
-                categories.push({
-                  mainCat: mainCatText,
-                  catText: headingText,
-                  catLink: link,
-                });
-              }
+              // headingText = catTextElem.textContent.trim();
+              // if (headingText != "") {
+              //   swCatText = 0;
+              //   categories.push({
+              //     mainCat: mainCatText,
+              //     catText: headingText,
+              //     catLink: link,
+              //   });
+              // }
             } else if (
               swCatText &&
               catTextElem.getAttribute("class").indexOf("link") >= 0
