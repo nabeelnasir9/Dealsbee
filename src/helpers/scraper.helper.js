@@ -12,7 +12,7 @@ export const ScraperHelper = {
 
       let data = JSON.stringify({
         source: "amazon_product",
-        domain: "com",
+        domain: "in",
         query: productId,
         parse: true,
         context: [
@@ -63,7 +63,7 @@ export const ScraperHelper = {
         let productData = {
           title: responseData.product_name,
           asin: responseData.asin,
-          price: responseData.price,
+          price: parseFloat(responseData.price),
           currency: responseData.currency,
           rating: responseData.ratings,
           product_details: responseData.product_details,
