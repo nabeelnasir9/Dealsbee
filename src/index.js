@@ -2,6 +2,13 @@ import {} from "dotenv/config";
 import express from "express";
 import loaders from "./loaders/index.js";
 import config from "./config/index.js";
+import thread from "./thread/index.js";
+import cron from "node-cron";
+
+cron.schedule("* 30 4 * *", async () => {
+  await thread();
+});
+
 async function startServer() {
   const app = express();
   await loaders.init({ expressApp: app });

@@ -63,21 +63,19 @@ async function subprocess() {
   isCompleted = 1;
 }
 
-(async function main() {
-  while (1) {
-    isDone = 0;
-    subprocess();
-    const categories = await fetchCategoryData();
-    for (let i = 0; i < categories.length; i++) {
-      const category = categories[i];
-      const products = await processCategory(category);
-      console.log(category, products.length);
-      productList.push(products);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    isDone = 1;
-    while (!isCompleted) {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
+export default async function thread() {
+  isDone = 0;
+  subprocess();
+  const categories = await fetchCategoryData();
+  for (let i = 0; i < categories.length; i++) {
+    const category = categories[i];
+    const products = await processCategory(category);
+    console.log(category, products.length);
+    productList.push(products);
   }
-})();
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+  isDone = 1;
+  while (!isCompleted) {
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+  }
+}
