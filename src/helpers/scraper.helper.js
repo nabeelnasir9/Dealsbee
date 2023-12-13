@@ -214,10 +214,11 @@ export const ScraperHelper = {
         category = await CategoryModel.create({ ladder });
       }
 
+      let finalPrice = price.replace(/₹/g, "").replaceAll(",", "");
       let productData = {
         title,
         asin,
-        price,
+        price: parseFloat(finalPrice),
         rating,
         product_details,
         url,
@@ -242,7 +243,7 @@ export const ScraperHelper = {
         status: 200,
         message: "Successfull",
         response: "Record Fetched Successfully",
-        data: responseData,
+        data: productData,
       };
     } catch (error) {
       throw {

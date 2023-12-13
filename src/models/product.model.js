@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 const schema = mongoose.Schema(
   {
-    supc: { type: String, required: true },
+    supc: { type: String },
     title: { type: String, required: true },
     asin: { type: String },
     price: { type: Number, float: true },
