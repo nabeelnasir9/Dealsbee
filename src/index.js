@@ -5,7 +5,7 @@ import config from "./config/index.js";
 import thread from "./thread/index.js";
 import cron from "node-cron";
 
-cron.schedule("* 30 4 * *", async () => {
+cron.schedule("35 4 * * *", async () => {
   await thread();
 });
 
