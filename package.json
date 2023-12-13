@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "start src/index.js",
-    "dev": "nodemon src/index.js",
+    "dev": "nodemon src/index.js && node caller/main.js",
     "test": "prettier --check .",
     "format": "prettier --write .",
     "prepare": "husky install"
