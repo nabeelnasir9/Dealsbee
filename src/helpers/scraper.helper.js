@@ -1,6 +1,7 @@
 import config from "../config/index.js";
 import { CategoryModel, ProductModel } from "../models/index.js";
 import axios from "axios";
+import puppeteer from "puppeteer";
 export const ScraperHelper = {
   scrapeAmazonProduct: async (productId) => {
     const oxylabsData =
@@ -97,22 +98,27 @@ export const ScraperHelper = {
       };
     }
   },
-  scrapeFlipkartProduct: async (url) => {
+  scrapeFlipkartProduct: async (url, newPage) => {
     try {
-      const browser = await puppeteer.launch({
-        headless: false,
-        defaultViewport: null,
-      });
-
-      const page = await browser.newPage();
+      let page, browser;
+      if (!newPage) {
+        browser = await puppeteer.launch({
+          headless: false,
+          defaultViewport: null,
+        });
+        page = await browser.newPage();
+      } else {
+        page = newPage;
+      }
+      if (!url) {
+        await browser.close();
+      }
       await page.goto(url, {
         waitUntil: "domcontentloaded",
       });
 
       const urlLink = await page.url();
       const asin = urlLink.split("pid=")[1]?.split("&")[0];
-
-      let data = [];
 
       const getElementText = async (selector) => {
         try {
@@ -228,13 +234,15 @@ export const ScraperHelper = {
           productData
         );
       }
-      await browser.close();
+      if (!newPage) {
+        await browser.close();
+      }
 
       return {
         status: 200,
         message: "Successfull",
         response: "Record Fetched Successfully",
-        data: data,
+        data: responseData,
       };
     } catch (error) {
       throw {
