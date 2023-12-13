@@ -6,4 +6,9 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET || "my_temporary_secret",
   oxylabxUsername: process.env.OXYLABS_USERNAME,
   oxylabsPassword: process.env.OXYLABS_PASSWORD,
+  cronMinute: process.env.CRON_MINUTE || "*",
+  cronHour: process.env.CRON_HOUR || "*",
+  cronDayOfMonth: process.env.CRON_DAY_OF_MONTH || "*",
+  cronMonth: process.env.CRON_MONTH || "*",
+  cronDayOfWeek: process.env.CRON_DAY_OF_WEEK || "*",
 };

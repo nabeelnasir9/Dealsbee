@@ -5,9 +5,12 @@ import config from "./config/index.js";
 import thread from "./thread/index.js";
 import cron from "node-cron";
 
-cron.schedule("35 4 * * *", async () => {
-  await thread();
-});
+cron.schedule(
+  `${config.env.cronMinute} ${config.env.cronHour} ${config.env.cronDayOfMonth} ${config.env.cronMonth} ${config.env.cronDayOfWeek}`,
+  async () => {
+    await thread();
+  }
+);
 
 async function startServer() {
   const app = express();
