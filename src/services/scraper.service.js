@@ -3,6 +3,8 @@ import axios from "axios";
 import { CategoryModel, ProductModel } from "../models/index.js";
 import config from "../config/index.js";
 import { ScraperHelper } from "../helpers/index.js";
+import { KnownDevices } from "puppeteer";
+const iPhone = KnownDevices["iPhone 6"];
 
 export const ScraperService = {
   scrapeAmazonProduct: ScraperHelper.scrapeAmazonProduct,
@@ -248,105 +250,141 @@ export const ScraperService = {
       };
     }
   },
-  scrapeFlipkartProduct: async (url) => {
+  scrapeFlipkartProduct: ScraperHelper.scrapeFlipkartProduct,
+  scrapeFlipkartProductList: async () => {
     try {
+      const pageLink = "https://www.flipkart.com";
+      const categoriesLink = [];
       const browser = await puppeteer.launch({
-        headless: true,
+        headless: false,
         defaultViewport: null,
       });
 
       const page = await browser.newPage();
-      await page.goto(url, {
-        waitUntil: "domcontentloaded",
+      await page.goto(pageLink, {
+        waitUntil: "networkidle0",
       });
 
-      let data = [];
-
-      const getElementText = async (selector) => {
-        try {
-          const element = await page.$eval(selector, (element) =>
-            element ? element.innerText : null
-          );
-          return element;
-        } catch (error) {
-          return null;
-        }
-      };
-
-      const getElementLink = async (selector) => {
-        try {
-          const element = await page.$$eval(selector, (element) =>
-            element ? element.slice(0, 6)?.map((item) => item.src) : null
-          );
-          return element;
-        } catch (error) {
-          return null;
-        }
-      };
-
-      const title = await getElementText(
-        "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(1) > h1 > span"
+      const modalClose = await page.waitForSelector(
+        "body > div.fbDBuK._3CYmv5 > div > span",
+        { visible: true }
       );
-
-      let rating = await getElementText(
-        "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > div:nth-child(1) > div > span:nth-child(1) > div"
-      );
-
-      if (!rating) {
-        rating = await getElementText(
-          "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(4) > div:nth-child(1) > div > span:nth-child(1) > div"
+      if (modalClose) {
+        modalClose.click();
+        const categoryBtn = await page.waitForSelector(
+          '[aria-label="Electronics"]',
+          { visible: true }
         );
+        if (categoryBtn) {
+          categoryBtn.click();
+
+          const electronicBtn = await page.waitForSelector(
+            "#container > div > div._331-kn > div > div > span:nth-child(1)",
+            { visible: true }
+          );
+          if (electronicBtn) {
+            electronicBtn.hover();
+
+            const mobilesLink = await page.waitForSelector('[title="Mobiles"]');
+            const siblingElements = await page.evaluate((element) => {
+              const siblings = [];
+              let sibling = element.nextElementSibling;
+              while (sibling) {
+                if (sibling.tagName === "A" && sibling.href) {
+                  siblings.push(sibling.href);
+                }
+                sibling = sibling.nextElementSibling;
+              }
+              return siblings;
+            }, mobilesLink);
+            categoriesLink.push(...siblingElements);
+
+            const accessoriesLink = await page.waitForSelector(
+              '[title="Mobile Accessories"]'
+            );
+            const siblingElements_2 = await page.evaluate((element) => {
+              const siblings = [];
+              let sibling = element.nextElementSibling;
+              while (sibling) {
+                if (sibling.tagName === "A" && sibling.href) {
+                  siblings.push(sibling.href);
+                }
+                sibling = sibling.nextElementSibling;
+              }
+              return siblings;
+            }, accessoriesLink);
+            categoriesLink.push(...siblingElements_2);
+
+            try {
+              const LoptopsLink = await page.waitForSelector(
+                '[title="Gaming Laptops"]'
+              );
+              const loptopsHref = await page.evaluate(
+                (element) => element.href,
+                LoptopsLink
+              );
+              categoriesLink.push(loptopsHref);
+            } catch (error) {
+              console.log("can't able to get laptop links");
+            }
+            try {
+              const disktopLink = await page.waitForSelector(
+                '[title="Desktop PCs"]'
+              );
+              const disktopHref = await page.evaluate(
+                (element) => element.href,
+                disktopLink
+              );
+              categoriesLink.push(disktopHref);
+            } catch (error) {
+              console.log("can't able to get disktop links");
+            }
+
+            try {
+              const ipadsLink = await page.waitForSelector(
+                '[title="Apple iPads"]'
+              );
+              const ipadsHref = await page.evaluate(
+                (element) => element.href,
+                ipadsLink
+              );
+              categoriesLink.push(ipadsHref);
+            } catch (error) {
+              console.log("can't able to get ipads links");
+            }
+          }
+        }
       }
-      let price = await getElementText(
-        "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(4) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1)"
-      );
 
-      if (!price) {
-        price = await getElementText(
-          "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(3) > div:nth-child(1) > div > div"
-        );
-      }
-
-      const category_1 = await getElementText(
-        "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(2) > a"
-      );
-      const category_2 = await getElementText(
-        "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(3) > a"
-      );
-
-      const img_url = await getElementLink("ul li img");
-
-      const prodDetails = await page.$$eval("table tbody tr", (rows) => {
-        return Array.from(rows, (row) => {
-          const columns = row.querySelectorAll("td");
-          return Array.from(columns, (column) => column.innerText);
+      const allData = [];
+      for (const pageUrl of categoriesLink) {
+        await page.goto(pageUrl, {
+          waitUntil: "domcontentloaded",
+          visible: true,
         });
-      });
-      let product_details = {};
-
-      for (let i = 0; i < prodDetails.length; i++) {
-        if (prodDetails[i]?.length?.toString() && prodDetails[i].length > 1) {
-          product_details[prodDetails[i][0]] = prodDetails[i][1];
-        }
-      }
-
-      const detailsLowerize = (obj) =>
-        Object.keys(obj).reduce((acc, k) => {
-          acc[k.toLowerCase()] = obj[k];
-          return acc;
-        }, {});
-      product_details = detailsLowerize(product_details);
-      let brand = "";
-      if (!product_details.brand) {
-        brand = await getElementText(
-          "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-last-child(2) > a"
+        const hrefArray = await page.$$eval(
+          "#container div div:nth-child(3) a",
+          (elements) => {
+            return elements?.map((element) => element.getAttribute("href"));
+          }
         );
-        if (brand) {
-          const verifyBrand = await getElementText(
-            "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-last-child(3) > a"
+        const base_url = "https://www.flipkart.com";
+        const fullUrls = hrefArray.map((uri) => base_url + uri);
+        const filteredUrls = fullUrls.filter((url) => url.includes("pid="));
+        allData.push(filteredUrls);
+      }
+      const combinedArray = [].concat(...allData);
+      const prodLink = [...new Set(combinedArray)];
+      let productStore;
+      for (let i = 0; i < prodLink.length; i++) {
+        try {
+          productStore = await ScraperHelper.scrapeFlipkartProduct(
+            prodLink[i],
+            page
           );
-          brand = brand.replace(verifyBrand, "");
-          product_details.brand = brand;
+        } catch (error) {
+          console.log("flipkart link failed");
+          continue;
         }
       }
       const ladder = [{ name: category_1 }, { name: category_2 }];
@@ -374,14 +412,14 @@ export const ScraperService = {
         );
       }
       await browser.close();
-
       return {
         status: 200,
         message: "Successfull",
         response: "Record Fetched Successfully",
-        data: data,
+        data: productStore,
       };
     } catch (error) {
+      await browser.close();
       throw {
         status: error?.status ? error?.status : 500,
         message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
