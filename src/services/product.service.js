@@ -13,10 +13,17 @@ export const ProductService = {
           },
         });
       }
-      if (query.brand) {
-        pipeline[0]["$match"]["product_details.brand"] = {
-          $regex: new RegExp(query.brand, "i"),
-        };
+      if (query.brand?.length) {
+        let brands = query.brand.split(",");
+        if (brands.length > 1) {
+          pipeline[0]["$match"]["product_details.brand"] = {
+            $in: brands.map((brand) => new RegExp(brand, "i")),
+          };
+        } else {
+          pipeline[0]["$match"]["product_details.brand"] = {
+            $regex: new RegExp(brands[0], "i"),
+          };
+        }
       }
       if (query.price?.lt || query.price?.gt) {
         const priceFilter = {};
