@@ -62,22 +62,25 @@ export const ScraperHelper = {
 
         let productData = {
           title: responseData.product_name,
-          asin: responseData.asin,
+          productId: responseData.asin,
           price: parseFloat(responseData.price),
           currency: responseData.currency,
           rating: responseData.ratings,
+          store: "amazon",
           product_details: responseData.product_details,
           url: responseData.url,
           category_id: category._id,
           img_url,
         };
         let product;
-        product = await ProductModel.findOne({ asin: productData.asin });
+        product = await ProductModel.findOne({
+          productId: productData.productId,
+        });
         if (!product) {
           product = await ProductModel.create(productData);
         } else {
           product = await ProductModel.updateOne(
-            { asin: productData.asin },
+            { productId: productData.productId },
             productData
           );
         }
@@ -118,7 +121,7 @@ export const ScraperHelper = {
       });
 
       const urlLink = await page.url();
-      const asin = urlLink.split("pid=")[1]?.split("&")[0];
+      const productId = urlLink.split("pid=")[1]?.split("&")[0];
 
       const getElementText = async (selector) => {
         try {
@@ -217,21 +220,24 @@ export const ScraperHelper = {
       let finalPrice = price.replace(/₹/g, "").replaceAll(",", "");
       let productData = {
         title,
-        asin,
+        productId,
         price: parseFloat(finalPrice),
         rating,
         product_details,
         url,
+        store: "flipkart",
         category_id: category._id,
         img_url,
       };
       let product;
-      product = await ProductModel.findOne({ asin: productData.asin });
+      product = await ProductModel.findOne({
+        productId: productData.productId,
+      });
       if (!product) {
         product = await ProductModel.create(productData);
       } else {
         product = await ProductModel.updateOne(
-          { asin: productData.asin },
+          { productId: productData.productId },
           productData
         );
       }
