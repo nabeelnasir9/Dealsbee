@@ -67,13 +67,14 @@ export const ScraperHelper = {
           });
         }
         let img_url = responseData.images.length ? responseData.images : [];
+        responseData.product_details.brand = responseData.brand;
 
         let productData = {
           title: responseData.product_name,
           productId: responseData.asin,
           price: parseFloat(responseData.price),
           currency: responseData.currency,
-          rating: responseData.ratings,
+          rating: parseFloat(responseData.rating),
           store: "amazon",
           product_details: responseData.product_details,
           url: responseData.url,
@@ -230,7 +231,7 @@ export const ScraperHelper = {
         title,
         productId,
         price: parseFloat(finalPrice),
-        rating,
+        rating: parseFloat(rating),
         product_details,
         url,
         store: "flipkart",

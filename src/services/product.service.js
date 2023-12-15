@@ -1,14 +1,16 @@
-import { ProductModel } from "../models/index.js";
+import { ProductModel, CategoryModel } from "../models/index.js";
 import mongoose from "mongoose";
 
 export const ProductService = {
   getProducts: async ({ page = 1, limit = 10, ...query }) => {
     const skip = (page - 1) * limit;
     let pipeline = [];
+    const regex = new RegExp("mobile", "i");
+    const categories = await CategoryModel.find({ name: regex });
     if (query) {
-      if (query.category_id) {
-        const categoryIds = query.category_id.split(",").map((item) => {
-          return mongoose.Types.ObjectId(item);
+      if (categories.length) {
+        const categoryIds = categories.map((item) => {
+          return mongoose.Types.ObjectId(item._id);
         });
         pipeline.push({
           $match: {
@@ -47,6 +49,7 @@ export const ProductService = {
       }
       pipeline.push({ $skip: +skip });
       pipeline.push({ $limit: +limit });
+      pipeline.push({ $sort: { rating: -1 } });
     }
     try {
       const data = await ProductModel.aggregate(pipeline);
