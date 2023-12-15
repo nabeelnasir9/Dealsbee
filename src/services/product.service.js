@@ -7,9 +7,10 @@ export const ProductService = {
     let pipeline = [];
     const regex = new RegExp("mobile", "i");
     const categories = await CategoryModel.find({ name: regex });
+    let categoryIds;
     if (query) {
       if (categories.length) {
-        const categoryIds = categories.map((item) => {
+        categoryIds = categories.map((item) => {
           return mongoose.Types.ObjectId(item._id);
         });
         pipeline.push({
@@ -52,13 +53,55 @@ export const ProductService = {
       pipeline.push({ $sort: { rating: -1 } });
     }
     try {
-      const data = await ProductModel.aggregate(pipeline);
-      if (data) {
+      const data = await ProductModel.aggregate([
+        {
+          $facet: {
+            paginatedResults: pipeline,
+            totalCount: [
+              {
+                $count: "count",
+              },
+            ],
+            brandCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: "$product_details.brand",
+                  count: { $sum: 1 },
+                },
+              },
+            ],
+            storeCounts: [
+              {
+                $group: {
+                  _id: "$store",
+                  count: { $sum: 1 },
+                },
+              },
+            ],
+          },
+        },
+        {
+          $unwind: "$totalCount",
+        },
+        {
+          $addFields: {
+            totalCount: "$totalCount.count",
+          },
+        },
+      ]);
+      if (data && data.length > 0) {
         return {
           status: 200,
           message: "Successfull",
           response: "Record Fetched Successfully",
-          data,
+          data: data[0],
         };
       }
       return {
