@@ -7,9 +7,14 @@ export const ProductService = {
     let pipeline = [];
     if (query) {
       if (query.category_id) {
+        const categoryIds = query.category_id.split(",").map((item) => {
+          return mongoose.Types.ObjectId(item);
+        });
         pipeline.push({
           $match: {
-            category_id: mongoose.Types.ObjectId(query.category_id),
+            category_id: {
+              $in: categoryIds,
+            },
           },
         });
       }

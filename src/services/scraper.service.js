@@ -32,14 +32,18 @@ export const ScraperService = {
           visible: true,
         });
       }
-      const captchImg = await page.waitForSelector("form img");
+      let captchImg = "";
+      try {
+        captchImg = await page.waitForSelector("form img", { timeout: 10000 });
+      } catch (err) {
+        console.log("err in captcha");
+      }
       if (captchImg) {
         if (attempt == 5) {
           browser.close();
         }
         gotoPage(page, attempt);
       }
-      await Promise.all([page.waitForNavigation()]);
       let menuBtn;
       try {
         menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
@@ -95,9 +99,16 @@ export const ScraperService = {
                   await page.goto(urls[`${key}`][j]["link"], {
                     waitUntil: "domcontentloaded",
                   });
-                  await page.waitForSelector(".a-link-normal", {
-                    visible: true,
-                  });
+                  try {
+                    await page.waitForSelector(".a-link-normal", {
+                      visible: true,
+                      timeout: 10000,
+                    });
+                  } catch (error) {
+                    await page.goto(urls[`${key}`][j]["link"], {
+                      waitUntil: "domcontentloaded",
+                    });
+                  }
                   const hrefArray = await page.$$eval(
                     ".a-link-normal",
                     (elements) => {
@@ -386,30 +397,6 @@ export const ScraperService = {
           console.log("flipkart link failed");
           continue;
         }
-      }
-      const ladder = [{ name: category_1 }, { name: category_2 }];
-      let category = await CategoryModel.findOne({ ladder });
-      if (!category) {
-        category = await CategoryModel.create({ ladder });
-      }
-      let productData = {
-        title,
-        price: parseFloat(price),
-        rating,
-        product_details,
-        url,
-        category_id: category._id,
-        img_url,
-      };
-      let product;
-      product = await ProductModel.findOne({ asin: productData.asin });
-      if (!product) {
-        product = await ProductModel.create(productData);
-      } else {
-        product = await ProductModel.updateOne(
-          { asin: productData.asin },
-          productData
-        );
       }
       await browser.close();
       return {

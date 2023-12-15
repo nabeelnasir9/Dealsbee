@@ -51,12 +51,20 @@ export const ScraperHelper = {
       ) {
         const responseData = response.data.results[0]["content"];
         const ladder = responseData?.category[0]?.ladder;
-        for (let i = 0; i < ladder.length; i++) {
-          ladder[i]["amazon_id"] = ladder[i]["url"].split("node=")[1];
+        let categoryName;
+        if (ladder.length > 2) {
+          categoryName = ladder[2]["name"];
         }
-        let category = await CategoryModel.findOne({ ladder });
+        categoryName = categoryName.replaceAll("&", "and");
+        let category = await CategoryModel.findOne({
+          name: categoryName,
+          ladder,
+        });
         if (!category) {
-          category = await CategoryModel.create({ ladder });
+          category = await CategoryModel.create({
+            name: categoryName,
+            ladder,
+          });
         }
         let img_url = responseData.images.length ? responseData.images : [];
 
@@ -209,9 +217,9 @@ export const ScraperHelper = {
         }
       }
       const ladder = [{ name: category_1 }, { name: category_2 }];
-      let category = await CategoryModel.findOne({ ladder });
+      let category = await CategoryModel.findOne({ name: category_2, ladder });
       if (!category) {
-        category = await CategoryModel.create({ ladder });
+        category = await CategoryModel.create({ name: category_2, ladder });
       }
 
       let finalPrice = price.replace(/₹/g, "").replaceAll(",", "");
