@@ -4,6 +4,7 @@ import loaders from "./loaders/index.js";
 import config from "./config/index.js";
 import thread from "./thread/index.js";
 import cron from "node-cron";
+import { ScraperService } from "./services/index.js";
 
 cron.schedule(
   `${config.env.cronMinute} ${config.env.cronHour} ${config.env.cronDayOfMonth} ${config.env.cronMonth} ${config.env.cronDayOfWeek}`,
@@ -11,6 +12,12 @@ cron.schedule(
     await thread();
   }
 );
+cron.schedule("0 0 * * *", async () => {
+  await ScraperService.scrapeAmazonProductList();
+});
+cron.schedule("0 0 * * *", async () => {
+  await ScraperService.scrapeFlipkartProductList();
+});
 
 async function startServer() {
   const app = express();
