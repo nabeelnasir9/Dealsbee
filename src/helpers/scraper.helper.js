@@ -67,7 +67,7 @@ export const ScraperHelper = {
           });
         }
         let img_url = responseData.images.length ? responseData.images : [];
-        responseData.product_details.brand = responseData.brand;
+        responseData.product_details.brand = responseData.brand.trim();
 
         let productData = {
           title: responseData.product_name,
@@ -227,6 +227,9 @@ export const ScraperHelper = {
       }
 
       let finalPrice = price.replace(/₹/g, "").replaceAll(",", "");
+      if (product_details.brand) {
+        product_details.brand = product.brand.trim();
+      }
       let productData = {
         title,
         productId,
