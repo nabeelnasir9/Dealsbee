@@ -72,8 +72,18 @@ export const ProductService = {
               },
               {
                 $group: {
-                  _id: "$product_details.brand",
+                  _id: { $toLower: "$product_details.brand" },
                   count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
                 },
               },
             ],
@@ -82,6 +92,16 @@ export const ProductService = {
                 $group: {
                   _id: "$store",
                   count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1, // Descending order based on count
                 },
               },
             ],
