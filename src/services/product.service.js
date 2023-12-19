@@ -83,6 +83,56 @@ export const ProductService = {
                 },
               },
             ],
+            ramCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.ram" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                },
+              },
+            ],
+            resolutionCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.resolution" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                },
+              },
+            ],
             storeCounts: [
               {
                 $group: {
