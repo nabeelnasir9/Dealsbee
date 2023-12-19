@@ -6,7 +6,7 @@ const schema = mongoose.Schema(
     asin: { type: String },
     price: { type: Number, float: true },
     currency: { type: String },
-    rating: { type: String },
+    rating: { type: Number, float: true },
     product_details: { type: Object },
     store: { type: String },
     productId: { type: String },

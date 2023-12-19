@@ -9,7 +9,7 @@ import { ScraperService } from "./services/index.js";
 cron.schedule(
   `${config.env.cronMinute} ${config.env.cronHour} ${config.env.cronDayOfMonth} ${config.env.cronMonth} ${config.env.cronDayOfWeek}`,
   async () => {
-    await thread();
+    // await thread();
   }
 );
 cron.schedule("0 0 * * *", async () => {

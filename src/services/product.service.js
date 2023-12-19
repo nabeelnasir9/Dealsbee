@@ -1,15 +1,23 @@
-import { ProductModel } from "../models/index.js";
+import { ProductModel, CategoryModel } from "../models/index.js";
 import mongoose from "mongoose";
 
 export const ProductService = {
   getProducts: async ({ page = 1, limit = 10, ...query }) => {
     const skip = (page - 1) * limit;
     let pipeline = [];
+    const regex = new RegExp("mobile", "i");
+    const categories = await CategoryModel.find({ name: regex });
+    let categoryIds;
     if (query) {
-      if (query.category_id) {
+      if (categories.length) {
+        categoryIds = categories.map((item) => {
+          return mongoose.Types.ObjectId(item._id);
+        });
         pipeline.push({
           $match: {
-            category_id: mongoose.Types.ObjectId(query.category_id),
+            category_id: {
+              $in: categoryIds,
+            },
           },
         });
       }
@@ -42,15 +50,78 @@ export const ProductService = {
       }
       pipeline.push({ $skip: +skip });
       pipeline.push({ $limit: +limit });
+      pipeline.push({ $sort: { rating: -1 } });
     }
     try {
-      const data = await ProductModel.aggregate(pipeline);
-      if (data) {
+      const data = await ProductModel.aggregate([
+        {
+          $facet: {
+            paginatedResults: pipeline,
+            totalCount: [
+              {
+                $count: "count",
+              },
+            ],
+            brandCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.brand" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                },
+              },
+            ],
+            storeCounts: [
+              {
+                $group: {
+                  _id: "$store",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1, // Descending order based on count
+                },
+              },
+            ],
+          },
+        },
+        {
+          $unwind: "$totalCount",
+        },
+        {
+          $addFields: {
+            totalCount: "$totalCount.count",
+          },
+        },
+      ]);
+      if (data && data.length > 0) {
         return {
           status: 200,
           message: "Successfull",
           response: "Record Fetched Successfully",
-          data,
+          data: data[0],
         };
       }
       return {
