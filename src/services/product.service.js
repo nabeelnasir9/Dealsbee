@@ -5,8 +5,14 @@ export const ProductService = {
   getProducts: async ({ page = 1, limit = 10, ...query }) => {
     const skip = (page - 1) * limit;
     let pipeline = [];
-    const regex = new RegExp("mobile", "i");
-    const categories = await CategoryModel.find({ name: regex });
+    if (!query.category_id) {
+      query.category_id = "mobile";
+    }
+    const regex = new RegExp(query.category_id, "i");
+    const categories =
+      query.category == "all"
+        ? await CategoryModel.find()
+        : await CategoryModel.find({ name: regex });
     let categoryIds;
     if (query) {
       if (categories.length) {
@@ -26,6 +32,30 @@ export const ProductService = {
         if (brands.length > 0) {
           pipeline[0]["$match"]["product_details.brand"] = {
             $in: brands.map((brand) => new RegExp(brand, "i")),
+          };
+        }
+      }
+      if (query.store?.length) {
+        let stores = query.store.split(",");
+        if (stores.length > 0) {
+          pipeline[0]["$match"]["store"] = {
+            $in: stores.map((store) => new RegExp(store, "i")),
+          };
+        }
+      }
+      if (query.resolution?.length) {
+        let resolution = query.resolution.replaceAll("-", " ").split(",");
+        if (resolution.length > 0) {
+          pipeline[0]["$match"]["product_details.resolution"] = {
+            $in: resolution.map((resolution) => new RegExp(resolution, "i")),
+          };
+        }
+      }
+      if (query.ram?.length) {
+        let rams = query.ram.split(",");
+        if (rams.length > 0) {
+          pipeline[0]["$match"]["product_details.ram"] = {
+            $in: rams.map((ram) => +ram),
           };
         }
       }
@@ -80,6 +110,58 @@ export const ProductService = {
               {
                 $sort: {
                   count: -1,
+                  _id: -1,
+                },
+              },
+            ],
+            ramCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.ram" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                },
+              },
+            ],
+            resolutionCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.resolution" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
                 },
               },
             ],
