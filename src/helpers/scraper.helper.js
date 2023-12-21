@@ -69,6 +69,14 @@ export const ScraperHelper = {
         let img_url = responseData.images.length ? responseData.images : [];
         responseData.product_details.brand = responseData.brand.trim();
 
+        // if (responseData.product_details?.ram) {
+        //   let ram =0
+        //   ram= responseData.product_details.ram.replace(/[^0-9\.]+/g, "");
+        //   let ram_unit=''
+        //   ram_unit=responseData.product_details.ram.replace(/[0-9]/g, '').trim()
+        //   responseData.product_details.ram=parseNumber(ram)
+        //   responseData.product_details.ram_unit=ram_unit
+        // }
         let productData = {
           title: responseData.product_name,
           productId: responseData.asin,
@@ -226,9 +234,17 @@ export const ScraperHelper = {
         category = await CategoryModel.create({ name: category_2, ladder });
       }
 
-      let finalPrice = price.replace(/₹/g, "").replaceAll(",", "");
+      let finalPrice = price.replace(/₹/g, "")?.replaceAll(",", "");
       if (product_details.brand) {
-        product_details.brand = product.brand.trim();
+        product_details.brand = product_details.brand.trim();
+      }
+      if (product_details.ram) {
+        let ram = 0;
+        ram = product_details.ram.replace(/[^0-9\.]+/g, "");
+        let ram_unit = "";
+        ram_unit = product_details.ram.replace(/[0-9]/g, "").trim();
+        product_details.ram = ram;
+        product_details.ram_unit = ram_unit;
       }
       let productData = {
         title,
