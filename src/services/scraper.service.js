@@ -168,6 +168,143 @@ export const ScraperService = {
       };
     }
   },
+  scrapeAmazonProductListIndia: async () => {
+    function delay(time) {
+      return new Promise(function (resolve) {
+        setTimeout(resolve, time);
+      });
+    }
+    const browser = await puppeteer.launch({
+      headless: false,
+      defaultViewport: null,
+    });
+
+    const page = await browser.newPage();
+    await page.goto("https://www.amazon.in/", {
+      waitUntil: "load",
+      waitUntil: "domcontentloaded",
+      visible: true,
+      timeout: 10000,
+    });
+    await page.waitForTimeout(2000);
+    let attempt = 0;
+    async function gotoPage(page, attempt) {
+      attempt = attempt + 1;
+      await page.goto("https://www.amazon.in/", {
+        waitUntil: "load",
+        waitUntil: "domcontentloaded",
+        visible: true,
+      });
+    }
+    gotoPage(page, attempt);
+    await Promise.all([page.waitForNavigation()]);
+    for (let i = 0; i < 13; i++) {
+      let menuBtn;
+      let urls = {};
+      try {
+        menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
+          visible: true,
+        });
+      } catch (error) {
+        const logoBtn = await page.waitForSelector("#nav-logo-sprites", {
+          visible: true,
+        });
+        logoBtn.click();
+        menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
+          visible: true,
+        });
+      }
+      if (menuBtn) {
+        menuBtn.click();
+        const menu = await page.waitForSelector("#hmenu-content", {
+          visible: true,
+        });
+        if (menu) {
+          const categoryBtn = await page.waitForSelector(
+            "#hmenu-content > ul:nth-child(1) > li:nth-child(16)",
+            {
+              visible: true,
+              waitUntil: "load",
+              waitUntil: "domcontentloaded",
+            }
+          );
+          let mobileBtnn;
+          if (categoryBtn) {
+            await categoryBtn.click();
+            // await page.waitForNavigation({ waitUntil: "domcontentloaded" });
+            const a = i;
+            mobileBtnn = await page.waitForSelector(
+              `#hmenu-content > ul:nth-child(8) > li:nth-child(${i + 3}) > a`,
+              {
+                visible: true,
+                waitUntil: "load",
+                waitUntil: "domcontentloaded",
+              }
+            );
+            if (!mobileBtnn) {
+              mobileBtnn = await page.waitForSelector(
+                `#hmenu-content > ul:nth-child(8) > li:nth-child(${i + 3}) > a`,
+                {
+                  visible: true,
+                  waitUntil: "load",
+                  waitUntil: "domcontentloaded",
+                }
+              );
+            } else {
+              mobileBtnn = await page.waitForSelector(
+                `#hmenu-content > ul:nth-child(8) > li:nth-child(${i + 3}) > a`,
+                {
+                  visible: true,
+                  waitUntil: "load",
+                  waitUntil: "domcontentloaded",
+                }
+              );
+            }
+
+            if (mobileBtnn) {
+              mobileBtnn.click();
+              await page.waitForNavigation({ waitUntil: "domcontentloaded" });
+              const seeAllBtn = await page.waitForSelector(
+                "#apb-desktop-browse-search-see-all",
+                { visible: true }
+              );
+              await seeAllBtn.click();
+              await page.waitForNavigation({ waitUntil: "domcontentloaded" });
+              await page.waitForSelector(".a-link-normal", { visible: true });
+              const hrefArray = await page.$$eval(
+                ".a-link-normal",
+                (elements) => {
+                  return elements.map((element) =>
+                    element.getAttribute("href")
+                  );
+                }
+              );
+
+              const links = hrefArray.toString();
+              const matchLink = links.split("dp/");
+              let extractedStrings = matchLink.map((link) => {
+                const endIndex = link.indexOf("/");
+                return endIndex !== -1 ? link.substring(0, endIndex) : link;
+              });
+              let uniqueArr = Array.from(new Set(extractedStrings));
+              for (let j = 0; j < uniqueArr.length > 0; j++) {
+                try {
+                  const domain = "in";
+                  const data = await ScraperHelper.scrapeAmazonProduct(
+                    uniqueArr[j],
+                    domain
+                  );
+                } catch (error) {
+                  console.log("error in amazon product asin = " + uniqueArr[j]);
+                }
+              }
+              urls.productId = uniqueArr;
+            }
+          }
+        }
+      }
+    }
+  },
   searchAmazonProducts: async ({ query, category_id }) => {
     const oxylabsData =
       config.env.oxylabxUsername + ":" + config.env.oxylabsPassword;
