@@ -3,7 +3,10 @@ import mongoose from "mongoose";
 export const ComparisonService = {
   createComparisons: async (body) => {
     try {
-      const data = await ComparisonModel.create(body);
+      let data = await ComparisonModel.findOne(body);
+      if (!data) {
+        data = await ComparisonModel.create(body);
+      }
       if (data) {
         return {
           status: 200,
@@ -117,6 +120,9 @@ export const ComparisonService = {
       if (data) {
         if (body.title) {
           data.title = body.title;
+        }
+        if (body.products) {
+          data.products = body.products;
         }
 
         await data.save();
