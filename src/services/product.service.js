@@ -13,7 +13,7 @@ export const ProductService = {
       query.category == "all"
         ? await CategoryModel.find()
         : await CategoryModel.find({ name: regex });
-    let categoryIds;
+    let categoryIds = [];
     if (query) {
       if (categories.length) {
         categoryIds = categories.map((item) => {
@@ -120,6 +120,11 @@ export const ProductService = {
                   category_id: {
                     $in: categoryIds,
                   },
+                  "product_details.ram": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
                 },
               },
               {
@@ -136,6 +141,7 @@ export const ProductService = {
               {
                 $sort: {
                   count: -1,
+                  _id: -1,
                 },
               },
             ],
@@ -144,6 +150,11 @@ export const ProductService = {
                 $match: {
                   category_id: {
                     $in: categoryIds,
+                  },
+                  "product_details.resolution": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
                   },
                 },
               },
@@ -167,6 +178,13 @@ export const ProductService = {
             ],
             storeCounts: [
               {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                },
+              },
+              {
                 $group: {
                   _id: "$store",
                   count: { $sum: 1 },
@@ -179,7 +197,7 @@ export const ProductService = {
               },
               {
                 $sort: {
-                  count: -1, // Descending order based on count
+                  count: -1,
                 },
               },
             ],
