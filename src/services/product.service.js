@@ -59,13 +59,13 @@ export const ProductService = {
           };
         }
       }
-      if (query.price?.lt || query.price?.gt) {
+      if (query.minPrice || query.maxPrice) {
         const priceFilter = {};
-        if (query.price?.lt) {
-          priceFilter.$lt = +query.price?.lt;
+        if (query.maxPrice) {
+          priceFilter.$lt = +query.maxPrice;
         }
-        if (query.price?.gt) {
-          priceFilter.$gt = +query.price?.gt;
+        if (query.minPrice) {
+          priceFilter.$gt = +query.minPrice;
         }
 
         pipeline.push({
