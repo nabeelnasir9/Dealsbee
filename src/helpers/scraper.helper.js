@@ -238,6 +238,20 @@ export const ScraperHelper = {
       if (product_details.brand) {
         product_details.brand = product_details.brand.trim();
       }
+      if (product_details?.["internal storage"]) {
+        let rom = 0;
+        rom = product_details["internal storage"].replace(/[^0-9\.]+/g, "");
+        let rom_unit = "";
+        rom_unit = product_details["internal storage"]
+          .replace(/[0-9]/g, "")
+          .trim();
+        if (rom) {
+          product_details.rom = parseInt(rom);
+        }
+        if (rom_unit) {
+          product_details.rom_unit = rom_unit;
+        }
+      }
       if (product_details.ram) {
         let ram = 0;
         ram = product_details.ram.replace(/[^0-9\.]+/g, "");
