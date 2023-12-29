@@ -59,6 +59,14 @@ export const ProductService = {
           };
         }
       }
+      if (query.rom?.length) {
+        let roms = query.rom.split(",");
+        if (roms.length > 0) {
+          pipeline[0]["$match"]["product_details.rom"] = {
+            $in: roms.map((rom) => +rom),
+          };
+        }
+      }
       if (query.minPrice || query.maxPrice) {
         const priceFilter = {};
         if (query.maxPrice) {
@@ -145,6 +153,37 @@ export const ProductService = {
               {
                 $group: {
                   _id: { $toLower: "$product_details.ram" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
+                },
+              },
+            ],
+            romCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.rom": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.rom" },
                   count: { $sum: 1 },
                 },
               },
