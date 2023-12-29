@@ -74,6 +74,21 @@ export const ProductService = {
           },
         });
       }
+      if (query.minRating || query.maxRating) {
+        const ratingFilter = {};
+        if (query.maxRating) {
+          ratingFilter.$lt = +query.maxRating;
+        }
+        if (query.minRating) {
+          ratingFilter.$gt = +query.minRating;
+        }
+
+        pipeline.push({
+          $match: {
+            price: ratingFilter,
+          },
+        });
+      }
       pipeline.push({ $skip: +skip });
       pipeline.push({ $limit: +limit });
       pipeline.push({ $sort: { rating: -1 } });
