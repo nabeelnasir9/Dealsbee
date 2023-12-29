@@ -243,8 +243,12 @@ export const ScraperHelper = {
         ram = product_details.ram.replace(/[^0-9\.]+/g, "");
         let ram_unit = "";
         ram_unit = product_details.ram.replace(/[0-9]/g, "").trim();
-        product_details.ram = ram;
-        product_details.ram_unit = ram_unit;
+        if (ram) {
+          product_details.ram = parseInt(ram);
+        }
+        if (ram_unit) {
+          product_details.ram_unit = ram_unit;
+        }
       }
       let productData = {
         title,
