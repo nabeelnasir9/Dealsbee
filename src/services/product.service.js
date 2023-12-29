@@ -51,6 +51,14 @@ export const ProductService = {
           };
         }
       }
+      if (query.core?.length) {
+        let core = query.core.replaceAll("-", " ").split(",");
+        if (core.length > 0) {
+          pipeline[0]["$match"]["product_details.processor core"] = {
+            $in: core.map((core) => new RegExp(core, "i")),
+          };
+        }
+      }
       if (query.ram?.length) {
         let rams = query.ram.split(",");
         if (rams.length > 0) {
@@ -215,6 +223,37 @@ export const ProductService = {
               {
                 $group: {
                   _id: { $toLower: "$product_details.resolution" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
+                },
+              },
+            ],
+            coreCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.processor core": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.processor core" },
                   count: { $sum: 1 },
                 },
               },
