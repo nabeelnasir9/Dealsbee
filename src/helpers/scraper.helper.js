@@ -264,6 +264,27 @@ export const ScraperHelper = {
           product_details.ram_unit = ram_unit;
         }
       }
+      if (product_details?.["battery capacity"]) {
+        let battery_size;
+        let battery_unit;
+        battery_size = product_details["battery capacity"].replace(
+          /[^0-9\.]+/g,
+          ""
+        );
+        battery_unit = product_details["battery capacity"]
+          .replace(/[0-9]/g, "")
+          .trim();
+        if (battery_size) {
+          product_details.battery_size = parseInt(battery_size);
+        }
+        if (battery_unit) {
+          product_details.battery_unit = battery_unit;
+        }
+      } else if (product_details?.["Battery Power Rating"]) {
+        product_details.battery_size = parseInt(
+          product_details?.["Battery Power Rating"]
+        );
+      }
       let productData = {
         title,
         productId,

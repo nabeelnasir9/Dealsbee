@@ -59,6 +59,34 @@ export const ProductService = {
           };
         }
       }
+      if (query.os?.length) {
+        let os = query.os.replaceAll("-", " ").split(",");
+        if (os.length > 0) {
+          pipeline[0]["$match"]["product_details.operating system"] = {
+            $in: os.map((os) => new RegExp(os, "i")),
+          };
+        }
+      }
+      if (query.battery?.length) {
+        let battery = query.battery.replaceAll("-", " ").split(",");
+        if (battery.length > 0) {
+          pipeline[0]["$match"]["product_details.battery capacity"] = {
+            $in: battery.map((battery) => new RegExp(battery, "i")),
+          };
+        }
+      }
+      if (query.processorBrand?.length) {
+        let processorBrand = query.processorBrand
+          .replaceAll("-", " ")
+          .split(",");
+        if (processorBrand.length > 0) {
+          pipeline[0]["$match"]["product_details.processor brand"] = {
+            $in: processorBrand.map(
+              (processorBrand) => new RegExp(processorBrand, "i")
+            ),
+          };
+        }
+      }
       if (query.ram?.length) {
         let rams = query.ram.split(",");
         if (rams.length > 0) {
@@ -254,6 +282,99 @@ export const ProductService = {
               {
                 $group: {
                   _id: { $toLower: "$product_details.processor core" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
+                },
+              },
+            ],
+            processorBrandCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.processor brand": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.processor brand" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
+                },
+              },
+            ],
+            osCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.operating system": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.operating system" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
+                },
+              },
+            ],
+            batteryCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.battery capacity": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.battery capacity" },
                   count: { $sum: 1 },
                 },
               },
