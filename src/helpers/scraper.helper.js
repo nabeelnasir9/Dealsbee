@@ -285,6 +285,50 @@ export const ScraperHelper = {
           product_details?.["Battery Power Rating"]
         );
       }
+      if (product_details?.["operating system"]) {
+        let os_type;
+        let os_version;
+        if (
+          product_details?.["operating system"]
+            ?.toLowerCase()
+            ?.includes("android")
+        ) {
+          os_type = "Android";
+        } else if (
+          product_details?.["operating system"]?.toLowerCase()?.includes("ios")
+        ) {
+          os_type = "iOS";
+        } else if (
+          product_details?.["operating system"]
+            ?.toLowerCase()
+            ?.includes("Windows")
+        ) {
+          os_type = "Windows";
+        }
+        let os_version_arr = product_details?.["operating system"]
+          ?.split(os_type)
+          ?.filter((item) => item.trim())
+          ?.join("")
+          ?.trim()
+          ?.split(" ")
+          ?.filter((item) => item.trim())
+          ?.filter((item) => {
+            if (item.replaceAll(/[^0-9\.]+/g, "")) {
+              return true;
+            } else {
+              return false;
+            }
+          });
+        if (os_version_arr?.length) {
+          os_version = os_version_arr[0];
+        }
+        if (os_version?.toString()) {
+          product_details.os_version = parseInt(os_version);
+        }
+        if (os_type) {
+          product_details.os_type = os_type;
+        }
+      }
       let productData = {
         title,
         productId,

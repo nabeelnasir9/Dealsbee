@@ -138,11 +138,19 @@ export const ProductService = {
       pipeline.push({ $sort: { rating: -1 } });
     }
     try {
+      const countPipline = pipeline.filter((item) => {
+        if (item?.$skip?.toString() || item?.$limit?.toString()) {
+          return false;
+        } else {
+          return true;
+        }
+      });
       const data = await ProductModel.aggregate([
         {
           $facet: {
             paginatedResults: pipeline,
             totalCount: [
+              ...countPipline,
               {
                 $count: "count",
               },
@@ -423,6 +431,7 @@ export const ProductService = {
         {
           $addFields: {
             totalCount: "$totalCount.count",
+            currentPage: parseInt(page),
           },
         },
       ]);
