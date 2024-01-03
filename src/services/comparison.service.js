@@ -29,7 +29,8 @@ export const ComparisonService = {
       };
     }
   },
-  getComparisons: async () => {
+  getComparisons: async ({ page = 1, limit = 10 }) => {
+    const skip = (page - 1) * limit;
     try {
       const data = await ComparisonModel.aggregate([
         {
@@ -46,6 +47,8 @@ export const ComparisonService = {
             as: "products",
           },
         },
+        { $skip: +skip },
+        { $limit: +limit },
       ]);
       if (data) {
         return {

@@ -188,9 +188,14 @@ export const ScraperHelper = {
       const category_1 = await getElementText(
         "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(2) > a"
       );
-      const category_2 = await getElementText(
+      let category_2 = await getElementText(
         "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(3) > a"
       );
+      if (category_2 == "Home Appliances") {
+        category_2 = await getElementText(
+          "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(4) > a"
+        );
+      }
 
       const img_url = await getElementLink("ul li img");
 
