@@ -10,6 +10,7 @@ const schema = mongoose.Schema(
         },
       ],
     },
+    type: { type: String },
   },
   {
     timestamps: true,

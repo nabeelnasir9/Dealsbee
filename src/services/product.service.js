@@ -7,6 +7,8 @@ export const ProductService = {
     let pipeline = [];
     if (!query.category_id) {
       query.category_id = "mobile";
+    } else {
+      query.category_id = query.category_id.replaceAll("_", " ");
     }
     const regex = new RegExp(query.category_id, "i");
     const categories =
