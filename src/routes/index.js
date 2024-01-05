@@ -12,6 +12,9 @@ const unProtectedRouter = express.Router();
 // Protected Routes
 
 // Un-Protected Routes
+unProtectedRouter.get("/", (req, res) => {
+  res.send("Hello World!");
+});
 unProtectedRouter.use("/scraper", scraperRoute);
 unProtectedRouter.use("/category", categoryRoute);
 unProtectedRouter.use("/product", productRoute);
