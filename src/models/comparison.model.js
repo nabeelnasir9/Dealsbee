@@ -11,6 +11,7 @@ const schema = mongoose.Schema(
       ],
     },
     type: { type: String },
+    popularity: { type: Number, default: 0 },
   },
   {
     timestamps: true,
