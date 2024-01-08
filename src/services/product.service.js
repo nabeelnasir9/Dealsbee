@@ -7,13 +7,15 @@ export const ProductService = {
     let pipeline = [];
     if (!query.category_id) {
       query.category_id = "mobile";
+    } else {
+      query.category_id = query.category_id.replaceAll("_", " ");
     }
     const regex = new RegExp(query.category_id, "i");
     const categories =
       query.category == "all"
         ? await CategoryModel.find()
         : await CategoryModel.find({ name: regex });
-    let categoryIds;
+    let categoryIds = [];
     if (query) {
       if (categories.length) {
         categoryIds = categories.map((item) => {
@@ -51,6 +53,42 @@ export const ProductService = {
           };
         }
       }
+      if (query.core?.length) {
+        let core = query.core.replaceAll("-", " ").split(",");
+        if (core.length > 0) {
+          pipeline[0]["$match"]["product_details.processor core"] = {
+            $in: core.map((core) => new RegExp(core, "i")),
+          };
+        }
+      }
+      if (query.os?.length) {
+        let os = query.os.replaceAll("-", " ").split(",");
+        if (os.length > 0) {
+          pipeline[0]["$match"]["product_details.operating system"] = {
+            $in: os.map((os) => new RegExp(os, "i")),
+          };
+        }
+      }
+      if (query.battery?.length) {
+        let battery = query.battery.replaceAll("-", " ").split(",");
+        if (battery.length > 0) {
+          pipeline[0]["$match"]["product_details.battery capacity"] = {
+            $in: battery.map((battery) => new RegExp(battery, "i")),
+          };
+        }
+      }
+      if (query.processorBrand?.length) {
+        let processorBrand = query.processorBrand
+          .replaceAll("-", " ")
+          .split(",");
+        if (processorBrand.length > 0) {
+          pipeline[0]["$match"]["product_details.processor brand"] = {
+            $in: processorBrand.map(
+              (processorBrand) => new RegExp(processorBrand, "i")
+            ),
+          };
+        }
+      }
       if (query.ram?.length) {
         let rams = query.ram.split(",");
         if (rams.length > 0) {
@@ -59,13 +97,24 @@ export const ProductService = {
           };
         }
       }
-      if (query.price?.lt || query.price?.gt) {
-        const priceFilter = {};
-        if (query.price?.lt) {
-          priceFilter.$lt = +query.price?.lt;
+      if (query.rom?.length) {
+        let roms = query.rom.split(",");
+        if (roms.length > 0) {
+          pipeline[0]["$match"]["product_details.rom"] = {
+            $in: roms.map((rom) => +rom),
+          };
         }
-        if (query.price?.gt) {
-          priceFilter.$gt = +query.price?.gt;
+      }
+      if(!query.minPrice?.toString()){
+        query.minPrice=5000;
+      }
+      if (query.minPrice || query.maxPrice) {
+        const priceFilter = {};
+        if (query.maxPrice) {
+          priceFilter.$lt = +query.maxPrice;
+        }
+        if (query.minPrice) {
+          priceFilter.$gt = +query.minPrice;
         }
 
         pipeline.push({
@@ -74,16 +123,39 @@ export const ProductService = {
           },
         });
       }
+      if (query.minRating || query.maxRating) {
+        const ratingFilter = {};
+        if (query.maxRating) {
+          ratingFilter.$lt = +query.maxRating;
+        }
+        if (query.minRating) {
+          ratingFilter.$gt = +query.minRating;
+        }
+
+        pipeline.push({
+          $match: {
+            price: ratingFilter,
+          },
+        });
+      }
       pipeline.push({ $skip: +skip });
       pipeline.push({ $limit: +limit });
       pipeline.push({ $sort: { rating: -1 } });
     }
     try {
+      const countPipline = pipeline.filter((item) => {
+        if (item?.$skip?.toString() || item?.$limit?.toString()) {
+          return false;
+        } else {
+          return true;
+        }
+      });
       const data = await ProductModel.aggregate([
         {
           $facet: {
             paginatedResults: pipeline,
             totalCount: [
+              ...countPipline,
               {
                 $count: "count",
               },
@@ -120,6 +192,11 @@ export const ProductService = {
                   category_id: {
                     $in: categoryIds,
                   },
+                  "product_details.ram": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
                 },
               },
               {
@@ -136,6 +213,38 @@ export const ProductService = {
               {
                 $sort: {
                   count: -1,
+                  _id: -1,
+                },
+              },
+            ],
+            romCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.rom": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.rom" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
                 },
               },
             ],
@@ -144,6 +253,11 @@ export const ProductService = {
                 $match: {
                   category_id: {
                     $in: categoryIds,
+                  },
+                  "product_details.resolution": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
                   },
                 },
               },
@@ -165,7 +279,138 @@ export const ProductService = {
                 },
               },
             ],
+            coreCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.processor core": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.processor core" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
+                },
+              },
+            ],
+            processorBrandCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.processor brand": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.processor brand" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
+                },
+              },
+            ],
+            osCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.operating system": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.operating system" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
+                },
+              },
+            ],
+            batteryCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.battery capacity": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.battery capacity" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
+                },
+              },
+            ],
             storeCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                },
+              },
               {
                 $group: {
                   _id: "$store",
@@ -179,7 +424,7 @@ export const ProductService = {
               },
               {
                 $sort: {
-                  count: -1, // Descending order based on count
+                  count: -1,
                 },
               },
             ],
@@ -191,6 +436,7 @@ export const ProductService = {
         {
           $addFields: {
             totalCount: "$totalCount.count",
+            currentPage: parseInt(page),
           },
         },
       ]);

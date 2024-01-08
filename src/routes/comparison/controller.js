@@ -15,7 +15,7 @@ const controller = {
   },
   getComparisons: async (req, res) => {
     try {
-      const data = await ComparisonService.getComparisons();
+      const data = await ComparisonService.getComparisons(req.query);
       return httpResponse.SUCCESS(res, data);
     } catch (error) {
       if (error.status == 400) {

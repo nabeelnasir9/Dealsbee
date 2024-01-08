@@ -29,9 +29,10 @@ export const ComparisonService = {
       };
     }
   },
-  getComparisons: async () => {
+  getComparisons: async ({ page = 1, limit = 10, ...query }) => {
+    const skip = (page - 1) * limit;
     try {
-      const data = await ComparisonModel.aggregate([
+      const aggregationPipeline = [
         {
           $lookup: {
             from: "products",
@@ -46,21 +47,35 @@ export const ComparisonService = {
             as: "products",
           },
         },
-      ]);
-      if (data) {
+        { $skip: +skip },
+        { $limit: +limit },
+      ];
+
+      if (query?.type) {
+        aggregationPipeline.unshift({
+          $match: {
+            type: query.type,
+          },
+        });
+      }
+
+      const data = await ComparisonModel.aggregate(aggregationPipeline);
+
+      if (data.length > 0) {
         return {
           status: 200,
-          message: "Successfull",
+          message: "Successful",
           response: "Comparison Fetched Successfully",
           data: data,
         };
+      } else {
+        return {
+          status: 200,
+          message: "Successful",
+          response: "No Comparison Exists",
+          data: {},
+        };
       }
-      return {
-        status: 200,
-        message: "Successfull",
-        response: "No Comparison Exits",
-        data: {},
-      };
     } catch (error) {
       throw {
         status: 500,
@@ -92,7 +107,11 @@ export const ComparisonService = {
           },
         },
       ]);
-      if (data) {
+      if (data[0]) {
+        // if(data[0]?.popularity?.toString()){
+        //   data[0].popularity =data[0].popularity+1;
+        //   await data[0].save();
+        // }
         return {
           status: 200,
           message: "Successfull",
