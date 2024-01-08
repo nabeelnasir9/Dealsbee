@@ -105,6 +105,9 @@ export const ProductService = {
           };
         }
       }
+      if(!query.minPrice?.toString()){
+        query.minPrice=5000;
+      }
       if (query.minPrice || query.maxPrice) {
         const priceFilter = {};
         if (query.maxPrice) {
