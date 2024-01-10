@@ -4,6 +4,7 @@ import controller from "./controller.js";
 const router = express.Router();
 router.post("/amazon", controller.scrapeAmazonProduct);
 router.post("/amazon/list", controller.scrapeAmazonProductList);
+router.post("/amazon/list/india", controller.scrapeAmazonProductListIndia);
 router.post("/amazon/search", controller.searchAmazonProducts);
 router.post("/flipkart", controller.scrapeFlipkartProduct);
 router.post("/flipkart/list", controller.scrapeFlipkartProductList);
