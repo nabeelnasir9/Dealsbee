@@ -1,10 +1,10 @@
-import puppeteer from "puppeteer";
-import axios from "axios";
-import { CategoryModel, ProductModel } from "../models/index.js";
-import config from "../config/index.js";
-import { ScraperHelper } from "../helpers/index.js";
-import { KnownDevices } from "puppeteer";
-const iPhone = KnownDevices["iPhone 6"];
+import puppeteer from 'puppeteer';
+import axios from 'axios';
+import { CategoryModel, ProductModel } from '../models/index.js';
+import config from '../config/index.js';
+import { ScraperHelper } from '../helpers/index.js';
+import { KnownDevices } from 'puppeteer';
+const iPhone = KnownDevices['iPhone 6'];
 
 export const ScraperService = {
   scrapeAmazonProduct: ScraperHelper.scrapeAmazonProduct,
@@ -16,9 +16,9 @@ export const ScraperService = {
       });
 
       const page = await browser.newPage();
-      await page.goto("https://www.amazon.com/", {
-        waitUntil: "load",
-        waitUntil: "domcontentloaded",
+      await page.goto('https://www.amazon.com/', {
+        waitUntil: 'load',
+        waitUntil: 'domcontentloaded',
         visible: true,
         timeout: 10000,
       });
@@ -26,17 +26,17 @@ export const ScraperService = {
       let attempt = 0;
       async function gotoPage(page, attempt) {
         attempt = attempt + 1;
-        await page.goto("https://www.amazon.com/", {
-          waitUntil: "load",
-          waitUntil: "domcontentloaded",
+        await page.goto('https://www.amazon.com/', {
+          waitUntil: 'load',
+          waitUntil: 'domcontentloaded',
           visible: true,
         });
       }
-      let captchImg = "";
+      let captchImg = '';
       try {
-        captchImg = await page.waitForSelector("form img", { timeout: 10000 });
+        captchImg = await page.waitForSelector('form img', { timeout: 10000 });
       } catch (err) {
-        console.log("err in captcha");
+        console.log('err in captcha');
       }
       if (captchImg) {
         if (attempt == 5) {
@@ -46,21 +46,21 @@ export const ScraperService = {
       }
       let menuBtn;
       try {
-        menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
+        menuBtn = await page.waitForSelector('#nav-hamburger-menu', {
           visible: true,
         });
       } catch (error) {
-        const logoBtn = await page.waitForSelector("nav-bb-logo", {
+        const logoBtn = await page.waitForSelector('nav-bb-logo', {
           visible: true,
         });
         logoBtn.click();
-        menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
+        menuBtn = await page.waitForSelector('#nav-hamburger-menu', {
           visible: true,
         });
       }
       if (menuBtn) {
         menuBtn.click();
-        const menu = await page.waitForSelector("#hmenu-content", {
+        const menu = await page.waitForSelector('#hmenu-content', {
           visible: true,
         });
 
@@ -72,7 +72,7 @@ export const ScraperService = {
               const element = await menu.waitForSelector(
                 `ul:nth-child(${number})`
               );
-              list = await element.$$eval("a", (elements) => {
+              list = await element.$$eval('a', (elements) => {
                 return elements.map((element, index) => {
                   if (index > 0) {
                     return { title: element.textContent, link: element.href };
@@ -81,7 +81,7 @@ export const ScraperService = {
               });
               list = list.filter((item) => item);
             } catch (error) {
-              console.log("error while scraping list", error);
+              console.log('error while scraping list', error);
             }
             return list;
           }
@@ -96,31 +96,31 @@ export const ScraperService = {
             try {
               for (let j = 0; j < urls[`${key}`].length; j++) {
                 try {
-                  await page.goto(urls[`${key}`][j]["link"], {
-                    waitUntil: "domcontentloaded",
+                  await page.goto(urls[`${key}`][j]['link'], {
+                    waitUntil: 'domcontentloaded',
                   });
                   try {
-                    await page.waitForSelector(".a-link-normal", {
+                    await page.waitForSelector('.a-link-normal', {
                       visible: true,
                       timeout: 10000,
                     });
                   } catch (error) {
-                    await page.goto(urls[`${key}`][j]["link"], {
-                      waitUntil: "domcontentloaded",
+                    await page.goto(urls[`${key}`][j]['link'], {
+                      waitUntil: 'domcontentloaded',
                     });
                   }
                   const hrefArray = await page.$$eval(
-                    ".a-link-normal",
+                    '.a-link-normal',
                     (elements) => {
                       return elements.map((element) =>
-                        element.getAttribute("href")
+                        element.getAttribute('href')
                       );
                     }
                   );
                   const links = hrefArray.toString();
-                  const matchLink = links.split("dp/");
+                  const matchLink = links.split('dp/');
                   let extractedStrings = matchLink.map((link) => {
-                    const endIndex = link.indexOf("/");
+                    const endIndex = link.indexOf('/');
                     return endIndex !== -1 ? link.substring(0, endIndex) : link;
                   });
                   let uniqueArr = Array.from(new Set(extractedStrings));
@@ -137,200 +137,365 @@ export const ScraperService = {
                       );
                     } catch (error) {
                       console.log(
-                        "error in amazon product asin = " + uniqueArr[j]
+                        'error in amazon product asin = ' + uniqueArr[j]
                       );
                     }
                   }
-                  urls[`${key}`][j]["id"] = uniqueArr;
+                  urls[`${key}`][j]['id'] = uniqueArr;
                   await page.waitForTimeout(delayBetweenPages);
                 } catch (error) {
                   console.log(
-                    "Error in Sub-Catgory " + urls[`${key}`][j]["title"]
+                    'Error in Sub-Catgory ' + urls[`${key}`][j]['title']
                   );
                 }
               }
             } catch (error) {
-              console.log("Error in " + key);
+              console.log('Error in ' + key);
             }
           }
         }
         await browser.close();
         return {
           status: 200,
-          message: "Successfully fetched href URLs",
+          message: 'Successfully fetched href URLs',
           data: urls,
         };
       }
     } catch (error) {
       throw {
         status: error?.status ? error?.status : 500,
-        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+        message: error?.message ? error?.message : 'INTERNAL SERVER ERROR',
       };
     }
   },
   scrapeAmazonProductListIndia: async () => {
-    function delay(time) {
-      return new Promise(function (resolve) {
-        setTimeout(resolve, time);
+    try {
+      async function delay(time) {
+        return new Promise(function (resolve) {
+          setTimeout(resolve, time);
+        });
+      }
+      const browser = await puppeteer.launch({
+        headless: false,
+        defaultViewport: null,
+        args: ['--window-size=866,1500'],
       });
-    }
-    const browser = await puppeteer.launch({
-      headless: false,
-      defaultViewport: null,
-    });
 
-    const page = await browser.newPage();
-    await page.goto("https://www.amazon.in/", {
-      waitUntil: "load",
-      waitUntil: "domcontentloaded",
-      visible: true,
-      timeout: 10000,
-    });
-    await page.waitForTimeout(2000);
-    let attempt = 0;
-    async function gotoPage(page, attempt) {
-      attempt = attempt + 1;
-      await page.goto("https://www.amazon.in/", {
-        waitUntil: "load",
-        waitUntil: "domcontentloaded",
+      const page = await browser.newPage();
+      await page.setViewport({ width: 866, height: 1500 });
+      await page.goto('https://www.amazon.in/', {
+        waitUntil: 'load',
+        waitUntil: 'domcontentloaded',
         visible: true,
+        timeout: 10000,
       });
-    }
-    gotoPage(page, attempt);
-    await Promise.all([page.waitForNavigation()]);
-    for (let i = 0; i < 13; i++) {
-      let menuBtn;
-      let urls = {};
-      try {
-        menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
-          visible: true,
-        });
-      } catch (error) {
-        const logoBtn = await page.waitForSelector("#nav-logo-sprites", {
-          visible: true,
-        });
-        logoBtn.click();
-        menuBtn = await page.waitForSelector("#nav-hamburger-menu", {
+      await page.waitForTimeout(2000);
+      let attempt = 0;
+      async function gotoPage(page, attempt) {
+        attempt = attempt + 1;
+        await page.goto('https://www.amazon.in/', {
+          waitUntil: 'load',
+          waitUntil: 'domcontentloaded',
           visible: true,
         });
       }
-      if (menuBtn) {
-        menuBtn.click();
-        const menu = await page.waitForSelector("#hmenu-content", {
+      gotoPage(page, attempt);
+      await Promise.all([page.waitForNavigation()]);
+      const getMenuBtn = async () => {
+        let menuBtn;
+        try {
+          menuBtn = await page.waitForSelector('#nav-hamburger-menu', {
+            visible: true,
+          });
+        } catch (error) {
+          const logoBtn = await page.waitForSelector('#nav-logo-sprites', {
+            visible: true,
+          });
+          await logoBtn.click();
+          menuBtn = await page.waitForSelector('#nav-hamburger-menu', {
+            visible: true,
+          });
+        }
+        return menuBtn;
+      };
+      const getMenu = async () => {
+        let menu = await page.waitForSelector('#hmenu-content', {
           visible: true,
         });
-        if (menu) {
-          const categoryBtn = await page.waitForSelector(
-            "#hmenu-content > ul:nth-child(1) > li:nth-child(16)",
+        return menu;
+      };
+      const getMobileBtn = async () => {
+        let value = '';
+        let categoryBtn = await page.waitForSelector(
+          '#hmenu-content > ul:nth-child(1) > li:nth-child(16)',
+          {
+            visible: true,
+            waitUntil: 'load',
+            waitUntil: 'domcontentloaded',
+          }
+        );
+        value = await categoryBtn.evaluate((el) => el.textContent);
+        await delay(500);
+        if (!value?.toLocaleLowerCase()?.includes('mobiles')) {
+          categoryBtn = await page.waitForSelector(
+            '#hmenu-content > ul:nth-child(1) > li:nth-child(15)',
             {
               visible: true,
-              waitUntil: "load",
-              waitUntil: "domcontentloaded",
+              waitUntil: 'load',
+              waitUntil: 'domcontentloaded',
             }
           );
-          let mobileBtnn;
-          if (categoryBtn) {
-            await categoryBtn.click();
-            // await page.waitForNavigation({ waitUntil: "domcontentloaded" });
-            const a = i;
-            mobileBtnn = await page.waitForSelector(
-              `#hmenu-content > ul:nth-child(8) > li:nth-child(${i + 3}) > a`,
-              {
-                visible: true,
-                waitUntil: "load",
-                waitUntil: "domcontentloaded",
-              }
-            );
-            if (!mobileBtnn) {
-              mobileBtnn = await page.waitForSelector(
-                `#hmenu-content > ul:nth-child(8) > li:nth-child(${i + 3}) > a`,
-                {
-                  visible: true,
-                  waitUntil: "load",
-                  waitUntil: "domcontentloaded",
-                }
-              );
-            } else {
-              mobileBtnn = await page.waitForSelector(
-                `#hmenu-content > ul:nth-child(8) > li:nth-child(${i + 3}) > a`,
-                {
-                  visible: true,
-                  waitUntil: "load",
-                  waitUntil: "domcontentloaded",
-                }
-              );
+          value = await categoryBtn.evaluate((el) => el.textContent);
+        }
+        return categoryBtn;
+      };
+      const getElectronicsBtn = async () => {
+        let value = '';
+        let categoryBtn = await page.waitForSelector(
+          '#hmenu-content > ul:nth-child(1) > li:nth-child(17)',
+          {
+            visible: true,
+            waitUntil: 'load',
+            waitUntil: 'domcontentloaded',
+          }
+        );
+        value = await categoryBtn.evaluate((el) => el.textContent);
+        await delay(500);
+        if (!value?.toLocaleLowerCase()?.includes('electronic')) {
+          categoryBtn = await page.waitForSelector(
+            '#hmenu-content > ul:nth-child(1) > li:nth-child(16)',
+            {
+              visible: true,
+              waitUntil: 'load',
+              waitUntil: 'domcontentloaded',
             }
+          );
+          value = await categoryBtn.evaluate((el) => el.textContent);
+        }
+        return categoryBtn;
+      };
 
-            if (mobileBtnn) {
-              mobileBtnn.click();
-              await page.waitForNavigation({ waitUntil: "domcontentloaded" });
-              const seeAllBtn = await page.waitForSelector(
-                "#apb-desktop-browse-search-see-all",
-                { visible: true }
+      let menuBtn;
+      let categoryBtn;
+      let urls = {};
+      menuBtn = await getMenuBtn();
+      await menuBtn.click();
+      if (menuBtn) {
+        let menu = await getMenu();
+        categoryBtn = await getMobileBtn();
+        await categoryBtn.click();
+        let els = await page.$$('#hmenu-content > ul:nth-child(8) > li');
+        let performInitial = false;
+        for (let j = 0; j < els.length; j++) {
+          if (performInitial) {
+            menuBtn = await getMenuBtn();
+            await menuBtn.click();
+            if (menuBtn) {
+              menu = await getMenu();
+              categoryBtn = await getMobileBtn();
+              await categoryBtn.click();
+              els = await page.$$(`#hmenu-content > ul:nth-child(8) > li`);
+            }
+          }
+          try {
+            performInitial = false;
+            const link = await els[j].$eval('a', (a) => a.getAttribute('href'));
+            if (link?.includes('node=')) {
+              let mobileBtnn;
+              mobileBtnn = await page.waitForSelector(
+                `#hmenu-content > ul:nth-child(8) > li:nth-child(${j}) > a`,
+                {
+                  visible: true,
+                  waitUntil: 'load',
+                  waitUntil: 'domcontentloaded',
+                }
               );
-              await seeAllBtn.click();
-              await page.waitForNavigation({ waitUntil: "domcontentloaded" });
-              await page.waitForSelector(".a-link-normal", { visible: true });
+              await mobileBtnn.click();
+              await page.waitForNavigation({
+                waitUntil: 'domcontentloaded',
+              });
+              performInitial = true;
+              try {
+                let seeAllBtn = await page.waitForSelector(
+                  '#apb-desktop-browse-search-see-all',
+                  { visible: true }
+                );
+                await seeAllBtn.click();
+                await page.waitForNavigation({
+                  waitUntil: 'domcontentloaded',
+                });
+              } catch (error) {
+                console.log('cant find see all button');
+              }
+
+              await page.waitForSelector('.a-link-normal', {
+                visible: true,
+              });
               const hrefArray = await page.$$eval(
-                ".a-link-normal",
+                '.a-link-normal',
                 (elements) => {
                   return elements.map((element) =>
-                    element.getAttribute("href")
+                    element.getAttribute('href')
                   );
                 }
               );
-
               const links = hrefArray.toString();
-              const matchLink = links.split("dp/");
+              const matchLink = links.split('dp/');
               let extractedStrings = matchLink.map((link) => {
-                const endIndex = link.indexOf("/");
+                const endIndex = link.indexOf('/');
                 return endIndex !== -1 ? link.substring(0, endIndex) : link;
               });
               let uniqueArr = Array.from(new Set(extractedStrings));
-              for (let j = 0; j < uniqueArr.length > 0; j++) {
+              uniqueArr = uniqueArr.filter((item) => item);
+              for (let k = 0; k < uniqueArr.length > 0; k++) {
                 try {
-                  const domain = "in";
+                  const domain = 'in';
                   const data = await ScraperHelper.scrapeAmazonProduct(
-                    uniqueArr[j],
+                    uniqueArr[k],
                     domain
                   );
                 } catch (error) {
-                  console.log("error in amazon product asin = " + uniqueArr[j]);
+                  console.log('error in amazon product asin = ' + uniqueArr[k]);
                 }
               }
               urls.productId = uniqueArr;
             }
+          } catch (error) {
+            continue;
           }
         }
       }
+      attempt = 0;
+      await gotoPage(page, attempt);
+      await delay(500);
+      
+      menuBtn = await getMenuBtn();
+      await menuBtn.click();
+      if (menuBtn) {
+        categoryBtn = await getElectronicsBtn();
+        await categoryBtn.click();
+        let els = await page.$$('#hmenu-content > ul:nth-child(9) > li');
+        let performInitial = false;
+        for (let j = 0; j < els.length; j++) {
+          if (performInitial) {
+            menuBtn = await getMenuBtn();
+            await menuBtn.click();
+            if (menuBtn) {
+              // menu = await getMenu();
+              categoryBtn = await getElectronicsBtn();
+              await categoryBtn.click();
+              els = await page.$$(`#hmenu-content > ul:nth-child(9) > li`);
+            }
+          }
+          try {
+            performInitial = false;
+            const link = await els[j].$eval('a', (a) => a.getAttribute('href'));
+            if (link?.includes('node=')) {
+              let mobileBtnn;
+              mobileBtnn = await page.waitForSelector(
+                `#hmenu-content > ul:nth-child(9) > li:nth-child(${j}) > a`,
+                {
+                  visible: true,
+                  waitUntil: 'load',
+                  waitUntil: 'domcontentloaded',
+                }
+              );
+              await mobileBtnn.click();
+              await page.waitForNavigation({
+                waitUntil: 'domcontentloaded',
+              });
+              performInitial = true;
+              try {
+                let seeAllBtn = await page.waitForSelector(
+                  '#apb-desktop-browse-search-see-all',
+                  { visible: true }
+                );
+                await seeAllBtn.click();
+                await page.waitForNavigation({
+                  waitUntil: 'domcontentloaded',
+                });
+              } catch (error) {
+                console.log('cant find see all button');
+              }
+
+              await page.waitForSelector('.a-link-normal', {
+                visible: true,
+              });
+              const hrefArray = await page.$$eval(
+                '.a-link-normal',
+                (elements) => {
+                  return elements.map((element) =>
+                    element.getAttribute('href')
+                  );
+                }
+              );
+              const links = hrefArray.toString();
+              const matchLink = links.split('dp/');
+              let extractedStrings = matchLink.map((link) => {
+                const endIndex = link.indexOf('/');
+                return endIndex !== -1 ? link.substring(0, endIndex) : link;
+              });
+              let uniqueArr = Array.from(new Set(extractedStrings));
+              uniqueArr = uniqueArr.filter((item) => item);
+              for (let k = 0; k < uniqueArr.length > 0; k++) {
+                try {
+                  const domain = 'in';
+                  const data = await ScraperHelper.scrapeAmazonProduct(
+                    uniqueArr[k],
+                    domain
+                  );
+                } catch (error) {
+                  console.log('error in amazon product asin = ' + uniqueArr[k]);
+                }
+              }
+              urls.productId = uniqueArr;
+            }
+          } catch (error) {
+            continue;
+          }
+        }
+      }
+      await browser.close();
+      return {
+        status: 200,
+        message: 'Successfully fetched href URLs',
+        data: urls,
+      };
+    } catch (error) {
+      await browser.close();
+      return {
+        status: 500,
+        message: 'INTERNAL SERVER ERROR',
+        data: error,
+      };
     }
   },
   searchAmazonProducts: async ({ query, category_id }) => {
     const oxylabsData =
-      config.env.oxylabxUsername + ":" + config.env.oxylabsPassword;
+      config.env.oxylabxUsername + ':' + config.env.oxylabsPassword;
     const category = await CategoryModel.findById(category_id);
     try {
       let buff = new Buffer(oxylabsData);
-      let oxylabsConfig = buff.toString("base64");
+      let oxylabsConfig = buff.toString('base64');
 
       let data = JSON.stringify({
-        source: "amazon_search",
-        domain: "in",
+        source: 'amazon_search',
+        domain: 'in',
         query,
         parse: true,
         context: [
           {
-            key: "category_id",
+            key: 'category_id',
             value: category.amazon_id,
           },
         ],
       });
 
       let config = {
-        method: "post",
-        url: "https://realtime.oxylabs.io/v1/queries",
+        method: 'post',
+        url: 'https://realtime.oxylabs.io/v1/queries',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Basic ${oxylabsConfig}`,
         },
         data: data,
@@ -382,26 +547,26 @@ export const ScraperService = {
         .catch((error) => {
           throw {
             status: error?.status ? error.status : 400,
-            message: error.message ? error.message : "Error in OXYLABS API",
+            message: error.message ? error.message : 'Error in OXYLABS API',
           };
         });
       return {
         status: 200,
-        message: "Successfull",
-        response: "Record Fetched Successfully",
+        message: 'Successfull',
+        response: 'Record Fetched Successfully',
         data: response,
       };
     } catch (error) {
       throw {
         status: error?.status ? error?.status : 500,
-        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+        message: error?.message ? error?.message : 'INTERNAL SERVER ERROR',
       };
     }
   },
   scrapeFlipkartProduct: ScraperHelper.scrapeFlipkartProduct,
   scrapeFlipkartProductList: async () => {
     try {
-      const pageLink = "https://www.flipkart.com";
+      const pageLink = 'https://www.flipkart.com';
       const categoriesLink = [];
       const browser = await puppeteer.launch({
         headless: false,
@@ -410,11 +575,11 @@ export const ScraperService = {
 
       const page = await browser.newPage();
       await page.goto(pageLink, {
-        waitUntil: "networkidle0",
+        waitUntil: 'networkidle0',
       });
 
       const modalClose = await page.waitForSelector(
-        "body > div.fbDBuK._3CYmv5 > div > span",
+        'body > div.fbDBuK._3CYmv5 > div > span',
         { visible: true }
       );
       if (modalClose) {
@@ -427,7 +592,7 @@ export const ScraperService = {
           categoryBtn.click();
 
           const electronicBtn = await page.waitForSelector(
-            "#container > div > div._331-kn > div > div > span:nth-child(1)",
+            '#container > div > div._331-kn > div > div > span:nth-child(1)',
             { visible: true }
           );
           if (electronicBtn) {
@@ -438,7 +603,7 @@ export const ScraperService = {
               const siblings = [];
               let sibling = element.nextElementSibling;
               while (sibling) {
-                if (sibling.tagName === "A" && sibling.href) {
+                if (sibling.tagName === 'A' && sibling.href) {
                   siblings.push(sibling.href);
                 }
                 sibling = sibling.nextElementSibling;
@@ -454,7 +619,7 @@ export const ScraperService = {
               const siblings = [];
               let sibling = element.nextElementSibling;
               while (sibling) {
-                if (sibling.tagName === "A" && sibling.href) {
+                if (sibling.tagName === 'A' && sibling.href) {
                   siblings.push(sibling.href);
                 }
                 sibling = sibling.nextElementSibling;
@@ -507,18 +672,18 @@ export const ScraperService = {
       const allData = [];
       for (const pageUrl of categoriesLink) {
         await page.goto(pageUrl, {
-          waitUntil: "domcontentloaded",
+          waitUntil: 'domcontentloaded',
           visible: true,
         });
         const hrefArray = await page.$$eval(
-          "#container div div:nth-child(3) a",
+          '#container div div:nth-child(3) a',
           (elements) => {
-            return elements?.map((element) => element.getAttribute("href"));
+            return elements?.map((element) => element.getAttribute('href'));
           }
         );
-        const base_url = "https://www.flipkart.com";
+        const base_url = 'https://www.flipkart.com';
         const fullUrls = hrefArray.map((uri) => base_url + uri);
-        const filteredUrls = fullUrls.filter((url) => url.includes("pid="));
+        const filteredUrls = fullUrls.filter((url) => url.includes('pid='));
         allData.push(filteredUrls);
       }
       const combinedArray = [].concat(...allData);
@@ -531,22 +696,22 @@ export const ScraperService = {
             page
           );
         } catch (error) {
-          console.log("flipkart link failed");
+          console.log('flipkart link failed');
           continue;
         }
       }
       await browser.close();
       return {
         status: 200,
-        message: "Successfull",
-        response: "Record Fetched Successfully",
+        message: 'Successfull',
+        response: 'Record Fetched Successfully',
         data: productStore,
       };
     } catch (error) {
       await browser.close();
       throw {
         status: error?.status ? error?.status : 500,
-        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+        message: error?.message ? error?.message : 'INTERNAL SERVER ERROR',
       };
     }
   },
@@ -567,13 +732,13 @@ export const ScraperService = {
         const supc = products[i].supc;
         const productId = products[i].productId;
         await page.goto(url, {
-          waitUntil: "domcontentloaded",
+          waitUntil: 'domcontentloaded',
         });
 
         const timeout = 500;
         try {
           let element = await page.waitForSelector(
-            "#highlightSupc .h-content",
+            '#highlightSupc .h-content',
             {
               visible: true,
               timeout,
@@ -584,10 +749,10 @@ export const ScraperService = {
           //   element
           // );
           const productSUPC = supc;
-          const productImg = await page.$$eval(".cloudzoom", (items) =>
-            items.map((item) => item.getAttribute("bigsrc"))
+          const productImg = await page.$$eval('.cloudzoom', (items) =>
+            items.map((item) => item.getAttribute('bigsrc'))
           );
-          element = await page.waitForSelector(".pdp-e-i-head", {
+          element = await page.waitForSelector('.pdp-e-i-head', {
             visible: true,
             timeout,
           });
@@ -595,7 +760,7 @@ export const ScraperService = {
             (item) => item.textContent.trim(),
             element
           );
-          element = await page.waitForSelector(".payBlkBig", {
+          element = await page.waitForSelector('.payBlkBig', {
             visible: true,
             timeout,
           });
@@ -605,23 +770,23 @@ export const ScraperService = {
           );
           const productCurrency = await page.$eval(
             "meta[itemprop='priceCurrency']",
-            (item) => item.getAttribute("content")
+            (item) => item.getAttribute('content')
           );
           element = await page.$$eval(
-            ".bCrumbOmniTrack > span",
+            '.bCrumbOmniTrack > span',
             (items, i) => items[i].textContent.trim(),
             1
           );
           let elements = await page.$$eval(
-            ".highlightsTileContent .h-content",
+            '.highlightsTileContent .h-content',
             (items) => items.map((item) => item.textContent.trim())
           );
           const productDetailsData = elements.filter(
-            (textContent) => textContent !== ""
+            (textContent) => textContent !== ''
           );
           const productDetails = {};
           for (let i = 0; i < productDetailsData.length; i++) {
-            const data = productDetailsData[i].split(":");
+            const data = productDetailsData[i].split(':');
             if (data.length >= 2) {
               productDetails[data[0]] = data[1];
             }
@@ -629,7 +794,7 @@ export const ScraperService = {
           // productDetails["productId"] = productId;
           let productRatingText = null;
           try {
-            element = await page.waitForSelector(".avrg-rating", {
+            element = await page.waitForSelector('.avrg-rating', {
               visible: true,
               timeout,
             });
@@ -643,16 +808,16 @@ export const ScraperService = {
             : [];
           const productRating = matches.length ? matches[0] : null;
 
-          element = await page.waitForSelector("#breadCrumbLabelIds", {
+          element = await page.waitForSelector('#breadCrumbLabelIds', {
             timeout,
           });
           const catIDsText = await page.evaluate(
             (item) => item.textContent,
             element
           );
-          const catIDs = catIDsText.split(",");
+          const catIDs = catIDsText.split(',');
           elements = await page.$$eval(
-            "#breadCrumbWrapper2 .containerBreadcrumb a",
+            '#breadCrumbWrapper2 .containerBreadcrumb a',
             (items) => items.map((item) => item.textContent.trim())
           );
           const catLadder = [];
@@ -667,7 +832,7 @@ export const ScraperService = {
             category = await CategoryModel.create({ ladder: catLadder });
           }
 
-          if ((productName != "") & (productSUPC != "")) {
+          if ((productName != '') & (productSUPC != '')) {
             const productData = {
               supc: productSUPC,
               title: productName,
@@ -678,7 +843,7 @@ export const ScraperService = {
               rating: productRating,
               product_details: productDetails,
               url: url,
-              store: "Snapdeal",
+              store: 'Snapdeal',
               productId: productId,
             };
             let product = await ProductModel.findOne({ supc: productSUPC });
@@ -699,15 +864,15 @@ export const ScraperService = {
       await browser.close();
       return {
         status: 200,
-        message: "Successfull",
-        response: "Record Fetched Successfully",
+        message: 'Successfull',
+        response: 'Record Fetched Successfully',
         data: data.length,
       };
     } catch (error) {
       browser && (await browser.close());
       throw {
         status: error?.status ? error?.status : 500,
-        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+        message: error?.message ? error?.message : 'INTERNAL SERVER ERROR',
       };
     }
   },
@@ -722,14 +887,14 @@ export const ScraperService = {
 
       const page = await browser.newPage();
       await page.goto(url, {
-        waitUntil: "domcontentloaded",
+        waitUntil: 'domcontentloaded',
       });
 
       const timeout = 600000;
-      let element = await page.waitForSelector("#products", {
+      let element = await page.waitForSelector('#products', {
         timeout: 3000,
       });
-      element = await page.waitForSelector("#see-more-products", {
+      element = await page.waitForSelector('#see-more-products', {
         timeout,
       });
       let visibilityStyle = await page.evaluate((el) => {
@@ -737,15 +902,15 @@ export const ScraperService = {
         return computedStyle.visibility;
       }, element);
       let isLoading = await page.evaluate((el) => {
-        return el.getAttribute("class").indexOf("hidden") < 0;
+        return el.getAttribute('class').indexOf('hidden') < 0;
       }, element);
       let products = await page.$$eval(
-        "section .product-tuple-listing",
+        'section .product-tuple-listing',
         (items) => {
           return items.map((item) => {
-            const productId = item.getAttribute("id").trim();
-            const supc = item.getAttribute("supc").trim();
-            const linkElem = item.querySelector(".product-tuple-image a");
+            const productId = item.getAttribute('id').trim();
+            const supc = item.getAttribute('supc').trim();
+            const linkElem = item.querySelector('.product-tuple-image a');
             const link = linkElem ? linkElem.href : null;
             return {
               productId,
@@ -756,16 +921,16 @@ export const ScraperService = {
         }
       );
       while (
-        (visibilityStyle == "visible" || isLoading) &&
+        (visibilityStyle == 'visible' || isLoading) &&
         products.length < limit
       ) {
         products = await page.$$eval(
-          "section .product-tuple-listing",
+          'section .product-tuple-listing',
           (items) => {
             return items.map((item) => {
-              const productId = item.getAttribute("id").trim();
-              const supc = item.getAttribute("supc").trim();
-              const linkElem = item.querySelector(".product-tuple-image a");
+              const productId = item.getAttribute('id').trim();
+              const supc = item.getAttribute('supc').trim();
+              const linkElem = item.querySelector('.product-tuple-image a');
               const link = linkElem ? linkElem.href : null;
               return {
                 productId,
@@ -776,17 +941,17 @@ export const ScraperService = {
           }
         );
 
-        if (visibilityStyle == "visible") element.click();
+        if (visibilityStyle == 'visible') element.click();
         await new Promise((resolve) => setTimeout(resolve, 1000));
         try {
-          element = await page.waitForSelector(".sd-loader-see-more", {
+          element = await page.waitForSelector('.sd-loader-see-more', {
             timeout,
           });
           isLoading = await page.evaluate((el) => {
-            return el.getAttribute("class").indexOf("hidden") < 0;
+            return el.getAttribute('class').indexOf('hidden') < 0;
           }, element);
         } catch {}
-        element = await page.waitForSelector("#see-more-products", {
+        element = await page.waitForSelector('#see-more-products', {
           timeout,
         });
         visibilityStyle = await page.evaluate((el) => {
@@ -815,15 +980,15 @@ export const ScraperService = {
       await browser.close();
       return {
         status: 200,
-        message: "Successfull",
-        response: "Record Fetched Successfully",
+        message: 'Successfull',
+        response: 'Record Fetched Successfully',
         data: products,
       };
     } catch (error) {
       browser && (await browser.close());
       throw {
         status: error?.status ? error?.status : 500,
-        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+        message: error?.message ? error?.message : 'INTERNAL SERVER ERROR',
       };
     }
   },
@@ -837,37 +1002,37 @@ export const ScraperService = {
 
       const page = await browser.newPage();
       await page.goto(url, {
-        waitUntil: "domcontentloaded",
+        waitUntil: 'domcontentloaded',
       });
 
       let data = [];
       const timeout = 500;
-      await page.waitForSelector(".leftNavigationLeftContainer li.navlink", {
+      await page.waitForSelector('.leftNavigationLeftContainer li.navlink', {
         timeout,
       });
       const elementHandles = await page.$$(
-        ".leftNavigationLeftContainer li.navlink"
+        '.leftNavigationLeftContainer li.navlink'
       );
       for (let i = 0; i < elementHandles.length; i++) {
         const handle = elementHandles[i];
         const subdata = await page.evaluate((element) => {
           const mainCatText = element
-            .querySelector("a span.catText")
+            .querySelector('a span.catText')
             .textContent.trim();
-          const catChildren = element.querySelectorAll(".colDataInnerBlk a");
+          const catChildren = element.querySelectorAll('.colDataInnerBlk a');
           let categories = [];
-          let headingText = "";
-          let catText = "";
-          let link = "";
+          let headingText = '';
+          let catText = '';
+          let link = '';
           let swCatText = 1;
           for (let j = 0; j < catChildren.length; j++) {
             const subitem = catChildren[j];
-            if (subitem.href.indexOf("sort=plrty") >= 0) {
+            if (subitem.href.indexOf('sort=plrty') >= 0) {
               link = subitem.href;
             } else {
-              const idx = subitem.href.indexOf("#bcrumbLabelId");
+              const idx = subitem.href.indexOf('#bcrumbLabelId');
               if (idx < 0) {
-                link = subitem.href + "?sort=plrty";
+                link = subitem.href + '?sort=plrty';
               } else {
                 link =
                   subitem.href.slice(0, idx) +
@@ -875,11 +1040,11 @@ export const ScraperService = {
                   subitem.href.slice(idx);
               }
             }
-            if (link.indexOf("http") < 0) {
+            if (link.indexOf('http') < 0) {
               continue;
             }
-            const catTextElem = subitem.querySelector("span");
-            if (catTextElem.getAttribute("class").indexOf("heading") >= 0) {
+            const catTextElem = subitem.querySelector('span');
+            if (catTextElem.getAttribute('class').indexOf('heading') >= 0) {
               // headingText = catTextElem.textContent.trim();
               // if (headingText != "") {
               //   swCatText = 0;
@@ -891,17 +1056,17 @@ export const ScraperService = {
               // }
             } else if (
               swCatText &&
-              catTextElem.getAttribute("class").indexOf("link") >= 0
+              catTextElem.getAttribute('class').indexOf('link') >= 0
             ) {
               catText = catTextElem.textContent.trim();
-              if (catText != "") {
+              if (catText != '') {
                 categories.push({
                   mainCat: mainCatText,
                   catText: catText,
                   catLink: link,
                 });
               }
-            } else if (catTextElem.getAttribute("class").indexOf("view") >= 0) {
+            } else if (catTextElem.getAttribute('class').indexOf('view') >= 0) {
             }
           }
           return categories;
@@ -911,14 +1076,14 @@ export const ScraperService = {
       await browser.close();
       return {
         status: 200,
-        message: "Successfull",
-        response: "Record Fetched Successfully",
+        message: 'Successfull',
+        response: 'Record Fetched Successfully',
         data: data,
       };
     } catch (error) {
       throw {
         status: error?.status ? error?.status : 500,
-        message: error?.message ? error?.message : "INTERNAL SERVER ERROR",
+        message: error?.message ? error?.message : 'INTERNAL SERVER ERROR',
       };
     }
   },
