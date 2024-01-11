@@ -178,8 +178,7 @@ export const ScraperService = {
       }
       browser = await puppeteer.launch({
         headless: true,
-        defaultViewport: null,
-        args: ['--window-size=866,1500'],
+        defaultViewport: null
       });
 
       const page = await browser.newPage();
