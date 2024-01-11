@@ -169,13 +169,14 @@ export const ScraperService = {
     }
   },
   scrapeAmazonProductListIndia: async () => {
+    let browser
     try {
       async function delay(time) {
         return new Promise(function (resolve) {
           setTimeout(resolve, time);
         });
       }
-      const browser = await puppeteer.launch({
+      browser = await puppeteer.launch({
         headless: true,
         defaultViewport: null,
         args: ['--window-size=866,1500'],
@@ -189,272 +190,272 @@ export const ScraperService = {
         visible: true,
         timeout: 10000,
       });
-      await page.waitForTimeout(2000);
-      let attempt = 0;
-      async function gotoPage(page, attempt) {
-        attempt = attempt + 1;
-        await page.goto('https://www.amazon.in/', {
-          waitUntil: 'load',
-          waitUntil: 'domcontentloaded',
-          visible: true,
-        });
-      }
-      gotoPage(page, attempt);
-      await Promise.all([page.waitForNavigation()]);
-      const getMenuBtn = async () => {
-        let menuBtn;
-        try {
-          menuBtn = await page.waitForSelector('#nav-hamburger-menu', {
-            visible: true,
-          });
-        } catch (error) {
-          const logoBtn = await page.waitForSelector('#nav-logo-sprites', {
-            visible: true,
-          });
-          await logoBtn.click();
-          menuBtn = await page.waitForSelector('#nav-hamburger-menu', {
-            visible: true,
-          });
-        }
-        return menuBtn;
-      };
-      const getMenu = async () => {
-        let menu = await page.waitForSelector('#hmenu-content', {
-          visible: true,
-        });
-        return menu;
-      };
-      const getMobileBtn = async () => {
-        let value = '';
-        let categoryBtn = await page.waitForSelector(
-          '#hmenu-content > ul:nth-child(1) > li:nth-child(16)',
-          {
-            visible: true,
-            waitUntil: 'load',
-            waitUntil: 'domcontentloaded',
-          }
-        );
-        value = await categoryBtn.evaluate((el) => el.textContent);
-        await delay(500);
-        if (!value?.toLocaleLowerCase()?.includes('mobiles')) {
-          categoryBtn = await page.waitForSelector(
-            '#hmenu-content > ul:nth-child(1) > li:nth-child(15)',
-            {
-              visible: true,
-              waitUntil: 'load',
-              waitUntil: 'domcontentloaded',
-            }
-          );
-          value = await categoryBtn.evaluate((el) => el.textContent);
-        }
-        return categoryBtn;
-      };
-      const getElectronicsBtn = async () => {
-        let value = '';
-        let categoryBtn = await page.waitForSelector(
-          '#hmenu-content > ul:nth-child(1) > li:nth-child(17)',
-          {
-            visible: true,
-            waitUntil: 'load',
-            waitUntil: 'domcontentloaded',
-          }
-        );
-        value = await categoryBtn.evaluate((el) => el.textContent);
-        await delay(500);
-        if (!value?.toLocaleLowerCase()?.includes('electronic')) {
-          categoryBtn = await page.waitForSelector(
-            '#hmenu-content > ul:nth-child(1) > li:nth-child(16)',
-            {
-              visible: true,
-              waitUntil: 'load',
-              waitUntil: 'domcontentloaded',
-            }
-          );
-          value = await categoryBtn.evaluate((el) => el.textContent);
-        }
-        return categoryBtn;
-      };
+      await delay(2000)
+      // let attempt = 0;
+      // async function gotoPage(page, attempt) {
+      //   attempt = attempt + 1;
+      //   await page.goto('https://www.amazon.in/', {
+      //     waitUntil: 'load',
+      //     waitUntil: 'domcontentloaded',
+      //     visible: true,
+      //   });
+      // }
+      // gotoPage(page, attempt);
+      // await Promise.all([page.waitForNavigation()]);
+      // const getMenuBtn = async () => {
+      //   let menuBtn;
+      //   try {
+      //     menuBtn = await page.waitForSelector('#nav-hamburger-menu', {
+      //       visible: true,
+      //     });
+      //   } catch (error) {
+      //     const logoBtn = await page.waitForSelector('#nav-logo-sprites', {
+      //       visible: true,
+      //     });
+      //     await logoBtn.click();
+      //     menuBtn = await page.waitForSelector('#nav-hamburger-menu', {
+      //       visible: true,
+      //     });
+      //   }
+      //   return menuBtn;
+      // };
+      // const getMenu = async () => {
+      //   let menu = await page.waitForSelector('#hmenu-content', {
+      //     visible: true,
+      //   });
+      //   return menu;
+      // };
+      // const getMobileBtn = async () => {
+      //   let value = '';
+      //   let categoryBtn = await page.waitForSelector(
+      //     '#hmenu-content > ul:nth-child(1) > li:nth-child(16)',
+      //     {
+      //       visible: true,
+      //       waitUntil: 'load',
+      //       waitUntil: 'domcontentloaded',
+      //     }
+      //   );
+      //   value = await categoryBtn.evaluate((el) => el.textContent);
+      //   await delay(500);
+      //   if (!value?.toLocaleLowerCase()?.includes('mobiles')) {
+      //     categoryBtn = await page.waitForSelector(
+      //       '#hmenu-content > ul:nth-child(1) > li:nth-child(15)',
+      //       {
+      //         visible: true,
+      //         waitUntil: 'load',
+      //         waitUntil: 'domcontentloaded',
+      //       }
+      //     );
+      //     value = await categoryBtn.evaluate((el) => el.textContent);
+      //   }
+      //   return categoryBtn;
+      // };
+      // const getElectronicsBtn = async () => {
+      //   let value = '';
+      //   let categoryBtn = await page.waitForSelector(
+      //     '#hmenu-content > ul:nth-child(1) > li:nth-child(17)',
+      //     {
+      //       visible: true,
+      //       waitUntil: 'load',
+      //       waitUntil: 'domcontentloaded',
+      //     }
+      //   );
+      //   value = await categoryBtn.evaluate((el) => el.textContent);
+      //   await delay(500);
+      //   if (!value?.toLocaleLowerCase()?.includes('electronic')) {
+      //     categoryBtn = await page.waitForSelector(
+      //       '#hmenu-content > ul:nth-child(1) > li:nth-child(16)',
+      //       {
+      //         visible: true,
+      //         waitUntil: 'load',
+      //         waitUntil: 'domcontentloaded',
+      //       }
+      //     );
+      //     value = await categoryBtn.evaluate((el) => el.textContent);
+      //   }
+      //   return categoryBtn;
+      // };
 
-      let menuBtn;
-      let categoryBtn;
-      let urls = {};
-      menuBtn = await getMenuBtn();
-      await menuBtn.click();
-      if (menuBtn) {
-        let menu = await getMenu();
-        categoryBtn = await getMobileBtn();
-        await categoryBtn.click();
-        let els = await page.$$('#hmenu-content > ul:nth-child(8) > li');
-        let performInitial = false;
-        for (let j = 0; j < els.length; j++) {
-          if (performInitial) {
-            menuBtn = await getMenuBtn();
-            await menuBtn.click();
-            if (menuBtn) {
-              menu = await getMenu();
-              categoryBtn = await getMobileBtn();
-              await categoryBtn.click();
-              els = await page.$$(`#hmenu-content > ul:nth-child(8) > li`);
-            }
-          }
-          try {
-            performInitial = false;
-            const link = await els[j].$eval('a', (a) => a.getAttribute('href'));
-            if (link?.includes('node=')) {
-              let mobileBtnn;
-              mobileBtnn = await page.waitForSelector(
-                `#hmenu-content > ul:nth-child(8) > li:nth-child(${j}) > a`,
-                {
-                  visible: true,
-                  waitUntil: 'load',
-                  waitUntil: 'domcontentloaded',
-                }
-              );
-              await mobileBtnn.click();
-              await page.waitForNavigation({
-                waitUntil: 'domcontentloaded',
-              });
-              performInitial = true;
-              try {
-                let seeAllBtn = await page.waitForSelector(
-                  '#apb-desktop-browse-search-see-all',
-                  { visible: true }
-                );
-                await seeAllBtn.click();
-                await page.waitForNavigation({
-                  waitUntil: 'domcontentloaded',
-                });
-              } catch (error) {
-                console.log('cant find see all button');
-              }
+      // let menuBtn;
+      // let categoryBtn;
+      // let urls = {};
+      // menuBtn = await getMenuBtn();
+      // await menuBtn.click();
+      // if (menuBtn) {
+      //   let menu = await getMenu();
+      //   categoryBtn = await getMobileBtn();
+      //   await categoryBtn.click();
+      //   let els = await page.$$('#hmenu-content > ul:nth-child(8) > li');
+      //   let performInitial = false;
+      //   for (let j = 0; j < els.length; j++) {
+      //     if (performInitial) {
+      //       menuBtn = await getMenuBtn();
+      //       await menuBtn.click();
+      //       if (menuBtn) {
+      //         menu = await getMenu();
+      //         categoryBtn = await getMobileBtn();
+      //         await categoryBtn.click();
+      //         els = await page.$$(`#hmenu-content > ul:nth-child(8) > li`);
+      //       }
+      //     }
+      //     try {
+      //       performInitial = false;
+      //       const link = await els[j].$eval('a', (a) => a.getAttribute('href'));
+      //       if (link?.includes('node=')) {
+      //         let mobileBtnn;
+      //         mobileBtnn = await page.waitForSelector(
+      //           `#hmenu-content > ul:nth-child(8) > li:nth-child(${j}) > a`,
+      //           {
+      //             visible: true,
+      //             waitUntil: 'load',
+      //             waitUntil: 'domcontentloaded',
+      //           }
+      //         );
+      //         await mobileBtnn.click();
+      //         await page.waitForNavigation({
+      //           waitUntil: 'domcontentloaded',
+      //         });
+      //         performInitial = true;
+      //         try {
+      //           let seeAllBtn = await page.waitForSelector(
+      //             '#apb-desktop-browse-search-see-all',
+      //             { visible: true }
+      //           );
+      //           await seeAllBtn.click();
+      //           await page.waitForNavigation({
+      //             waitUntil: 'domcontentloaded',
+      //           });
+      //         } catch (error) {
+      //           console.log('cant find see all button');
+      //         }
 
-              await page.waitForSelector('.a-link-normal', {
-                visible: true,
-              });
-              const hrefArray = await page.$$eval(
-                '.a-link-normal',
-                (elements) => {
-                  return elements.map((element) =>
-                    element.getAttribute('href')
-                  );
-                }
-              );
-              const links = hrefArray.toString();
-              const matchLink = links.split('dp/');
-              let extractedStrings = matchLink.map((link) => {
-                const endIndex = link.indexOf('/');
-                return endIndex !== -1 ? link.substring(0, endIndex) : link;
-              });
-              let uniqueArr = Array.from(new Set(extractedStrings));
-              uniqueArr = uniqueArr.filter((item) => item);
-              for (let k = 0; k < uniqueArr.length > 0; k++) {
-                try {
-                  const domain = 'in';
-                  const data = await ScraperHelper.scrapeAmazonProduct(
-                    uniqueArr[k],
-                    domain
-                  );
-                } catch (error) {
-                  console.log('error in amazon product asin = ' + uniqueArr[k]);
-                }
-              }
-              urls.productId = uniqueArr;
-            }
-          } catch (error) {
-            continue;
-          }
-        }
-      }
-      attempt = 0;
-      await gotoPage(page, attempt);
-      await delay(500);
+      //         await page.waitForSelector('.a-link-normal', {
+      //           visible: true,
+      //         });
+      //         const hrefArray = await page.$$eval(
+      //           '.a-link-normal',
+      //           (elements) => {
+      //             return elements.map((element) =>
+      //               element.getAttribute('href')
+      //             );
+      //           }
+      //         );
+      //         const links = hrefArray.toString();
+      //         const matchLink = links.split('dp/');
+      //         let extractedStrings = matchLink.map((link) => {
+      //           const endIndex = link.indexOf('/');
+      //           return endIndex !== -1 ? link.substring(0, endIndex) : link;
+      //         });
+      //         let uniqueArr = Array.from(new Set(extractedStrings));
+      //         uniqueArr = uniqueArr.filter((item) => item);
+      //         for (let k = 0; k < uniqueArr.length > 0; k++) {
+      //           try {
+      //             const domain = 'in';
+      //             const data = await ScraperHelper.scrapeAmazonProduct(
+      //               uniqueArr[k],
+      //               domain
+      //             );
+      //           } catch (error) {
+      //             console.log('error in amazon product asin = ' + uniqueArr[k]);
+      //           }
+      //         }
+      //         urls.productId = uniqueArr;
+      //       }
+      //     } catch (error) {
+      //       continue;
+      //     }
+      //   }
+      // }
+      // attempt = 0;
+      // await gotoPage(page, attempt);
+      // await delay(500);
       
-      menuBtn = await getMenuBtn();
-      await menuBtn.click();
-      if (menuBtn) {
-        categoryBtn = await getElectronicsBtn();
-        await categoryBtn.click();
-        let els = await page.$$('#hmenu-content > ul:nth-child(9) > li');
-        let performInitial = false;
-        for (let j = 0; j < els.length; j++) {
-          if (performInitial) {
-            menuBtn = await getMenuBtn();
-            await menuBtn.click();
-            if (menuBtn) {
-              // menu = await getMenu();
-              categoryBtn = await getElectronicsBtn();
-              await categoryBtn.click();
-              els = await page.$$(`#hmenu-content > ul:nth-child(9) > li`);
-            }
-          }
-          try {
-            performInitial = false;
-            const link = await els[j].$eval('a', (a) => a.getAttribute('href'));
-            if (link?.includes('node=')) {
-              let mobileBtnn;
-              mobileBtnn = await page.waitForSelector(
-                `#hmenu-content > ul:nth-child(9) > li:nth-child(${j}) > a`,
-                {
-                  visible: true,
-                  waitUntil: 'load',
-                  waitUntil: 'domcontentloaded',
-                }
-              );
-              await mobileBtnn.click();
-              await page.waitForNavigation({
-                waitUntil: 'domcontentloaded',
-              });
-              performInitial = true;
-              try {
-                let seeAllBtn = await page.waitForSelector(
-                  '#apb-desktop-browse-search-see-all',
-                  { visible: true }
-                );
-                await seeAllBtn.click();
-                await page.waitForNavigation({
-                  waitUntil: 'domcontentloaded',
-                });
-              } catch (error) {
-                console.log('cant find see all button');
-              }
+      // menuBtn = await getMenuBtn();
+      // await menuBtn.click();
+      // if (menuBtn) {
+      //   categoryBtn = await getElectronicsBtn();
+      //   await categoryBtn.click();
+      //   let els = await page.$$('#hmenu-content > ul:nth-child(9) > li');
+      //   let performInitial = false;
+      //   for (let j = 0; j < els.length; j++) {
+      //     if (performInitial) {
+      //       menuBtn = await getMenuBtn();
+      //       await menuBtn.click();
+      //       if (menuBtn) {
+      //         // menu = await getMenu();
+      //         categoryBtn = await getElectronicsBtn();
+      //         await categoryBtn.click();
+      //         els = await page.$$(`#hmenu-content > ul:nth-child(9) > li`);
+      //       }
+      //     }
+      //     try {
+      //       performInitial = false;
+      //       const link = await els[j].$eval('a', (a) => a.getAttribute('href'));
+      //       if (link?.includes('node=')) {
+      //         let mobileBtnn;
+      //         mobileBtnn = await page.waitForSelector(
+      //           `#hmenu-content > ul:nth-child(9) > li:nth-child(${j}) > a`,
+      //           {
+      //             visible: true,
+      //             waitUntil: 'load',
+      //             waitUntil: 'domcontentloaded',
+      //           }
+      //         );
+      //         await mobileBtnn.click();
+      //         await page.waitForNavigation({
+      //           waitUntil: 'domcontentloaded',
+      //         });
+      //         performInitial = true;
+      //         try {
+      //           let seeAllBtn = await page.waitForSelector(
+      //             '#apb-desktop-browse-search-see-all',
+      //             { visible: true }
+      //           );
+      //           await seeAllBtn.click();
+      //           await page.waitForNavigation({
+      //             waitUntil: 'domcontentloaded',
+      //           });
+      //         } catch (error) {
+      //           console.log('cant find see all button');
+      //         }
 
-              await page.waitForSelector('.a-link-normal', {
-                visible: true,
-              });
-              const hrefArray = await page.$$eval(
-                '.a-link-normal',
-                (elements) => {
-                  return elements.map((element) =>
-                    element.getAttribute('href')
-                  );
-                }
-              );
-              const links = hrefArray.toString();
-              const matchLink = links.split('dp/');
-              let extractedStrings = matchLink.map((link) => {
-                const endIndex = link.indexOf('/');
-                return endIndex !== -1 ? link.substring(0, endIndex) : link;
-              });
-              let uniqueArr = Array.from(new Set(extractedStrings));
-              uniqueArr = uniqueArr.filter((item) => item);
-              for (let k = 0; k < uniqueArr.length > 0; k++) {
-                try {
-                  const domain = 'in';
-                  const data = await ScraperHelper.scrapeAmazonProduct(
-                    uniqueArr[k],
-                    domain
-                  );
-                } catch (error) {
-                  console.log('error in amazon product asin = ' + uniqueArr[k]);
-                }
-              }
-              urls.productId = uniqueArr;
-            }
-          } catch (error) {
-            continue;
-          }
-        }
-      }
+      //         await page.waitForSelector('.a-link-normal', {
+      //           visible: true,
+      //         });
+      //         const hrefArray = await page.$$eval(
+      //           '.a-link-normal',
+      //           (elements) => {
+      //             return elements.map((element) =>
+      //               element.getAttribute('href')
+      //             );
+      //           }
+      //         );
+      //         const links = hrefArray.toString();
+      //         const matchLink = links.split('dp/');
+      //         let extractedStrings = matchLink.map((link) => {
+      //           const endIndex = link.indexOf('/');
+      //           return endIndex !== -1 ? link.substring(0, endIndex) : link;
+      //         });
+      //         let uniqueArr = Array.from(new Set(extractedStrings));
+      //         uniqueArr = uniqueArr.filter((item) => item);
+      //         for (let k = 0; k < uniqueArr.length > 0; k++) {
+      //           try {
+      //             const domain = 'in';
+      //             const data = await ScraperHelper.scrapeAmazonProduct(
+      //               uniqueArr[k],
+      //               domain
+      //             );
+      //           } catch (error) {
+      //             console.log('error in amazon product asin = ' + uniqueArr[k]);
+      //           }
+      //         }
+      //         urls.productId = uniqueArr;
+      //       }
+      //     } catch (error) {
+      //       continue;
+      //     }
+      //   }
+      // }
       await browser.close();
       return {
         status: 200,
