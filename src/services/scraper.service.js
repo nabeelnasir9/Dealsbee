@@ -183,7 +183,7 @@ export const ScraperService = {
       });
 
       const page = await browser.newPage();
-      await page.setViewport({ width: 866, height: 1500 });
+      // await page.setViewport({ width: 866, height: 1500 });
       await page.goto('https://www.amazon.in/', {
         waitUntil: 'load',
         waitUntil: 'domcontentloaded',
