@@ -134,7 +134,7 @@ export const ProductService = {
 
         pipeline.push({
           $match: {
-            price: ratingFilter,
+            rating: ratingFilter,
           },
         });
       }
@@ -404,6 +404,7 @@ export const ProductService = {
               },
             ],
             storeCounts: [
+              ...countPipline,
               {
                 $match: {
                   category_id: {

@@ -22,7 +22,7 @@ export const ScraperService = {
         visible: true,
         timeout: 10000,
       });
-      await page.waitForTimeout(2000);
+      await delay(2000);
       let attempt = 0;
       async function gotoPage(page, attempt) {
         attempt = attempt + 1;
@@ -176,7 +176,7 @@ export const ScraperService = {
         });
       }
       const browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         defaultViewport: null,
         args: ['--window-size=866,1500'],
       });
