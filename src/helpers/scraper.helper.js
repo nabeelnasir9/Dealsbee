@@ -134,7 +134,7 @@ export const ScraperHelper = {
       let page, browser;
       if (!newPage) {
         browser = await puppeteer.launch({
-          headless: false,
+          headless: true,
           defaultViewport: null,
           args: ['--no-sandbox', '--disable-setuid-sandbox','--enable-gpu'],
           ignoreDefaultArgs: ['--disable-extensions']
