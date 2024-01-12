@@ -177,12 +177,10 @@ export const ScraperService = {
       }
       const browser = await puppeteer.launch({
         headless: true,
-        defaultViewport: null,
-        args: ["--window-size=866,1500"],
+        defaultViewport: null
       });
 
       const page = await browser.newPage();
-      await page.setViewport({ width: 866, height: 1500 });
       await page.goto("https://www.amazon.in/", {
         waitUntil: "load",
         waitUntil: "domcontentloaded",
