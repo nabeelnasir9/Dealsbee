@@ -9,8 +9,7 @@
     "dev": "nodemon src/index.js",
     "test": "prettier --check .",
     "format": "prettier --write .",
-    "prepare": "husky install",
-    "heroku-postbuild": "mv /app/.cache/puppeteer ./.cache"
+    "prepare": "husky install"
   },
   "author": "@imrancs058",
   "license": "MIT",

@@ -1,4 +1,4 @@
-import { ComparisonModel } from "../models/index.js";
+import { ComparisonModel, CategoryModel } from "../models/index.js";
 import mongoose from "mongoose";
 export const ComparisonService = {
   createComparisons: async (body) => {
@@ -31,6 +31,11 @@ export const ComparisonService = {
   },
   getComparisons: async ({ page = 1, limit = 10, ...query }) => {
     const skip = (page - 1) * limit;
+    if (!query.category) {
+      query.category = "mobile";
+    } else {
+      query.category = query.category.replaceAll("_", " ");
+    }
     try {
       const aggregationPipeline = [
         {
@@ -47,17 +52,14 @@ export const ComparisonService = {
             as: "products",
           },
         },
+        {
+          $match: {
+            type: query.category,
+          },
+        },
         { $skip: +skip },
         { $limit: +limit },
       ];
-
-      if (query?.type) {
-        aggregationPipeline.unshift({
-          $match: {
-            type: query.type,
-          },
-        });
-      }
 
       const data = await ComparisonModel.aggregate(aggregationPipeline);
 
