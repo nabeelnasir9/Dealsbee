@@ -136,6 +136,7 @@ export const ScraperHelper = {
         browser = await puppeteer.launch({
           headless: false,
           defaultViewport: null,
+          args: ['--no-sandbox', '--disable-setuid-sandbox','--enable-gpu']
         });
         page = await browser.newPage();
       } else {
