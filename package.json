@@ -6,7 +6,10 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "test": "prettier --check .",
+    "format": "prettier --write .",
+    "prepare": "husky install"
   },
   "author": "@imrancs058",
   "license": "MIT",
@@ -28,6 +31,16 @@
     "puppeteer": "^21.5.2"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "husky": "^8.0.0",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.8.8"
+  },
+  "husky": {
+    "hooks": {
+      "applypatch-msg": "echo \"[Husky] applypatch-msg\"",
+      "pre-applypatch": "echo \"[Husky] pre-applypatch\"",
+      "post-applypatch": "echo \"[Husky] post-applypatch\"",
+      "pre-commit": "prettier --check . && git add -A ."
+    }
   }
 }
