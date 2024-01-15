@@ -164,6 +164,7 @@ export const ScraperHelper = {
       // if (!url) {
       //   await browser.close();
       // }
+      
       await page.goto(url, {
         waitUntil: "domcontentloaded",
       });
