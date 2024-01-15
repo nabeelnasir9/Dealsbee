@@ -175,6 +175,11 @@ export const ProductService = {
                 },
               },
               {
+                  $match: {
+                      count: { $gte: 20 }
+                  }
+              },
+              {
                 $addFields: {
                   checked: false,
                 },
