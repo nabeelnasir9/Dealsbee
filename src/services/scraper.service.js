@@ -564,8 +564,7 @@ export const ScraperService = {
       const pageLink = "https://www.flipkart.com";
       const categoriesLink = [];
       const browser = await puppeteer.launch({
-        headless: false,
-        defaultViewport: null,
+        args: ["--no-sandbox"]
       });
 
       const page = await browser.newPage();
