@@ -572,97 +572,110 @@ export const ScraperService = {
       await page.goto(pageLink, {
         waitUntil: "networkidle0",
       });
-
-      const modalClose = await page.waitForSelector(
-        "body > div.fbDBuK._3CYmv5 > div > span",
-        { visible: true }
-      );
-      if (modalClose) {
+      try {
+        const modalClose = await page.waitForSelector('span[role="button"]', {
+          visible: true,
+          timeout: 2000,
+        });
         modalClose.click();
-        const categoryBtn = await page.waitForSelector(
+      } catch (error) {
+        console.log('error');
+      }
+      let categoryBtn
+      let method
+      try{
+        categoryBtn = await page.waitForSelector(
           '[aria-label="Electronics"]',
           { visible: true }
         );
-        if (categoryBtn) {
-          categoryBtn.click();
+        method=1
+      }catch(error){
+        categoryBtn = await page.waitForSelector(
+          '[aria-label="TVs & Electronics"]',
+          { visible: true }
+        );
+        method=2
+      }
+      if (categoryBtn) {
+        categoryBtn.click();
 
-          const electronicBtn = await page.waitForSelector(
-            "#container > div > div._331-kn > div > div > span:nth-child(1)",
-            { visible: true }
+        const electronicBtn = await page.waitForSelector(
+          "#container > div > div._331-kn > div > div > span:nth-child(1)",
+          { visible: true }
+        );
+        if (electronicBtn) {
+          electronicBtn.hover();
+
+          const mobilesLink = await page.waitForSelector('[title="Mobiles"]');
+          const siblingElements = await page.evaluate((element) => {
+            const siblings = [];
+            let sibling = element.nextElementSibling;
+            while (sibling) {
+              if (sibling.tagName === "A" && sibling.href) {
+                siblings.push(sibling.href);
+              }
+              sibling = sibling.nextElementSibling;
+            }
+            return siblings;
+          }, mobilesLink);
+          categoriesLink.push(...siblingElements);
+
+          const accessoriesLink = await page.waitForSelector(
+            '[title="Mobile Accessories"]'
           );
-          if (electronicBtn) {
-            electronicBtn.hover();
-
-            const mobilesLink = await page.waitForSelector('[title="Mobiles"]');
-            const siblingElements = await page.evaluate((element) => {
-              const siblings = [];
-              let sibling = element.nextElementSibling;
-              while (sibling) {
-                if (sibling.tagName === "A" && sibling.href) {
-                  siblings.push(sibling.href);
-                }
-                sibling = sibling.nextElementSibling;
+          const siblingElements_2 = await page.evaluate((element) => {
+            const siblings = [];
+            let sibling = element.nextElementSibling;
+            while (sibling) {
+              if (sibling.tagName === "A" && sibling.href) {
+                siblings.push(sibling.href);
               }
-              return siblings;
-            }, mobilesLink);
-            categoriesLink.push(...siblingElements);
+              sibling = sibling.nextElementSibling;
+            }
+            return siblings;
+          }, accessoriesLink);
+          categoriesLink.push(...siblingElements_2);
 
-            const accessoriesLink = await page.waitForSelector(
-              '[title="Mobile Accessories"]'
+          try {
+            const LoptopsLink = await page.waitForSelector(
+              '[title="Gaming Laptops"]'
             );
-            const siblingElements_2 = await page.evaluate((element) => {
-              const siblings = [];
-              let sibling = element.nextElementSibling;
-              while (sibling) {
-                if (sibling.tagName === "A" && sibling.href) {
-                  siblings.push(sibling.href);
-                }
-                sibling = sibling.nextElementSibling;
-              }
-              return siblings;
-            }, accessoriesLink);
-            categoriesLink.push(...siblingElements_2);
+            const loptopsHref = await page.evaluate(
+              (element) => element.href,
+              LoptopsLink
+            );
+            categoriesLink.push(loptopsHref);
+          } catch (error) {
+            console.log("can't able to get laptop links");
+          }
+          try {
+            const disktopLink = await page.waitForSelector(
+              '[title="Desktop PCs"]'
+            );
+            const disktopHref = await page.evaluate(
+              (element) => element.href,
+              disktopLink
+            );
+            categoriesLink.push(disktopHref);
+          } catch (error) {
+            console.log("can't able to get disktop links");
+          }
 
-            try {
-              const LoptopsLink = await page.waitForSelector(
-                '[title="Gaming Laptops"]'
-              );
-              const loptopsHref = await page.evaluate(
-                (element) => element.href,
-                LoptopsLink
-              );
-              categoriesLink.push(loptopsHref);
-            } catch (error) {
-              console.log("can't able to get laptop links");
-            }
-            try {
-              const disktopLink = await page.waitForSelector(
-                '[title="Desktop PCs"]'
-              );
-              const disktopHref = await page.evaluate(
-                (element) => element.href,
-                disktopLink
-              );
-              categoriesLink.push(disktopHref);
-            } catch (error) {
-              console.log("can't able to get disktop links");
-            }
-
-            try {
-              const ipadsLink = await page.waitForSelector(
-                '[title="Apple iPads"]'
-              );
-              const ipadsHref = await page.evaluate(
-                (element) => element.href,
-                ipadsLink
-              );
-              categoriesLink.push(ipadsHref);
-            } catch (error) {
-              console.log("can't able to get ipads links");
-            }
+          try {
+            const ipadsLink = await page.waitForSelector(
+              '[title="Apple iPads"]'
+            );
+            const ipadsHref = await page.evaluate(
+              (element) => element.href,
+              ipadsLink
+            );
+            categoriesLink.push(ipadsHref);
+          } catch (error) {
+            console.log("can't able to get ipads links");
           }
         }
       }
+    
 
       const allData = [];
       for (const pageUrl of categoriesLink) {
