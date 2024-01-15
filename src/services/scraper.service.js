@@ -569,7 +569,7 @@ export const ScraperService = {
 
       const page = await browser.newPage();
       await page.goto(pageLink, {
-        waitUntil: "networkidle0",
+        waitUntil: "domcontentloaded",
       });
       try {
         const modalClose = await page.waitForSelector('span[role="button"]', {
