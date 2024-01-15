@@ -140,7 +140,7 @@ export const ScraperHelper = {
         }catch(error){
           throw{
             status: 500,
-            message: "ERROR DURING BROWSER INITIALIZATION",
+            message: "ERROR DURING BROWSER INITIALIZATION, "+error.message?error.message:"",
           }
         }
         try{
