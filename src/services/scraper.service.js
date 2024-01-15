@@ -3,8 +3,6 @@ import axios from "axios";
 import { CategoryModel, ProductModel } from "../models/index.js";
 import config from "../config/index.js";
 import { ScraperHelper } from "../helpers/index.js";
-import { KnownDevices } from "puppeteer";
-const iPhone = KnownDevices["iPhone 6"];
 
 export const ScraperService = {
   scrapeAmazonProduct: ScraperHelper.scrapeAmazonProduct,
