@@ -133,12 +133,33 @@ export const ScraperHelper = {
     try {
       let page, browser;
       if (!newPage) {
-        browser = await puppeteer.launch({
-          args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
-        page = await browser.newPage();
+        try{
+          browser = await puppeteer.launch({
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+          });
+        }catch(error){
+          throw{
+            status: 500,
+            message: "ERROR DURING BROWSER INITIALIZATION",
+          }
+        }
+        try{
+          page = await browser.newPage();
+        }catch(error){
+          throw{
+            status: 500,
+            message: "ERROR DURING PAGE INITIALIZATION",
+          }
+        }
       } else {
-        page = newPage;
+        try{
+          page = newPage;
+        }catch(error){
+          throw{
+            status: 500,
+            message: "ERROR DURING NEW PAGE INITIALIZATION",
+          }
+        }
       }
       if (!url) {
         await browser.close();
