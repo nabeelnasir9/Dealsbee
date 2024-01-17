@@ -161,13 +161,13 @@ export const ScraperHelper = {
           throw {
             status: 500,
             message: "ERROR DURING NEW PAGE INITIALIZATION",
-          }
+          };
         }
       }
       if (!url) {
         await browser.close();
       }
-      
+
       await page.goto(url, {
         waitUntil: "domcontentloaded",
       });

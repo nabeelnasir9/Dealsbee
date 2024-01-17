@@ -175,7 +175,7 @@ export const ScraperService = {
       }
       const browser = await puppeteer.launch({
         headless: true,
-        defaultViewport: null
+        defaultViewport: null,
       });
 
       const page = await browser.newPage();
@@ -721,7 +721,7 @@ export const ScraperService = {
               const siblings = [];
               let sibling = element.nextElementSibling;
               while (sibling) {
-                if (sibling.tagName === 'A' && sibling.href) {
+                if (sibling.tagName === "A" && sibling.href) {
                   siblings.push(sibling.href);
                 }
                 sibling = sibling.nextElementSibling;
@@ -740,7 +740,7 @@ export const ScraperService = {
               const siblings = [];
               let sibling = element.nextElementSibling;
               while (sibling) {
-                if (sibling.tagName === 'A' && sibling.href) {
+                if (sibling.tagName === "A" && sibling.href) {
                   siblings.push(sibling.href);
                 }
                 sibling = sibling.nextElementSibling;

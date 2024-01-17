@@ -158,10 +158,10 @@ export const ProductService = {
       }
 
       const countPipline = pipeline.filter((item) => {
-        if(item?.['$match']?.['category_id'] || item?.['$sort']?.['rating']){
-          return true
-        } else{
-          return false
+        if (item?.["$match"]?.["category_id"] || item?.["$sort"]?.["rating"]) {
+          return true;
+        } else {
+          return false;
         }
       });
       const data = await ProductModel.aggregate([
