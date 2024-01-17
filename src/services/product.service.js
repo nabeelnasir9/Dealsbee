@@ -225,6 +225,11 @@ export const ProductService = {
                 },
               },
               {
+                $match: {
+                  count: { $gte: 20 },
+                },
+              },
+              {
                 $addFields: {
                   checked: false,
                 },
@@ -261,6 +266,11 @@ export const ProductService = {
                 },
               },
               {
+                $match: {
+                  count: { $gte: 20 },
+                },
+              },
+              {
                 $sort: {
                   count: -1,
                   _id: -1,
@@ -292,6 +302,11 @@ export const ProductService = {
                 },
               },
               {
+                $match: {
+                  count: { $gte: 20 },
+                },
+              },
+              {
                 $sort: {
                   count: -1,
                   _id: -1,
@@ -315,6 +330,11 @@ export const ProductService = {
                 $group: {
                   _id: { $toLower: "$product_details.processor core" },
                   count: { $sum: 1 },
+                },
+              },
+              {
+                $match: {
+                  count: { $gte: 20 },
                 },
               },
               {
@@ -349,6 +369,11 @@ export const ProductService = {
                 },
               },
               {
+                $match: {
+                  count: { $gte: 20 },
+                },
+              },
+              {
                 $addFields: {
                   checked: false,
                 },
@@ -377,6 +402,11 @@ export const ProductService = {
                 $group: {
                   _id: { $toLower: "$product_details.operating system" },
                   count: { $sum: 1 },
+                },
+              },
+              {
+                $match: {
+                  count: { $gte: 20 },
                 },
               },
               {
@@ -411,6 +441,11 @@ export const ProductService = {
                 },
               },
               {
+                $match: {
+                  count: { $gte: 20 },
+                },
+              },
+              {
                 $addFields: {
                   checked: false,
                 },
@@ -423,7 +458,6 @@ export const ProductService = {
               },
             ],
             storeCounts: [
-              ...countPipline,
               {
                 $match: {
                   category_id: {
@@ -435,6 +469,11 @@ export const ProductService = {
                 $group: {
                   _id: "$store",
                   count: { $sum: 1 },
+                },
+              },
+              {
+                $match: {
+                  count: { $gte: 20 },
                 },
               },
               {
