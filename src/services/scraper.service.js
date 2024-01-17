@@ -283,6 +283,7 @@ export const ScraperService = {
         let els = await page.$$("#hmenu-content > ul:nth-child(8) > li");
         let performInitial = false;
         for (let j = 0; j < els.length; j++) {
+          let currentPage=1
           if (performInitial) {
             menuBtn = await getMenuBtn();
             await menuBtn.click();
@@ -327,14 +328,37 @@ export const ScraperService = {
               await page.waitForSelector(".a-link-normal", {
                 visible: true,
               });
-              const hrefArray = await page.$$eval(
-                ".a-link-normal",
-                (elements) => {
-                  return elements.map((element) =>
-                    element.getAttribute("href")
+              async function goToNextPage() {
+                let hrefs=[]
+                try{
+                  let nextBtn = await page.waitForSelector(
+                    `a[aria-label="Go to page ${currentPage+1}"]`,
+                    {
+                      visible: true,
+                      waitUntil: "load",
+                      waitUntil: "domcontentloaded",
+                    }
                   );
+                  hrefs = await page.$$eval(
+                    ".a-link-normal",
+                    (elements) => {
+                      return elements.map((element) =>
+                        element.getAttribute("href")
+                      );
+                    }
+                  );
+                  if(currentPage<10){
+                    await nextBtn.click();
+                    currentPage=currentPage+1
+                    const tempHrefs=await goToNextPage()
+                    hrefs.push(...tempHrefs)
+                  }
+                }catch(error){
+                  console.log('cant find next page')
                 }
-              );
+                return hrefs
+              }
+              const hrefArray=await goToNextPage()
               const links = hrefArray.toString();
               const matchLink = links.split("dp/");
               let extractedStrings = matchLink.map((link) => {
@@ -346,10 +370,13 @@ export const ScraperService = {
               for (let k = 0; k < uniqueArr.length > 0; k++) {
                 try {
                   const domain = "in";
-                  const data = await ScraperHelper.scrapeAmazonProduct(
-                    uniqueArr[k],
-                    domain
-                  );
+                  const isExists=await ProductModel.findOne({asin:uniqueArr[k]})
+                  if(!isExists){
+                    const data = await ScraperHelper.scrapeAmazonProduct(
+                      uniqueArr[k],
+                      domain
+                    );
+                  }
                 } catch (error) {
                   console.log("error in amazon product asin = " + uniqueArr[k]);
                 }
@@ -389,7 +416,7 @@ export const ScraperService = {
             if (link?.includes("node=")) {
               let mobileBtnn;
               mobileBtnn = await page.waitForSelector(
-                `#hmenu-content > ul:nth-child(9) > li:nth-child(${j}) > a`,
+                `#hmenu-content > ul:nth-child(8) > li:nth-child(${j}) > a`,
                 {
                   visible: true,
                   waitUntil: "load",
