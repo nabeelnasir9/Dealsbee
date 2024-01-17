@@ -133,29 +133,32 @@ export const ScraperHelper = {
     try {
       let page, browser;
       if (!newPage) {
-        try{
+        try {
           browser = await puppeteer.launch({
-            args: ['--no-sandbox']
+            args: ["--no-sandbox"],
           });
-        }catch(error){
-          throw{
+        } catch (error) {
+          throw {
             status: 500,
-            message: "ERROR DURING BROWSER INITIALIZATION, "+error.message?error.message:"",
-          }
+            message:
+              "ERROR DURING BROWSER INITIALIZATION, " + error.message
+                ? error.message
+                : "",
+          };
         }
-        try{
+        try {
           page = await browser.newPage();
-        }catch(error){
-          throw{
+        } catch (error) {
+          throw {
             status: 500,
             message: "ERROR DURING PAGE INITIALIZATION",
-          }
+          };
         }
       } else {
-        try{
+        try {
           page = newPage;
-        }catch(error){
-          throw{
+        } catch (error) {
+          throw {
             status: 500,
             message: "ERROR DURING NEW PAGE INITIALIZATION",
           }

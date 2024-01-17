@@ -564,7 +564,8 @@ export const ScraperService = {
       const pageLink = "https://www.flipkart.com";
       const categoriesLink = [];
       const browser = await puppeteer.launch({
-        args: ["--no-sandbox"]
+        headless: false,
+        defaultViewport: null,
       });
 
       const page = await browser.newPage();
@@ -578,22 +579,23 @@ export const ScraperService = {
         });
         modalClose.click();
       } catch (error) {
-        console.log('error');
+        console.log("error");
       }
-      let categoryBtn
-      let method
-      try{
-        categoryBtn = await page.waitForSelector(
-          '[aria-label="Electronics"]',
-          { visible: true }
-        );
-        method=1
-      }catch(error){
+      let categoryBtn;
+      let method;
+      let viewAllLinks = [];
+      try {
+        categoryBtn = await page.waitForSelector('[aria-label="Electronics"]', {
+          visible: true,
+          timeout: 6000,
+        });
+        method = 1;
+      } catch (error) {
         categoryBtn = await page.waitForSelector(
           '[aria-label="TVs & Electronics"]',
           { visible: true }
         );
-        method=2
+        method = 2;
       }
       if (categoryBtn) {
         categoryBtn.click();
@@ -636,14 +638,12 @@ export const ScraperService = {
           categoriesLink.push(...siblingElements_2);
 
           try {
-            const LoptopsLink = await page.waitForSelector(
-              '[title="Gaming Laptops"]'
-            );
+            const LoptopsLink = await page.waitForSelector('[title="Laptops"]');
             const loptopsHref = await page.evaluate(
               (element) => element.href,
               LoptopsLink
             );
-            categoriesLink.push(loptopsHref);
+            viewAllLinks.push(loptopsHref);
           } catch (error) {
             console.log("can't able to get laptop links");
           }
@@ -655,43 +655,197 @@ export const ScraperService = {
               (element) => element.href,
               disktopLink
             );
-            categoriesLink.push(disktopHref);
+            viewAllLinks.push(disktopHref);
+          } catch (error) {
+            console.log("can't able to get disktop links");
+          }
+          try {
+            const disktopLink = await page.waitForSelector(
+              '[title="Gaming & Accessories"]'
+            );
+            const disktopHref = await page.evaluate(
+              (element) => element.href,
+              disktopLink
+            );
+            viewAllLinks.push(disktopHref);
+          } catch (error) {
+            console.log("can't able to get disktop links");
+          }
+          try {
+            const disktopLink = await page.waitForSelector(
+              '[title="Computer Accessories"]'
+            );
+            const disktopHref = await page.evaluate(
+              (element) => element.href,
+              disktopLink
+            );
+            viewAllLinks.push(disktopHref);
+          } catch (error) {
+            console.log("can't able to get disktop links");
+          }
+          try {
+            const disktopLink = await page.waitForSelector(
+              '[title="Computer Peripherals"]'
+            );
+            const disktopHref = await page.evaluate(
+              (element) => element.href,
+              disktopLink
+            );
+            viewAllLinks.push(disktopHref);
           } catch (error) {
             console.log("can't able to get disktop links");
           }
 
           try {
-            const ipadsLink = await page.waitForSelector(
-              '[title="Apple iPads"]'
-            );
+            const ipadsLink = await page.waitForSelector('[title="Tablets"]');
             const ipadsHref = await page.evaluate(
               (element) => element.href,
               ipadsLink
             );
-            categoriesLink.push(ipadsHref);
+            viewAllLinks.push(ipadsHref);
           } catch (error) {
             console.log("can't able to get ipads links");
           }
         }
+        try {
+          const appliancesBtn = await page.waitForSelector(
+            "#container > div > div._331-kn > div > div > span:nth-child(2)",
+            { visible: true }
+          );
+          await appliancesBtn.hover();
+          try {
+            const acAndMachinesLinks = await page.waitForSelector(
+              '[title="Washing Machine"]'
+            );
+            const siblingElements = await page.evaluate((element) => {
+              const siblings = [];
+              let sibling = element.nextElementSibling;
+              while (sibling) {
+                if (sibling.tagName === 'A' && sibling.href) {
+                  siblings.push(sibling.href);
+                }
+                sibling = sibling.nextElementSibling;
+              }
+              return siblings;
+            }, acAndMachinesLinks);
+            categoriesLink.push(...siblingElements);
+          } catch (error) {
+            console.log(error);
+          }
+          try {
+            const appliancesLinks = await page.waitForSelector(
+              '[title="Kitchen Appliances"]'
+            );
+            const siblingElements = await page.evaluate((element) => {
+              const siblings = [];
+              let sibling = element.nextElementSibling;
+              while (sibling) {
+                if (sibling.tagName === 'A' && sibling.href) {
+                  siblings.push(sibling.href);
+                }
+                sibling = sibling.nextElementSibling;
+              }
+              return siblings;
+            }, appliancesLinks);
+            categoriesLink.push(...siblingElements);
+          } catch (error) {
+            console.log(error);
+          }
+          try {
+            const tvLink = await page.waitForSelector('[title="Television"]');
+            const tvHref = await page.evaluate(
+              (element) => element.href,
+              tvLink
+            );
+            viewAllLinks.push(tvHref);
+          } catch (error) {
+            console.log("can't able to get ipads links");
+          }
+        } catch (error) {
+          console.log("error in view all links");
+          //document.querySelectorAll('a[class="_2I9KP_"]')
+        }
       }
-    
+      for (let i = 0; i < viewAllLinks.length; i++) {
+        try {
+          await page.goto(viewAllLinks[i], {
+            waitUntil: "domcontentloaded",
+            visible: true,
+          });
+          const hrefArray = await page.$$eval("a", (elements) => {
+            return elements?.map((element) => element.getAttribute("href"));
+          });
+          let pageUrl = hrefArray.filter((item) => item.includes("sid="));
+          pageUrl = new Set(pageUrl);
+          categoriesLink.push(...pageUrl);
+        } catch (error) {
+          continue;
+        }
+      }
 
       const allData = [];
+      let categoriesLinkPage = 1;
       for (const pageUrl of categoriesLink) {
-        await page.goto(pageUrl, {
-          waitUntil: "domcontentloaded",
-          visible: true,
-        });
-        const hrefArray = await page.$$eval(
-          "#container div div:nth-child(3) a",
-          (elements) => {
-            return elements?.map((element) => element.getAttribute("href"));
+        try {
+          let pageLink;
+          if (!pageUrl.includes("https://www.flipkart.com")) {
+            if (pageUrl[0] == "/") {
+              pageLink = "https://www.flipkart.com" + pageUrl;
+            } else {
+              pageLink = "https://www.flipkart.com/" + pageUrl;
+            }
+          } else {
+            pageLink = pageUrl;
           }
-        );
-        const base_url = "https://www.flipkart.com";
-        const fullUrls = hrefArray.map((uri) => base_url + uri);
-        const filteredUrls = fullUrls.filter((url) => url.includes("pid="));
-        allData.push(filteredUrls);
+          async function getLinksOfACategory() {
+            const hrefArray = await page.$$eval(
+              "#container div div:nth-child(3) a",
+              (elements) => {
+                return elements?.map((element) => element.getAttribute("href"));
+              }
+            );
+            const base_url = "https://www.flipkart.com";
+            const fullUrls = hrefArray.map((uri) => base_url + uri);
+            const filteredUrls = fullUrls.filter((url) => url.includes("pid="));
+            allData.push(filteredUrls);
+            //get all links
+            const allLinks = await page.$$eval("a", (elements) => {
+              return elements?.map((element) => element.getAttribute("href"));
+            });
+
+            //check if any of allLinks contains page=2
+            const nextPage = allLinks.some((item) =>
+              item.includes(`page=${categoriesLinkPage + 1}`)
+            );
+            if (nextPage && categoriesLinkPage < 6) {
+              let nextPageLink = allLinks.filter((item) =>
+                item.includes(`page=${categoriesLinkPage + 1}`)
+              );
+              nextPageLink = nextPageLink[0]?.includes(
+                "https://www.flipkart.com"
+              )
+                ? nextPageLink[0]
+                : "https://www.flipkart.com" + nextPageLink[0];
+              await page.goto(nextPageLink, {
+                waitUntil: "domcontentloaded",
+                visible: true,
+                timeout: 60000,
+              });
+              categoriesLinkPage = categoriesLinkPage + 1;
+              await getLinksOfACategory();
+            } else {
+              categoriesLinkPage = 1;
+              return allData;
+            }
+          }
+          await page.goto(pageLink, {
+            waitUntil: "domcontentloaded",
+            visible: true,
+          });
+          await getLinksOfACategory();
+        } catch (error) {
+          continue;
+        }
       }
       const combinedArray = [].concat(...allData);
       const prodLink = [...new Set(combinedArray)];
