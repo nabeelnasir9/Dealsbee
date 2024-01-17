@@ -283,7 +283,7 @@ export const ScraperService = {
         let els = await page.$$("#hmenu-content > ul:nth-child(8) > li");
         let performInitial = false;
         for (let j = 0; j < els.length; j++) {
-          let currentPage=1
+          let currentPage = 1;
           if (performInitial) {
             menuBtn = await getMenuBtn();
             await menuBtn.click();
@@ -329,36 +329,33 @@ export const ScraperService = {
                 visible: true,
               });
               async function goToNextPage() {
-                let hrefs=[]
-                try{
+                let hrefs = [];
+                try {
                   let nextBtn = await page.waitForSelector(
-                    `a[aria-label="Go to page ${currentPage+1}"]`,
+                    `a[aria-label="Go to page ${currentPage + 1}"]`,
                     {
                       visible: true,
                       waitUntil: "load",
                       waitUntil: "domcontentloaded",
                     }
                   );
-                  hrefs = await page.$$eval(
-                    ".a-link-normal",
-                    (elements) => {
-                      return elements.map((element) =>
-                        element.getAttribute("href")
-                      );
-                    }
-                  );
-                  if(currentPage<10){
+                  hrefs = await page.$$eval(".a-link-normal", (elements) => {
+                    return elements.map((element) =>
+                      element.getAttribute("href")
+                    );
+                  });
+                  if (currentPage < 10) {
                     await nextBtn.click();
-                    currentPage=currentPage+1
-                    const tempHrefs=await goToNextPage()
-                    hrefs.push(...tempHrefs)
+                    currentPage = currentPage + 1;
+                    const tempHrefs = await goToNextPage();
+                    hrefs.push(...tempHrefs);
                   }
-                }catch(error){
-                  console.log('cant find next page')
+                } catch (error) {
+                  console.log("cant find next page");
                 }
-                return hrefs
+                return hrefs;
               }
-              const hrefArray=await goToNextPage()
+              const hrefArray = await goToNextPage();
               const links = hrefArray.toString();
               const matchLink = links.split("dp/");
               let extractedStrings = matchLink.map((link) => {
@@ -370,8 +367,10 @@ export const ScraperService = {
               for (let k = 0; k < uniqueArr.length > 0; k++) {
                 try {
                   const domain = "in";
-                  const isExists=await ProductModel.findOne({asin:uniqueArr[k]})
-                  if(!isExists){
+                  const isExists = await ProductModel.findOne({
+                    productId: uniqueArr[k],
+                  });
+                  if (!isExists) {
                     const data = await ScraperHelper.scrapeAmazonProduct(
                       uniqueArr[k],
                       domain
@@ -492,7 +491,7 @@ export const ScraperService = {
       };
     }
   },
-  scrapeAmazonMobileListIndia: async () => {
+  scrapeAmazonMobiles: async () => {
     try {
       async function delay(time) {
         return new Promise(function (resolve) {
@@ -579,6 +578,7 @@ export const ScraperService = {
         let menu = await getMenu();
         let categoryBtn = await getMobileBtn();
         await categoryBtn.click();
+        await delay(3000);
         let mobileBtnn = await page.waitForSelector(
           `#hmenu-content > ul:nth-child(8) > li:nth-child(3) > a`,
           {
@@ -591,6 +591,7 @@ export const ScraperService = {
         await page.waitForNavigation({
           waitUntil: "domcontentloaded",
         });
+        await delay(3000);
         let seeAllBtn = await page.waitForSelector(
           "#apb-desktop-browse-search-see-all",
           { visible: true }
@@ -599,34 +600,69 @@ export const ScraperService = {
         await page.waitForNavigation({
           waitUntil: "domcontentloaded",
         });
+        await delay(3000);
         await page.waitForSelector(".a-link-normal", {
           visible: true,
         });
-        const hrefArray = await page.$$eval(".a-link-normal", (elements) => {
-          return elements.map((element) => element.getAttribute("href"));
-        });
-        const links = hrefArray.toString();
-        const matchLink = links.split("dp/");
-        let extractedStrings = matchLink.map((link) => {
-          const endIndex = link.indexOf("/");
-          return endIndex !== -1 ? link.substring(0, endIndex) : link;
-        });
-        let uniqueArr = Array.from(new Set(extractedStrings));
-        uniqueArr = uniqueArr.filter((item) => item);
-        for (let k = 0; k < uniqueArr.length > 0; k++) {
+        let currentPage = 1;
+        async function goToNextPage() {
+          let resultArr = [];
           try {
-            const domain = "in";
-            const data = await ScraperHelper.scrapeAmazonProduct(
-              uniqueArr[k],
-              domain
+            let nextBtn = await page.waitForSelector(
+              `a[aria-label="Go to page ${currentPage + 1}"]`,
+              {
+                visible: true,
+                waitUntil: "load",
+                waitUntil: "domcontentloaded",
+              }
             );
+            let hrefs = await page.$$eval(".a-link-normal", (elements) => {
+              return elements.map((element) => element.getAttribute("href"));
+            });
+            const links = hrefs.toString();
+            const matchLink = links.split("dp/");
+            let extractedStrings = matchLink.map((link) => {
+              const endIndex = link.indexOf("/");
+              return endIndex !== -1 ? link.substring(0, endIndex) : link;
+            });
+            let uniqueArr = Array.from(new Set(extractedStrings));
+            uniqueArr = uniqueArr.filter((item) => item);
+            for (let k = 0; k < uniqueArr.length > 0; k++) {
+              try {
+                const domain = "in";
+                const isExists = await ProductModel.findOne({
+                  productId: uniqueArr[k],
+                });
+                if (!isExists) {
+                  const data = await ScraperHelper.scrapeAmazonProduct(
+                    uniqueArr[k],
+                    domain
+                  );
+                } else {
+                  console.log("already exists");
+                }
+              } catch (error) {
+                console.log("error in amazon product asin = " + uniqueArr[k]);
+              }
+            }
+            if (currentPage < 150) {
+              console.log("page", currentPage);
+              await nextBtn.click();
+              await delay(1000)
+              currentPage = currentPage + 1;
+              const tempHrefs = await goToNextPage();
+              resultArr.push(...tempHrefs);
+            }
+            resultArr = uniqueArr;
           } catch (error) {
-            console.log("error in amazon product asin = " + uniqueArr[k]);
+            console.log("cant find next page");
           }
+          return resultArr;
         }
-        urls.productId = uniqueArr;
+        const hrefArray = await goToNextPage();
+
+        urls.productId = hrefArray;
       }
-      attempt = 0;
       await browser.close();
       return {
         status: 200,

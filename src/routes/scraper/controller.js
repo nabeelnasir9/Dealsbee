@@ -44,9 +44,9 @@ const controller = {
       return httpResponse.INTERNAL_SERVER_ERROR(res, error);
     }
   },
-  scrapeAmazonMobileListIndia: async (req, res) => {
+  scrapeAmazonMobiles: async (req, res) => {
     try {
-      const data = await ScraperService.scrapeAmazonMobileListIndia();
+      const data = await ScraperService.scrapeAmazonMobiles();
       if (data?.status == 204) {
         return httpResponse.SUCCESS(res, data);
       }
