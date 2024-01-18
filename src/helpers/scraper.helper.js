@@ -80,14 +80,16 @@ export const ScraperHelper = {
           }
         }
 
-        // if (responseData.product_details?.ram) {
-        //   let ram =0
-        //   ram= responseData.product_details.ram.replace(/[^0-9\.]+/g, "");
-        //   let ram_unit=''
-        //   ram_unit=responseData.product_details.ram.replace(/[0-9]/g, '').trim()
-        //   responseData.product_details.ram=parseNumber(ram)
-        //   responseData.product_details.ram_unit=ram_unit
-        // }
+        if (responseData.product_details?.ram) {
+          let ram = 0;
+          ram = responseData.product_details.ram.replace(/[^0-9\.]+/g, "");
+          let ram_unit = "";
+          ram_unit = responseData.product_details.ram
+            .replace(/[0-9]/g, "")
+            .trim();
+          responseData.product_details.ram = parseNumber(ram);
+          responseData.product_details.ram_unit = ram_unit;
+        }
         let productData = {
           title: responseData.product_name,
           productId: responseData.asin,
