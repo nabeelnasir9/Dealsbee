@@ -560,21 +560,7 @@ export const ProductService = {
   },
   getProductById: async (id) => {
     try {
-      const data = await ProductModel.find({ store: "amazon" });
-      const b = [];
-      for (let i = 0; i < data.length; i++) {
-        if (
-          data[i]?.product_details?.["processor brand"]?.includes("NA") &&
-          !data[i]?.product_details?.["processor brand"]?.includes("Snap")
-        ) {
-          b.push({
-            _id: data[i]._id,
-            brand: data[i]?.product_details?.["processor brand"],
-            url: data[i].url,
-            productId: data[i].productId,
-          });
-        }
-      }
+      const data = await ProductModel.findById(id);
       if (data) {
         return {
           status: 200,
