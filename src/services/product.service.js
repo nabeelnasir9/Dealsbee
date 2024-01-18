@@ -164,6 +164,11 @@ export const ProductService = {
           return false;
         }
       });
+      countPipline.push({
+        $match: {
+          price: { $gt: +query.minPrice },
+        },
+      });
       const data = await ProductModel.aggregate([
         {
           $facet: {
@@ -204,6 +209,9 @@ export const ProductService = {
                   _id: -1,
                 },
               },
+              {
+                $limit: 15,
+              },
             ],
             ramCounts: [
               {
@@ -239,6 +247,9 @@ export const ProductService = {
                   count: -1,
                   _id: -1,
                 },
+              },
+              {
+                $limit: 15,
               },
             ],
             romCounts: [
@@ -276,6 +287,9 @@ export const ProductService = {
                   _id: -1,
                 },
               },
+              {
+                $limit: 15,
+              },
             ],
             resolutionCounts: [
               {
@@ -311,6 +325,9 @@ export const ProductService = {
                   count: -1,
                   _id: -1,
                 },
+              },
+              {
+                $limit: 15,
               },
             ],
             coreCounts: [
@@ -348,6 +365,9 @@ export const ProductService = {
                   _id: -1,
                 },
               },
+              {
+                $limit: 15,
+              },
             ],
             processorBrandCounts: [
               {
@@ -383,6 +403,9 @@ export const ProductService = {
                   count: -1,
                   _id: -1,
                 },
+              },
+              {
+                $limit: 15,
               },
             ],
             osCounts: [
@@ -420,6 +443,9 @@ export const ProductService = {
                   _id: -1,
                 },
               },
+              {
+                $limit: 15,
+              },
             ],
             batteryCounts: [
               {
@@ -455,6 +481,9 @@ export const ProductService = {
                   count: -1,
                   _id: -1,
                 },
+              },
+              {
+                $limit: 15,
               },
             ],
             storeCounts: [
