@@ -29,7 +29,8 @@ export const ProductService = {
             ? await CategoryModel.find()
             : await CategoryModel.find({ name: regex });
       }
-      let categoryIds = [];
+      let categoryIds = [],
+        osTypeCounts = [];
       if (query) {
         if (categories.length) {
           categoryIds = categories.map((item) => {
@@ -80,6 +81,14 @@ export const ProductService = {
           if (os.length > 0) {
             pipeline[0]["$match"]["product_details.operating system"] = {
               $in: os.map((os) => new RegExp(os, "i")),
+            };
+          }
+        }
+        if (query.osType?.length) {
+          let osType = query.osType.replaceAll("-", " ").split(",");
+          if (osType.length > 0) {
+            pipeline[0]["$match"]["product_details.operating system"] = {
+              $in: osType.map((osType) => new RegExp(osType, "i")),
             };
           }
         }
@@ -536,7 +545,33 @@ export const ProductService = {
           },
         },
       ]);
+
       if (data && data.length > 0) {
+        let Android =
+          data[0].osCounts.find((osCount) =>
+            osCount._id.toLowerCase().includes("android")
+          )?.count || 0;
+        if (Android) {
+          osTypeCounts.push({ _id: "android", count: Android, checked: false });
+        }
+        let iOS =
+          data[0].osCounts.find((osCount) =>
+            osCount._id.toLowerCase().includes("ios")
+          )?.count || 0;
+        if (iOS) {
+          osTypeCounts.push({ _id: "ios", count: iOS, checked: false });
+        }
+        let Windows =
+          data[0].osCounts.find((osCount) =>
+            osCount._id.toLowerCase().includes("windows")
+          )?.count || 0;
+        if (Windows) {
+          osTypeCounts.push({ _id: "windows", count: Windows, checked: false });
+        }
+      }
+
+      if (data && data.length > 0) {
+        data[0]["osTypeCounts"] = osTypeCounts;
         return {
           status: 200,
           message: "Successfull",
