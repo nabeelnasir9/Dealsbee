@@ -7,6 +7,7 @@ router.post("/amazon/list", controller.scrapeAmazonProductList);
 router.post("/amazon/list/india", controller.scrapeAmazonProductListIndia);
 router.post("/amazon/mobiles", controller.scrapeAmazonMobiles);
 router.post("/amazon/laptops", controller.scrapeAmazonLaptops);
+router.post("/amazon/tablets", controller.scrapeAmazonTablets);
 router.post("/amazon/tv", controller.scrapeAmazonTelevision);
 router.post("/amazon/ac", controller.scrapeAmazonAC);
 router.post("/amazon/washingMachines", controller.scrapeAmazonWashingMachines);
