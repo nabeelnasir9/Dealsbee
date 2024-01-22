@@ -90,6 +90,10 @@ export const ScraperHelper = {
           responseData.product_details.ram = parseNumber(ram);
           responseData.product_details.ram_unit = ram_unit;
         }
+        if (responseData.discount_percentage) {
+          responseData.product_details.discount_percentage =
+            responseData.discount_percentage;
+        }
         let productData = {
           title: responseData.product_name,
           productId: responseData.asin,
@@ -236,7 +240,19 @@ export const ScraperHelper = {
           "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(3) > div > div:nth-child(4) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1)"
         );
       }
-
+      if (!price) {
+        price = await getElementText(
+          "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(3) > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1)"
+        );
+      }
+      let discount_percentage = await getElementText(
+        "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(3) > div > div:nth-child(4) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3)"
+      );
+      if (!discount_percentage) {
+        discount_percentage = await getElementText(
+          "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(3) > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(1) > div:nth-child(3)"
+        );
+      }
       const category_1 = await getElementText(
         "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(2) > a"
       );
@@ -319,6 +335,12 @@ export const ScraperHelper = {
         }
         if (ram_unit) {
           product_details.ram_unit = ram_unit;
+        }
+      }
+      if (discount_percentage) {
+        discount_percentage = discount_percentage.replace(/[^0-9\.]+/g, "");
+        if (discount_percentage) {
+          product_details.discount_percentage = parseInt(discount_percentage);
         }
       }
       if (product_details?.["battery capacity"]) {

@@ -1,3 +1,4 @@
+import { ScraperHelper } from "../helpers/scraper.helper.js";
 import { ProductModel, CategoryModel } from "../models/index.js";
 import mongoose from "mongoose";
 
@@ -161,6 +162,24 @@ export const ProductService = {
             },
           });
         }
+
+        if (query.discount) {
+          let discountRange = {};
+          const discount = query.discount.split(",");
+
+          if (discount.indexOf("10") !== -1) {
+            discountRange = { $gte: 10 };
+          } else if (discount.indexOf("20") !== -1) {
+            discountRange = { $gte: 20 };
+          } else if (discount.indexOf("30") !== -1) {
+            discountRange = { $gte: 30 };
+          } else if (discount.indexOf("40") !== -1) {
+            discountRange = { $gte: 40 };
+          }
+          pipeline[0]["$match"]["product_details.discount_percentage"] =
+            discountRange;
+        }
+
         pipeline.push({ $skip: +skip });
         pipeline.push({ $limit: +limit });
         pipeline.push({ $sort: { rating: -1 } });
@@ -304,6 +323,39 @@ export const ProductService = {
               },
               {
                 $limit: 15,
+              },
+            ],
+            percentageCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.discount_percentage": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.discount_percentage" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  value: { $toInt: "$_id" },
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
+                },
               },
             ],
             resolutionCounts: [
@@ -547,6 +599,51 @@ export const ProductService = {
       ]);
 
       if (data && data.length > 0) {
+        let tenToTwenty = 0,
+          twentyToThirty = 0,
+          thirtyToFourty = 0,
+          aboveFourty = 0;
+        data[0].percentageCounts.map((percentageCount) => {
+          if (percentageCount.value >= 10 && percentageCount.value < 20) {
+            tenToTwenty = tenToTwenty + percentageCount.count;
+          } else if (
+            percentageCount.value >= 20 &&
+            percentageCount.value < 30
+          ) {
+            twentyToThirty = tenToTwenty + percentageCount.count;
+          } else if (
+            percentageCount.value >= 30 &&
+            percentageCount.value < 40
+          ) {
+            thirtyToFourty = tenToTwenty + percentageCount.count;
+          } else if (percentageCount.value >= 40) {
+            aboveFourty = tenToTwenty + percentageCount.count;
+          }
+          delete data[0].percentageCounts;
+          data[0].discountCounts = [
+            {
+              _id: "10",
+              count: tenToTwenty,
+              checked: false,
+            },
+            {
+              _id: "20",
+              count: twentyToThirty,
+              checked: false,
+            },
+            {
+              _id: "30",
+              count: thirtyToFourty,
+              checked: false,
+            },
+            {
+              _id: "40",
+              count: aboveFourty,
+              checked: false,
+            },
+          ];
+        });
+
         let Android =
           data[0].osCounts.find((osCount) =>
             osCount._id.toLowerCase().includes("android")
