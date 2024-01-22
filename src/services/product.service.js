@@ -62,10 +62,20 @@ export const ProductService = {
           }
         }
         if (query.resolution?.length) {
-          let resolution = query.resolution.replaceAll("-", " ").split(",");
+          let resolution = query.resolution.replaceAll(":", " ").split(",");
           if (resolution.length > 0) {
             pipeline[0]["$match"]["product_details.resolution"] = {
               $in: resolution.map((resolution) => new RegExp(resolution, "i")),
+            };
+          }
+        }
+        if (query.aspectRatio?.length) {
+          let aspectRatios = query.aspectRatio.replaceAll("_", ":").split(",");
+          if (aspectRatios.length > 0) {
+            pipeline[0]["$match"]["product_details.aspect_ratio"] = {
+              $in: aspectRatios.map(
+                (aspectRatio) => new RegExp(aspectRatio, "i")
+              ),
             };
           }
         }
@@ -118,6 +128,22 @@ export const ProductService = {
           if (rams.length > 0) {
             pipeline[0]["$match"]["product_details.ram"] = {
               $in: rams.map((ram) => +ram),
+            };
+          }
+        }
+        if (query.ipRating?.length) {
+          let ipRatings = query.ipRating.split(",");
+          if (ipRatings.length > 0) {
+            pipeline[0]["$match"]["product_details.ip_rating"] = {
+              $in: ipRatings.map((ipRating) => +ipRating),
+            };
+          }
+        }
+        if (query.refreshRate?.length) {
+          let refreshRates = query.refreshRate.split(",");
+          if (refreshRates.length > 0) {
+            pipeline[0]["$match"]["product_details.refresh_rate"] = {
+              $in: refreshRates.map((refreshRate) => +refreshRate),
             };
           }
         }
@@ -323,6 +349,84 @@ export const ProductService = {
               },
               {
                 $limit: 15,
+              },
+            ],
+            ipRatingCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.ip_rating": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: "nan",
+                    $ne: "NaN",
+                    $ne: "undefined",
+                    $ne: 0,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.ip_rating" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              // {
+              //   $match: {
+              //     count: { $gte: 20 },
+              //   },
+              // },
+              {
+                $sort: {
+                  _id: -1,
+                },
+              },
+              // {
+              //   $limit: 15,
+              // },
+            ],
+            refreshRateCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.refresh_rate": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.refresh_rate" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $match: {
+                  count: { $gte: 30 },
+                },
+              },
+              {
+                $sort: {
+                  _id: -1,
+                },
               },
             ],
             percentageCounts: [
@@ -549,6 +653,45 @@ export const ProductService = {
                 $sort: {
                   count: -1,
                   _id: -1,
+                },
+              },
+              {
+                $limit: 15,
+              },
+            ],
+            aspectRatioCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.aspect_ratio": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.aspect_ratio" },
+                  count: { $sum: 1 },
+                },
+              },
+              // {
+              //   $match: {
+              //     count: { $gte: 20 },
+              //   },
+              // },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  // _id: -1,
                 },
               },
               {

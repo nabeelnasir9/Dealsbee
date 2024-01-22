@@ -87,12 +87,26 @@ export const ScraperHelper = {
           ram_unit = responseData.product_details.ram
             .replace(/[0-9]/g, "")
             .trim();
-          responseData.product_details.ram = parseNumber(ram);
+          responseData.product_details.ram = parseInt(ram);
           responseData.product_details.ram_unit = ram_unit;
         }
         if (responseData.discount_percentage) {
           responseData.product_details.discount_percentage =
             responseData.discount_percentage;
+        }
+        if (responseData.bullet_points) {
+          try {
+            if (
+              responseData.bullet_points
+                ?.toLowerCase()
+                ?.includes("refresh rate")
+            ) {
+              const match = responseData.bullet_points
+                .toLowerCase()
+                .match(/(\d+)\s*Hz(?:\s*Refresh Rate)?/i);
+              responseData.product_details.refresh_rate = parseInt(match[1]);
+            }
+          } catch (error) {}
         }
         let productData = {
           title: responseData.product_name,
@@ -446,6 +460,20 @@ export const ScraperHelper = {
         if (volte) {
           product_details.volte = volte;
         }
+      }
+      if (product_details["other display features"]) {
+        try {
+          if (
+            product_details["other display features"]
+              ?.toLowerCase()
+              ?.includes("refresh rate")
+          ) {
+            const match = product_details["other display features"].match(
+              /(\d+)\s*Hz(?:\s*Refresh Rate)?/i
+            );
+            product_details.refresh_rate = parseInt(match[1]);
+          }
+        } catch (error) {}
       }
       let productData = {
         title,
