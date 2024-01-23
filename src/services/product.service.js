@@ -233,6 +233,63 @@ export const ProductService = {
           }
           pipeline[0]["$match"]["product_details.ram"] = ramRange;
         }
+        if (query.rearCamera) {
+          let rearCameraRange = {};
+          const rearCameras = query.rearCamera.split(",");
+
+          if (rearCameras.indexOf("rear camera") !== -1) {
+            pipeline[0]["$match"]["product_details.rear_camera"] = true;
+          }
+          if (rearCameras.indexOf("rear camera dual") !== -1) {
+            pipeline[0]["$match"]["product_details.rear_camera_dual"] = true;
+          }
+
+          if (rearCameras.indexOf("5") !== -1) {
+            rearCameraRange = { $gte: 5 };
+          } else if (rearCameras.indexOf("8") !== -1) {
+            rearCameraRange = { $gte: 8 };
+          } else if (rearCameras.indexOf("12") !== -1) {
+            rearCameraRange = { $gte: 12 };
+          } else if (rearCameras.indexOf("16") !== -1) {
+            rearCameraRange = { $gte: 16 };
+          } else if (rearCameras.indexOf("32") !== -1) {
+            rearCameraRange = { $gte: 32 };
+          } else if (rearCameras.indexOf("12") !== -1) {
+            rearCameraRange = { $gte: 12 };
+          }
+          if (rearCameraRange?.$gte) {
+            pipeline[0]["$match"]["product_details.rear_camera_size"] =
+              rearCameraRange;
+          }
+        }
+        if (query.frontCamera) {
+          let frontCameraRange = {};
+          const frontCameras = query.frontCamera.split(",");
+
+          if (frontCameras.indexOf("front camera") !== -1) {
+            pipeline[0]["$match"]["product_details.front_camera"] = true;
+          }
+          if (frontCameras.indexOf("front camera dual") !== -1) {
+            pipeline[0]["$match"]["product_details.front_camera_dual"] = true;
+          }
+
+          if (frontCameras.indexOf("5") !== -1) {
+            frontCameraRange = { $gte: 5 };
+          } else if (frontCameras.indexOf("8") !== -1) {
+            frontCameraRange = { $gte: 8 };
+          } else if (frontCameras.indexOf("12") !== -1) {
+            frontCameraRange = { $gte: 12 };
+          } else if (frontCameras.indexOf("16") !== -1) {
+            frontCameraRange = { $gte: 16 };
+          } else if (frontCameras.indexOf("32") !== -1) {
+            frontCameraRange = { $gte: 32 };
+          }
+
+          if (frontCameraRange?.$gte) {
+            pipeline[0]["$match"]["product_details.front_camera_size"] =
+              frontCameraRange;
+          }
+        }
         if (query.rom) {
           let romRange = {};
           const roms = query.rom.split(",");
@@ -764,6 +821,182 @@ export const ProductService = {
                 },
               },
             ],
+            rearCameraDualCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.rear_camera_dual": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.rear_camera_dual": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "rear camera dual",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
+            rearCameraCount: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.rear_camera": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.rear_camera": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "rear camera",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
+            rearCameraSizeCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.rear_camera_size": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.rear_camera_size" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  value: { $toInt: "$_id" },
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  value: -1,
+                  count: -1,
+                  _id: -1,
+                },
+              },
+            ],
+            frontCameraDualCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.front_camera_dual": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.front_camera_dual": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "front camera dual",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
+            frontCameraCount: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.rear_camera": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.rear_camera": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "rear camera",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
+            frontCameraSizeCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.front_camera_size": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.front_camera_size" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  value: { $toInt: "$_id" },
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  value: -1,
+                  count: -1,
+                  _id: -1,
+                },
+              },
+            ],
             percentageCounts: [
               {
                 $match: {
@@ -1159,8 +1392,11 @@ export const ProductService = {
         ) {
           connectivityCounts.push(data[0].fourGCounts[0]);
         }
-        if(data[0].fiveGCounts?.length>0 && data[0].fiveGCounts[0]?.count>0){
-          connectivityCounts.push(data[0].fiveGCounts[0])
+        if (
+          data[0].fiveGCounts?.length > 0 &&
+          data[0].fiveGCounts[0]?.count > 0
+        ) {
+          connectivityCounts.push(data[0].fiveGCounts[0]);
         }
         delete data[0].otgCounts;
         delete data[0].usbCounts;
@@ -1171,12 +1407,171 @@ export const ProductService = {
         delete data[0].twoGCounts;
         delete data[0].threeGCounts;
         delete data[0].fourGCounts;
-        delete data[0].fiveGCounts
+        delete data[0].fiveGCounts;
 
         if (connectivityCounts?.length > 0) {
           data[0].connectivityCounts = connectivityCounts;
         }
+        //React Camera
+        let rear_camera_5_MpAndAbove = 0,
+          rear_camera_8_MpAndAbove = 0,
+          rear_camera_12_MpAndAbove = 0,
+          rear_camera_16_MpAndAbove = 0,
+          rear_camera_32_MpAndAbove = 0;
+        data[0].rearCameraSizeCounts.map((rearCamera) => {
+          if (rearCamera.value >= 32) {
+            rear_camera_32_MpAndAbove =
+              rear_camera_32_MpAndAbove + rearCamera.count;
+            rear_camera_16_MpAndAbove = rear_camera_32_MpAndAbove;
+          } else if (rearCamera.value >= 16 && rearCamera.value < 32) {
+            rear_camera_16_MpAndAbove =
+              rear_camera_16_MpAndAbove + rearCamera.count;
+            rear_camera_12_MpAndAbove = rear_camera_16_MpAndAbove;
+          } else if (rearCamera.value >= 12 && rearCamera.value < 16) {
+            rear_camera_12_MpAndAbove =
+              rear_camera_12_MpAndAbove + rearCamera.count;
+            rear_camera_8_MpAndAbove = rear_camera_12_MpAndAbove;
+          } else if (rearCamera.value >= 8 && rearCamera.value < 12) {
+            rear_camera_8_MpAndAbove =
+              rear_camera_8_MpAndAbove + rearCamera.count;
+            rear_camera_5_MpAndAbove = rear_camera_8_MpAndAbove;
+          } else if (rearCamera.value >= 5 && rearCamera.value < 8) {
+            rear_camera_5_MpAndAbove =
+              rear_camera_5_MpAndAbove + rearCamera.count;
+          }
+        });
+        data[0].rearCameraCounts = [];
+        if (data[0]?.rearCameraCount.length > 0) {
+          data[0].rearCameraCounts.push({
+            ...data[0].rearCameraCount[0],
+            skipText: true,
+          });
+        }
+        if (data[0]?.rearCameraDualCounts.length > 0) {
+          data[0].rearCameraCounts.push({
+            ...data[0].rearCameraDualCounts[0],
+            skipText: true,
+          });
+        }
+        delete data[0].rearCameraCount;
+        delete data[0].rearCameraDualCounts;
+        if (rear_camera_32_MpAndAbove) {
+          data[0].rearCameraCounts.push({
+            _id: "32",
+            count: rear_camera_32_MpAndAbove,
+            checked: false,
+          });
+        }
+        if (rear_camera_16_MpAndAbove) {
+          data[0].rearCameraCounts.push({
+            _id: "16",
+            count: rear_camera_16_MpAndAbove,
+            checked: false,
+          });
+        }
+        if (rear_camera_12_MpAndAbove) {
+          data[0].rearCameraCounts.push({
+            _id: "12",
+            count: rear_camera_12_MpAndAbove,
+            checked: false,
+          });
+        }
+        if (rear_camera_8_MpAndAbove) {
+          data[0].rearCameraCounts.push({
+            _id: "8",
+            count: rear_camera_8_MpAndAbove,
+            checked: false,
+          });
+        }
+        if (rear_camera_5_MpAndAbove) {
+          data[0].rearCameraCounts.push({
+            _id: "5",
+            count: rear_camera_5_MpAndAbove,
+            checked: false,
+          });
+        }
 
+        //Rear Camera
+        //Front Camera
+        let front_camera_5_MpAndAbove = 0,
+          front_camera_8_MpAndAbove = 0,
+          front_camera_12_MpAndAbove = 0,
+          front_camera_16_MpAndAbove = 0,
+          front_camera_32_MpAndAbove = 0;
+        data[0].frontCameraSizeCounts.map((frontCamera) => {
+          if (frontCamera.value >= 32) {
+            front_camera_32_MpAndAbove =
+              front_camera_32_MpAndAbove + frontCamera.count;
+            front_camera_16_MpAndAbove = front_camera_32_MpAndAbove;
+          } else if (frontCamera.value >= 16 && frontCamera.value < 32) {
+            front_camera_16_MpAndAbove =
+              front_camera_16_MpAndAbove + frontCamera.count;
+            front_camera_12_MpAndAbove = front_camera_16_MpAndAbove;
+          } else if (frontCamera.value >= 12 && frontCamera.value < 16) {
+            front_camera_12_MpAndAbove =
+              front_camera_12_MpAndAbove + frontCamera.count;
+            front_camera_8_MpAndAbove = front_camera_12_MpAndAbove;
+          } else if (frontCamera.value >= 8 && frontCamera.value < 12) {
+            front_camera_8_MpAndAbove =
+              front_camera_8_MpAndAbove + frontCamera.count;
+            front_camera_5_MpAndAbove = front_camera_8_MpAndAbove;
+          } else if (frontCamera.value >= 5 && frontCamera.value < 8) {
+            front_camera_5_MpAndAbove =
+              front_camera_5_MpAndAbove + frontCamera.count;
+          }
+        });
+        data[0].frontCameraCounts = [];
+        if (data[0]?.frontCameraCount.length > 0) {
+          data[0].frontCameraCounts.push({
+            ...data[0].frontCameraCount[0],
+            skipText: true,
+          });
+        }
+        if (data[0]?.frontCameraDualCounts.length > 0) {
+          data[0].frontCameraCounts.push({
+            ...data[0].frontCameraDualCounts[0],
+            skipText: true,
+          });
+        }
+        delete data[0].frontCameraCount;
+        delete data[0].frontCameraDualCounts;
+        if (front_camera_32_MpAndAbove) {
+          data[0].frontCameraCounts.push({
+            _id: "32",
+            count: front_camera_32_MpAndAbove,
+            checked: false,
+          });
+        }
+        if (front_camera_16_MpAndAbove) {
+          data[0].frontCameraCounts.push({
+            _id: "16",
+            count: front_camera_16_MpAndAbove,
+            checked: false,
+          });
+        }
+        if (front_camera_12_MpAndAbove) {
+          data[0].frontCameraCounts.push({
+            _id: "12",
+            count: front_camera_12_MpAndAbove,
+            checked: false,
+          });
+        }
+        if (front_camera_8_MpAndAbove) {
+          data[0].frontCameraCounts.push({
+            _id: "8",
+            count: front_camera_8_MpAndAbove,
+            checked: false,
+          });
+        }
+        if (front_camera_5_MpAndAbove) {
+          data[0].frontCameraCounts.push({
+            _id: "5",
+            count: front_camera_5_MpAndAbove,
+            checked: false,
+          });
+        }
+
+        //FrontCamera
         let rom_32_GbAndAbove = 0,
           rom_64_GbAndAbove = 0,
           rom_128_GbAndAbove = 0,
@@ -1199,33 +1594,42 @@ export const ProductService = {
             rom_32_GbAndAbove = rom_32_GbAndAbove + romCount.count;
           }
         });
-        data[0].romCounts = [
-          {
+        data[0].romCounts = [];
+        if (rom_512_GbAndAbove > 0) {
+          data[0].romCounts.push({
             _id: "512",
             count: rom_512_GbAndAbove,
             checked: false,
-          },
-          {
+          });
+        }
+        if (rom_256_GbAndAbove > 0) {
+          data[0].romCounts.push({
             _id: "256",
             count: rom_256_GbAndAbove,
             checked: false,
-          },
-          {
+          });
+        }
+        if (rom_128_GbAndAbove > 0) {
+          data[0].romCounts.push({
             _id: "128",
             count: rom_128_GbAndAbove,
             checked: false,
-          },
-          {
+          });
+        }
+        if (rom_64_GbAndAbove > 0) {
+          data[0].romCounts.push({
             _id: "64",
             count: rom_64_GbAndAbove,
             checked: false,
-          },
-          {
+          });
+        }
+        if (rom_32_GbAndAbove > 0) {
+          data[0].romCounts.push({
             _id: "32",
             count: rom_32_GbAndAbove,
             checked: false,
-          },
-        ];
+          });
+        }
         let twoGbAndAboveRam = 0,
           threeGbAndAboveRam = 0,
           fourGbAndAboveRam = 0,
@@ -1252,38 +1656,49 @@ export const ProductService = {
             twoGbAndAboveRam = twoGbAndAboveRam + ramCount.count;
           }
         });
-        data[0].ramCounts = [
-          {
+        data[0].ramCounts = [];
+        if (tvelweGbAndAboveRam) {
+          data[0].ramCounts.push({
             _id: "12",
             count: tvelweGbAndAboveRam,
             checked: false,
-          },
-          {
+          });
+        }
+        if (eightGbAndAboveRam) {
+          data[0].ramCounts.push({
             _id: "8",
             count: eightGbAndAboveRam,
             checked: false,
-          },
-          {
+          });
+        }
+        if (sixGbAndAboveRam) {
+          data[0].ramCounts.push({
             _id: "6",
             count: sixGbAndAboveRam,
             checked: false,
-          },
-          {
+          });
+        }
+        if (fourGbAndAboveRam) {
+          data[0].ramCounts.push({
             _id: "4",
             count: fourGbAndAboveRam,
             checked: false,
-          },
-          {
+          });
+        }
+        if (threeGbAndAboveRam) {
+          data[0].ramCounts.push({
             _id: "3",
             count: threeGbAndAboveRam,
             checked: false,
-          },
-          {
+          });
+        }
+        if (twoGbAndAboveRam) {
+          data[0].ramCounts.push({
             _id: "2",
             count: twoGbAndAboveRam,
             checked: false,
-          },
-        ];
+          });
+        }
 
         let tenToTwenty = 0,
           twentyToThirty = 0,
@@ -1441,8 +1856,98 @@ export const ProductService = {
     }
   },
   getProductById: async (id) => {
+    const modifyProduct = (product) => {
+      const { product_details } = product;
+      let modify = false;
+      let dual_camera_lens = product_details?.["dual camera lens"];
+      let secondary_camera_available =
+        product_details?.["secondary camera available"];
+      let primary_camera_available =
+        product_details?.["primary camera available"];
+      let secondary_camera = product_details?.["secondary camera"];
+      let primary_camera = product_details?.["primary camera"];
+      try {
+        if (dual_camera_lens?.includes("Primary")) {
+          product.product_details.rear_camera_dual = true;
+          modify = true;
+        }
+      } catch (error) {
+        console.log("error");
+      }
+      try {
+        if (dual_camera_lens?.includes("Secondary")) {
+          product.product_details.front_camera_dual = true;
+          modify = true;
+        }
+      } catch (error) {
+        console.log("error");
+      }
+      try {
+        if (secondary_camera_available?.includes("Yes")) {
+          product.product_details.front_camera = true;
+          modify = true;
+        }
+      } catch (error) {
+        console.log("error");
+      }
+      try {
+        if (secondary_camera?.includes("MP")) {
+          let str = secondary_camera.split("MP")[0]?.trim();
+          if (str && typeof parseInt(str) == "number" && !isNaN(str)) {
+            product.product_details.front_camera_size = parseInt(str);
+          }
+          modify = true;
+        }
+      } catch (error) {
+        console.log("error");
+      }
+      try {
+        if (primary_camera?.includes("MP")) {
+          let str = primary_camera.split("MP")[0]?.trim();
+          if (str && typeof parseInt(str) == "number" && !isNaN(str)) {
+            product.product_details.rear_camera_size = parseInt(str);
+          }
+          modify = true;
+        }
+      } catch (error) {
+        console.log("error");
+      }
+      try {
+        if (primary_camera_available?.includes("Yes")) {
+          product.product_details.rear_camera = true;
+          modify = true;
+        }
+      } catch (error) {
+        console.log("error");
+      }
+      return modify ? product : null;
+    };
     try {
-      const data = await ProductModel.findById();
+      const data = await ProductModel.find({ store: "flipkart" });
+      let count = 0;
+      let products = [];
+      for (let i = 0; i < data.length; i++) {
+        products.push(data[i]);
+      }
+      for (let i = 0; i < products.length; i++) {
+        const id = products[i]._id;
+        let product = JSON.parse(JSON.stringify(products[i]));
+        delete product._id;
+        product = modifyProduct(product);
+        if (product?.productId) {
+          const isDone = await ProductModel.create(product);
+          if (isDone) {
+            const isExistArray = await ProductModel.find({
+              productId: product.productId,
+            });
+            if (isExistArray?.length > 1) {
+              await ProductModel.findByIdAndDelete(id);
+              count = count + 1;
+            }
+          }
+        }
+      }
+      const c = count;
       if (data) {
         return {
           status: 200,
