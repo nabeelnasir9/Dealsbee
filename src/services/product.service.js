@@ -87,14 +87,14 @@ export const ProductService = {
             };
           }
         }
-        if (query.os?.length) {
-          let os = query.os.replaceAll("-", " ").split(",");
-          if (os.length > 0) {
-            pipeline[0]["$match"]["product_details.operating system"] = {
-              $in: os.map((os) => new RegExp(os, "i")),
-            };
-          }
-        }
+        // if (query.os?.length) {
+        //   let os = query.os.replaceAll("-", " ").split(",");
+        //   if (os.length > 0) {
+        //     pipeline[0]["$match"]["product_details.operating system"] = {
+        //       $in: os.map((os) => new RegExp(os, "i")),
+        //     };
+        //   }
+        // }
         if (query.osType?.length) {
           let osType = query.osType.replaceAll("-", " ").split(",");
           if (osType.length > 0) {
@@ -224,6 +224,26 @@ export const ProductService = {
             romRange = { $gte: 512 };
           }
           pipeline[0]["$match"]["product_details.rom"] = romRange;
+        }
+        if (query.os) {
+          let osRange = {};
+          const oss = query.os.split(",");
+
+          if (oss.indexOf("10") !== -1) {
+            osRange = { $gte: 10 };
+          } else if (oss.indexOf("11") !== -1) {
+            osRange = { $gte: 11 };
+          } else if (oss.indexOf("12") !== -1) {
+            osRange = { $gte: 12 };
+          } else if (oss.indexOf("13") !== -1) {
+            osRange = { $gte: 13 };
+          } else if (oss.indexOf("14") !== -1) {
+            osRange = { $gte: 14 };
+          }
+          pipeline[0]["$match"]["product_details.os_version"] = osRange;
+          pipeline[0]["$match"]["product_details.os_type"] = {
+            $regex: new RegExp("android", "i"),
+          };
         }
 
         pipeline.push({ $skip: +skip });
@@ -619,11 +639,11 @@ export const ProductService = {
                   count: { $sum: 1 },
                 },
               },
-              {
-                $match: {
-                  count: { $gte: 20 },
-                },
-              },
+              // {
+              //   $match: {
+              //     count: { $gte: 20 },
+              //   },
+              // },
               {
                 $addFields: {
                   checked: false,
@@ -635,8 +655,47 @@ export const ProductService = {
                   _id: -1,
                 },
               },
+              // {
+              //   $limit: 15,
+              // },
+            ],
+            osVersionCounts: [
               {
-                $limit: 15,
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.operating system": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                  "product_details.os_type": {
+                    $regex: new RegExp("android", "i"),
+                  },
+                  "product_details.os_version": {
+                    $not: { $in: [NaN] },
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.os_version" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  // value: { $toInt: "$_id" },
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  // value:-1,
+                  count: -1,
+                  _id: -1,
+                },
               },
             ],
             batteryCounts: [
@@ -936,6 +995,70 @@ export const ProductService = {
         if (Windows) {
           osTypeCounts.push({ _id: "windows", count: Windows, checked: false });
         }
+        delete data[0].osCount;
+
+        //Code for Android Filter
+        data[0].osVersionCounts = data[0].osVersionCounts.filter(
+          (osCount) => osCount._id
+        );
+        data[0].osVersionCounts = data[0].osVersionCounts.map((osCount) => {
+          osCount._id = parseInt(osCount._id);
+          return osCount;
+        });
+        data[0].osVersionCounts.sort((a, b) => {
+          if (a._id < b._id) return 1;
+          if (a._id > b._id) return -1;
+          return 0;
+        });
+        let android_11_versionAndAbove = 0,
+          android_12_versionAndAbove = 0,
+          android_13_versionAndAbove = 0,
+          android_14_versionAndAbove = 0;
+        data[0].osVersionCounts.map((osVersion) => {
+          if (osVersion._id >= 14) {
+            android_14_versionAndAbove =
+              android_14_versionAndAbove + osVersion.count;
+            android_13_versionAndAbove = android_14_versionAndAbove;
+          } else if (osVersion._id >= 13 && osVersion._id < 14) {
+            android_13_versionAndAbove =
+              android_13_versionAndAbove + osVersion.count;
+            android_12_versionAndAbove = android_13_versionAndAbove;
+          } else if (osVersion._id >= 12 && osVersion._id < 13) {
+            android_12_versionAndAbove =
+              android_12_versionAndAbove + osVersion.count;
+            android_11_versionAndAbove = android_12_versionAndAbove;
+          } else if (osVersion._id >= 11 && osVersion._id < 12) {
+            android_11_versionAndAbove =
+              android_11_versionAndAbove + osVersion.count;
+          }
+        });
+
+        data[0].osVersionCounts = [
+          {
+            _id: "14",
+            count: android_14_versionAndAbove,
+            checked: false,
+          },
+          {
+            _id: "13",
+            count: android_13_versionAndAbove,
+            checked: false,
+          },
+          {
+            _id: "12",
+            count: android_12_versionAndAbove,
+            checked: false,
+          },
+          {
+            _id: "11",
+            count: android_11_versionAndAbove,
+            checked: false,
+          },
+        ];
+
+        data[0].osCounts = data[0].osVersionCounts;
+        delete data[0].osVersionCounts;
+        //Code for Android Filter
       }
 
       if (data && data.length > 0) {
@@ -963,7 +1086,7 @@ export const ProductService = {
   },
   getProductById: async (id) => {
     try {
-      const data = await ProductModel.findById(id);
+      const data = await ProductModel.findById();
       if (data) {
         return {
           status: 200,
