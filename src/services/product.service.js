@@ -87,14 +87,6 @@ export const ProductService = {
             };
           }
         }
-        // if (query.os?.length) {
-        //   let os = query.os.replaceAll("-", " ").split(",");
-        //   if (os.length > 0) {
-        //     pipeline[0]["$match"]["product_details.operating system"] = {
-        //       $in: os.map((os) => new RegExp(os, "i")),
-        //     };
-        //   }
-        // }
         if (query.osType?.length) {
           let osType = query.osType.replaceAll("-", " ").split(",");
           if (osType.length > 0) {
@@ -109,6 +101,39 @@ export const ProductService = {
             pipeline[0]["$match"]["product_details.battery capacity"] = {
               $in: battery.map((battery) => new RegExp(battery, "i")),
             };
+          }
+        }
+        if (query.connectivity?.length) {
+          let connects = query.connectivity.split(",");
+          if (connects.indexOf("otg") != -1) {
+            pipeline[0]["$match"]["product_details.otg"] = true;
+          }
+          if (connects.indexOf("usb") != -1) {
+            pipeline[0]["$match"]["product_details.usb"] = true;
+          }
+          if (connects.indexOf("irBlaster") != -1) {
+            pipeline[0]["$match"]["product_details.irBlaster"] = true;
+          }
+          if (connects.indexOf("wifi") != -1) {
+            pipeline[0]["$match"]["product_details.wifi"] = true;
+          }
+          if (connects.indexOf("nfc") != -1) {
+            pipeline[0]["$match"]["product_details.nfc"] = true;
+          }
+          if (connects.indexOf("gps") != -1) {
+            pipeline[0]["$match"]["product_details.gps"] = true;
+          }
+          if (connects.indexOf("2G") != -1) {
+            pipeline[0]["$match"]["product_details.2G"] = true;
+          }
+          if (connects.indexOf("3G") != -1) {
+            pipeline[0]["$match"]["product_details.3G"] = true;
+          }
+          if (connects.indexOf("4G") != -1) {
+            pipeline[0]["$match"]["product_details.4G"] = true;
+          }
+          if (connects.indexOf("5G") != -1) {
+            pipeline[0]["$match"]["product_details.5G"] = true;
           }
         }
         if (query.processorBrand?.length) {
@@ -469,6 +494,276 @@ export const ProductService = {
                 },
               },
             ],
+            otgCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.otg": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.otg": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "otg",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
+            usbCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.usb": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.usb": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "usb",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
+            irBlasterCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.irBlaster": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.irBlaster": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "irBlaster",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
+            wifiCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.wifi": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.wifi": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "wifi",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
+            nfcCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.nfc": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.nfc": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "nfc",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
+            gpsCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.gps": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.gps": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "usb",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
+            twoGCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.2G": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.2G": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "2G",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
+            threeGCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.3G": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.3G": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "3G",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
+            fourGCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.4G": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.4G": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "4G",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
+            fiveGCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.5G": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                  },
+                  "product_details.5G": true,
+                },
+              },
+              {
+                $group: {
+                  _id: "5G",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+            ],
             percentageCounts: [
               {
                 $match: {
@@ -821,6 +1116,67 @@ export const ProductService = {
       ]);
 
       if (data && data.length > 0) {
+        let connectivityCounts = [];
+        if (data[0].otgCounts?.length > 0 && data[0].otgCounts[0]?.count > 0) {
+          connectivityCounts.push(data[0].otgCounts[0]);
+        }
+        if (data[0].usbCounts?.length > 0 && data[0].usbCounts[0]?.count > 0) {
+          connectivityCounts.push(data[0].usbCounts[0]);
+        }
+        if (
+          data[0].irBlasterCounts?.length > 0 &&
+          data[0].irBlasterCounts[0]?.count > 0
+        ) {
+          connectivityCounts.push(data[0].irBlasterCounts[0]);
+        }
+        if (
+          data[0].wifiCounts?.length > 0 &&
+          data[0].wifiCounts[0]?.count > 0
+        ) {
+          connectivityCounts.push(data[0].wifiCounts[0]);
+        }
+        if (data[0].nfcCounts?.length > 0 && data[0].nfcCounts[0]?.count > 0) {
+          connectivityCounts.push(data[0].nfcCounts[0]);
+        }
+        if (data[0].gpsCounts?.length > 0 && data[0].gpsCounts[0]?.count > 0) {
+          connectivityCounts.push(data[0].gpsCounts[0]);
+        }
+        if (
+          data[0].twoGCounts?.length > 0 &&
+          data[0].twoGCounts[0]?.count > 0
+        ) {
+          connectivityCounts.push(data[0].twoGCounts[0]);
+        }
+        if (
+          data[0].threeGCounts?.length > 0 &&
+          data[0].threeGCounts[0]?.count > 0
+        ) {
+          connectivityCounts.push(data[0].threeGCounts[0]);
+        }
+        if (
+          data[0].fourGCounts?.length > 0 &&
+          data[0].fourGCounts[0]?.count > 0
+        ) {
+          connectivityCounts.push(data[0].fourGCounts[0]);
+        }
+        if(data[0].fiveGCounts?.length>0 && data[0].fiveGCounts[0]?.count>0){
+          connectivityCounts.push(data[0].fiveGCounts[0])
+        }
+        delete data[0].otgCounts;
+        delete data[0].usbCounts;
+        delete data[0].irBlasterCounts;
+        delete data[0].wifiCounts;
+        delete data[0].nfcCounts;
+        delete data[0].gpsCounts;
+        delete data[0].twoGCounts;
+        delete data[0].threeGCounts;
+        delete data[0].fourGCounts;
+        delete data[0].fiveGCounts
+
+        if (connectivityCounts?.length > 0) {
+          data[0].connectivityCounts = connectivityCounts;
+        }
+
         let rom_32_GbAndAbove = 0,
           rom_64_GbAndAbove = 0,
           rom_128_GbAndAbove = 0,
