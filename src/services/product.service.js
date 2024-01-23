@@ -139,14 +139,6 @@ export const ProductService = {
             };
           }
         }
-        if (query.rom?.length) {
-          let roms = query.rom.split(",");
-          if (roms.length > 0) {
-            pipeline[0]["$match"]["product_details.rom"] = {
-              $in: roms.map((rom) => +rom),
-            };
-          }
-        }
         if (!query.minPrice?.toString()) {
           query.minPrice = 5000;
         }
@@ -201,20 +193,37 @@ export const ProductService = {
           let ramRange = {};
           const rams = query.ram.split(",");
 
-          if (rams.indexOf("12") !== -1) {
-            ramRange = { $gte: 12 };
-          } else if (rams.indexOf("8") !== -1) {
-            ramRange = { $gte: 8 };
-          } else if (rams.indexOf("6") !== -1) {
-            ramRange = { $gte: 6 };
-          } else if (rams.indexOf("4") !== -1) {
-            ramRange = { $gte: 4 };
+          if (rams.indexOf("2") !== -1) {
+            ramRange = { $gte: 2 };
           } else if (rams.indexOf("3") !== -1) {
             ramRange = { $gte: 3 };
-          } else if (rams.indexOf("2") !== -1) {
-            ramRange = { $gte: 2 };
+          } else if (rams.indexOf("4") !== -1) {
+            ramRange = { $gte: 4 };
+          } else if (rams.indexOf("6") !== -1) {
+            ramRange = { $gte: 6 };
+          } else if (rams.indexOf("8") !== -1) {
+            ramRange = { $gte: 8 };
+          } else if (rams.indexOf("12") !== -1) {
+            ramRange = { $gte: 12 };
           }
           pipeline[0]["$match"]["product_details.ram"] = ramRange;
+        }
+        if (query.rom) {
+          let romRange = {};
+          const roms = query.rom.split(",");
+
+          if (roms.indexOf("32") !== -1) {
+            romRange = { $gte: 32 };
+          } else if (roms.indexOf("64") !== -1) {
+            romRange = { $gte: 64 };
+          } else if (roms.indexOf("128") !== -1) {
+            romRange = { $gte: 128 };
+          } else if (roms.indexOf("256") !== -1) {
+            romRange = { $gte: 256 };
+          } else if (roms.indexOf("512") !== -1) {
+            romRange = { $gte: 512 };
+          }
+          pipeline[0]["$match"]["product_details.rom"] = romRange;
         }
 
         pipeline.push({ $skip: +skip });
@@ -342,25 +351,25 @@ export const ProductService = {
               },
               {
                 $addFields: {
-                  romValue: { $toInt: "$_id" },
+                  value: { $toInt: "$_id" },
                   checked: false,
                 },
               },
-              {
-                $match: {
-                  count: { $gte: 20 },
-                },
-              },
+              // {
+              //   $match: {
+              //     count: { $gte: 20 },
+              //   },
+              // },
               {
                 $sort: {
-                  romValue: -1,
+                  value: -1,
                   count: -1,
                   _id: -1,
                 },
               },
-              {
-                $limit: 15,
-              },
+              // {
+              //   $limit: 15,
+              // },
             ],
             ipRatingCounts: [
               {
@@ -753,6 +762,55 @@ export const ProductService = {
       ]);
 
       if (data && data.length > 0) {
+        let rom_32_GbAndAbove = 0,
+          rom_64_GbAndAbove = 0,
+          rom_128_GbAndAbove = 0,
+          rom_256_GbAndAbove = 0,
+          rom_512_GbAndAbove = 0;
+        data[0].romCounts.map((romCount) => {
+          if (romCount.value >= 512) {
+            rom_512_GbAndAbove = rom_512_GbAndAbove + romCount.count;
+            rom_256_GbAndAbove = rom_512_GbAndAbove;
+          } else if (romCount.value >= 256 && romCount.value < 512) {
+            rom_256_GbAndAbove = rom_256_GbAndAbove + romCount.count;
+            rom_128_GbAndAbove = rom_256_GbAndAbove;
+          } else if (romCount.value >= 128 && romCount.value < 256) {
+            rom_128_GbAndAbove = rom_128_GbAndAbove + romCount.count;
+            rom_64_GbAndAbove = rom_128_GbAndAbove;
+          } else if (romCount.value >= 64 && romCount.value < 128) {
+            rom_64_GbAndAbove = rom_64_GbAndAbove + romCount.count;
+            rom_32_GbAndAbove = rom_64_GbAndAbove;
+          } else if (romCount.value >= 32 && romCount.value < 64) {
+            rom_32_GbAndAbove = rom_32_GbAndAbove + romCount.count;
+          }
+        });
+        data[0].romCounts = [
+          {
+            _id: "512",
+            count: rom_512_GbAndAbove,
+            checked: false,
+          },
+          {
+            _id: "256",
+            count: rom_256_GbAndAbove,
+            checked: false,
+          },
+          {
+            _id: "128",
+            count: rom_128_GbAndAbove,
+            checked: false,
+          },
+          {
+            _id: "64",
+            count: rom_64_GbAndAbove,
+            checked: false,
+          },
+          {
+            _id: "32",
+            count: rom_32_GbAndAbove,
+            checked: false,
+          },
+        ];
         let twoGbAndAboveRam = 0,
           threeGbAndAboveRam = 0,
           fourGbAndAboveRam = 0,
