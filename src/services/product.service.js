@@ -123,14 +123,6 @@ export const ProductService = {
             };
           }
         }
-        if (query.ram?.length) {
-          let rams = query.ram.split(",");
-          if (rams.length > 0) {
-            pipeline[0]["$match"]["product_details.ram"] = {
-              $in: rams.map((ram) => +ram),
-            };
-          }
-        }
         if (query.ipRating?.length) {
           let ipRatings = query.ipRating.split(",");
           if (ipRatings.length > 0) {
@@ -204,6 +196,25 @@ export const ProductService = {
           }
           pipeline[0]["$match"]["product_details.discount_percentage"] =
             discountRange;
+        }
+        if (query.ram) {
+          let ramRange = {};
+          const rams = query.ram.split(",");
+
+          if (rams.indexOf("12") !== -1) {
+            ramRange = { $gte: 12 };
+          } else if (rams.indexOf("8") !== -1) {
+            ramRange = { $gte: 8 };
+          } else if (rams.indexOf("6") !== -1) {
+            ramRange = { $gte: 6 };
+          } else if (rams.indexOf("4") !== -1) {
+            ramRange = { $gte: 4 };
+          } else if (rams.indexOf("3") !== -1) {
+            ramRange = { $gte: 3 };
+          } else if (rams.indexOf("2") !== -1) {
+            ramRange = { $gte: 2 };
+          }
+          pipeline[0]["$match"]["product_details.ram"] = ramRange;
         }
 
         pipeline.push({ $skip: +skip });
@@ -289,25 +300,25 @@ export const ProductService = {
               },
               {
                 $addFields: {
-                  ramValue: { $toInt: "$_id" },
+                  value: { $toInt: "$_id" },
                   checked: false,
                 },
               },
-              {
-                $match: {
-                  count: { $gte: 20 },
-                },
-              },
+              // {
+              //   $match: {
+              //     count: { $gte: 20 },
+              //   },
+              // },
               {
                 $sort: {
-                  ramValue: -1,
+                  value: -1,
                   count: -1,
                   _id: -1,
                 },
               },
-              {
-                $limit: 15,
-              },
+              // {
+              //   $limit: 15,
+              // },
             ],
             romCounts: [
               {
@@ -742,6 +753,65 @@ export const ProductService = {
       ]);
 
       if (data && data.length > 0) {
+        let twoGbAndAboveRam = 0,
+          threeGbAndAboveRam = 0,
+          fourGbAndAboveRam = 0,
+          sixGbAndAboveRam = 0,
+          eightGbAndAboveRam = 0,
+          tvelweGbAndAboveRam = 0;
+        data[0].ramCounts.map((ramCount) => {
+          if (ramCount.value >= 12) {
+            tvelweGbAndAboveRam = tvelweGbAndAboveRam + ramCount.count;
+            eightGbAndAboveRam = tvelweGbAndAboveRam;
+          } else if (ramCount.value >= 8 && ramCount.value < 12) {
+            eightGbAndAboveRam = eightGbAndAboveRam + ramCount.count;
+            sixGbAndAboveRam = eightGbAndAboveRam;
+          } else if (ramCount.value >= 6 && ramCount.value < 8) {
+            sixGbAndAboveRam = sixGbAndAboveRam + ramCount.count;
+            fourGbAndAboveRam = sixGbAndAboveRam;
+          } else if (ramCount.value >= 4 && ramCount.value < 6) {
+            fourGbAndAboveRam = fourGbAndAboveRam + ramCount.count;
+            threeGbAndAboveRam = fourGbAndAboveRam;
+          } else if (ramCount.value >= 3 && ramCount.value < 4) {
+            threeGbAndAboveRam = threeGbAndAboveRam + ramCount.count;
+            twoGbAndAboveRam = threeGbAndAboveRam;
+          } else if (ramCount.value >= 2 && ramCount.value < 3) {
+            twoGbAndAboveRam = twoGbAndAboveRam + ramCount.count;
+          }
+        });
+        data[0].ramCounts = [
+          {
+            _id: "12",
+            count: tvelweGbAndAboveRam,
+            checked: false,
+          },
+          {
+            _id: "8",
+            count: eightGbAndAboveRam,
+            checked: false,
+          },
+          {
+            _id: "6",
+            count: sixGbAndAboveRam,
+            checked: false,
+          },
+          {
+            _id: "4",
+            count: fourGbAndAboveRam,
+            checked: false,
+          },
+          {
+            _id: "3",
+            count: threeGbAndAboveRam,
+            checked: false,
+          },
+          {
+            _id: "2",
+            count: twoGbAndAboveRam,
+            checked: false,
+          },
+        ];
+
         let tenToTwenty = 0,
           twentyToThirty = 0,
           thirtyToFourty = 0,
