@@ -7,6 +7,10 @@ export const ProductService = {
     try {
       const skip = (page - 1) * limit;
       let pipeline = [];
+      const isAccesory = false;
+      if (query.category_id?.toLowerCase()?.includes("accesories")) {
+        isAccesory = true;
+      }
       if (!query.category_id) {
         query.category_id = "mobile";
       } else {
@@ -34,7 +38,17 @@ export const ProductService = {
         osTypeCounts = [];
       if (query) {
         if (categories.length) {
-          categoryIds = categories.map((item) => {
+          let tCategory = categories;
+          if (!isAccesory) {
+            tCategory = tCategory.filter((item) => {
+              if (item?.name?.toLowerCase()?.includes("accessor")) {
+                return false;
+              } else {
+                return true;
+              }
+            });
+          }
+          categoryIds = tCategory.map((item) => {
             return mongoose.Types.ObjectId(item._id);
           });
           pipeline.push({
