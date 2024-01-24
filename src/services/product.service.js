@@ -69,6 +69,47 @@ export const ProductService = {
             };
           }
         }
+        if (query.type?.length) {
+          let types = query.type.split(",");
+          if (types.includes("dual sim")) {
+            pipeline[0]["$match"]["product_details.sim type"] = {
+              $in: [new RegExp("dual", "i")],
+            };
+          }
+          if (types.includes("single sim")) {
+            pipeline[0]["$match"]["product_details.sim type"] = {
+              $in: [new RegExp("single", "i")],
+            };
+          }
+          if (types.includes("smart phone")) {
+            pipeline[0]["$match"]["$or"] = [
+              {
+                "product_details.generic_name": {
+                  $in: [new RegExp("smart", "i")],
+                },
+              },
+              {
+                "product_details.browse type": {
+                  $in: [new RegExp("smart", "i")],
+                },
+              },
+            ];
+          }
+          if (types.includes("feature phone")) {
+            pipeline[0]["$match"]["$or"] = [
+              {
+                "product_details.generic_name": {
+                  $in: [new RegExp("feature", "i")],
+                },
+              },
+              {
+                "product_details.browse type": {
+                  $in: [new RegExp("feature", "i")],
+                },
+              },
+            ];
+          }
+        }
         if (query.available?.length) {
           let availables = query.available.split(",");
 
@@ -1151,6 +1192,101 @@ export const ProductService = {
                 $limit: 15,
               },
             ],
+            genericNameCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.generic_name": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.generic_name" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $match: {
+                  count: { $gte: 20 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
+                },
+              },
+              {
+                $limit: 15,
+              },
+            ],
+            browseTypeCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.browse type": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.browse type" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $match: {
+                  count: { $gte: 20 },
+                },
+              },
+              {
+                $limit: 15,
+              },
+            ],
+            simCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.sim type": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.sim type" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $match: {
+                  count: { $gte: 20 },
+                },
+              },
+              {
+                $limit: 15,
+              },
+            ],
             processorBrandCounts: [
               {
                 $match: {
@@ -1392,6 +1528,66 @@ export const ProductService = {
       ]);
 
       if (data && data.length > 0) {
+        let smartPhone = { _id: "smart phone", count: 0, checked: false };
+        let featurePhone = { _id: "feature phone", count: 0, checked: false };
+        let signleSim = { _id: "single sim", count: 0, checked: false };
+        let dualSim = { _id: "dual sim", count: 0, checked: false };
+        data[0].genericNameCounts.map((item) => {
+          if (
+            item._id?.replaceAll(" ", "")?.toLowerCase()?.includes("smartphone")
+          ) {
+            smartPhone.count = smartPhone.count + item.count;
+          } else if (
+            item._id
+              ?.replaceAll(" ", "")
+              ?.toLowerCase()
+              ?.includes("featurephone")
+          ) {
+            featurePhone.count = featurePhone.count + item.count;
+          }
+        });
+        data[0].browseTypeCounts.map((item) => {
+          if (
+            item._id?.replaceAll(" ", "")?.toLowerCase()?.includes("smartphone")
+          ) {
+            smartPhone.count = smartPhone.count + item.count;
+          } else if (
+            item._id
+              ?.replaceAll(" ", "")
+              ?.toLowerCase()
+              ?.includes("featurephone")
+          ) {
+            featurePhone.count = featurePhone.count + item.count;
+          }
+        });
+
+        data[0].simCounts.map((item) => {
+          if (
+            item._id?.replaceAll(" ", "")?.toLowerCase()?.includes("singlesim")
+          ) {
+            signleSim.count = signleSim.count + item.count;
+          } else if (
+            item._id?.replaceAll(" ", "")?.toLowerCase()?.includes("dualsim")
+          ) {
+            dualSim.count = dualSim.count + item.count;
+          }
+        });
+        delete data[0].genericNameCounts;
+        delete data[0].simCounts;
+        delete data[0].browseTypeCounts;
+        data[0].typeCounts = [];
+        if (smartPhone.count) {
+          data[0].typeCounts.push(smartPhone);
+        }
+        if (featurePhone.count) {
+          data[0].typeCounts.push(featurePhone);
+        }
+        if (signleSim.count) {
+          data[0].typeCounts.push(signleSim);
+        }
+        if (dualSim.count) {
+          data[0].typeCounts.push(dualSim);
+        }
         if (data[0]?.availableCounts?.length > 0) {
           let emptyDataIndex;
           data[0].availableCounts = data[0]?.availableCounts.map(
