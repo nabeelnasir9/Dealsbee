@@ -69,6 +69,19 @@ export const ProductService = {
             };
           }
         }
+        if (query.available?.length) {
+          let availables = query.available.split(",");
+
+          if (availables.length > 0) {
+            pipeline[0]["$match"]["product_details.available"] = {
+              $in: availables.map((available) => new RegExp(available, "i")),
+            };
+            pipeline[0]["$match"]["$or"] = [
+              { "product_details.available": { $exists: false } },
+            ];
+          }
+        }
+
         if (query.aspectRatio?.length) {
           let aspectRatios = query.aspectRatio.replaceAll("_", ":").split(",");
           if (aspectRatios.length > 0) {
@@ -942,18 +955,18 @@ export const ProductService = {
                   category_id: {
                     $in: categoryIds,
                   },
-                  "product_details.rear_camera": {
+                  "product_details.front_camera": {
                     $exists: true,
                     $ne: null,
                     $ne: "",
                     $ne: 0,
                   },
-                  "product_details.rear_camera": true,
+                  "product_details.front_camera": true,
                 },
               },
               {
                 $group: {
-                  _id: "rear camera",
+                  _id: "front camera",
                   count: { $sum: 1 },
                 },
               },
@@ -1067,6 +1080,36 @@ export const ProductService = {
               },
               {
                 $limit: 15,
+              },
+            ],
+            availableCounts: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  $or: [
+                    { "product_details.available": { $exists: true, $ne: "" } },
+                    { "product_details.available": { $exists: false } },
+                  ],
+                },
+              },
+              {
+                $group: {
+                  _id: { $toLower: "$product_details.available" },
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                  _id: -1,
+                },
               },
             ],
             coreCounts: [
@@ -1349,6 +1392,24 @@ export const ProductService = {
       ]);
 
       if (data && data.length > 0) {
+        if (data[0]?.availableCounts?.length > 0) {
+          let emptyDataIndex;
+          data[0].availableCounts = data[0]?.availableCounts.map(
+            (item, index, self) => {
+              if (item._id == "available") {
+                const emptyData = self.filter((item) => !item._id);
+                if (emptyData?.length > 0) {
+                  item.count = item.count + emptyData[0].count;
+                  emptyDataIndex = self.indexOf(emptyData[0]);
+                }
+              }
+              return item;
+            }
+          );
+          if (emptyDataIndex?.toString() && emptyDataIndex > -1) {
+            data[0].availableCounts.splice(emptyDataIndex, 1);
+          }
+        }
         let connectivityCounts = [];
         if (data[0].otgCounts?.length > 0 && data[0].otgCounts[0]?.count > 0) {
           connectivityCounts.push(data[0].otgCounts[0]);
