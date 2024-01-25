@@ -1,4 +1,4 @@
-import { ScraperHelper } from "../helpers/scraper.helper.js";
+
 import { ProductModel, CategoryModel } from "../models/index.js";
 import mongoose from "mongoose";
 
@@ -80,6 +80,23 @@ export const ProductService = {
           if (resolution.length > 0) {
             pipeline[0]["$match"]["product_details.resolution"] = {
               $in: resolution.map((resolution) => new RegExp(resolution, "i")),
+            };
+          }
+        }
+        if (query.launched?.length) {
+          let launched = query.launched.split(",");
+          const startDate = new Date();
+          if (launched.length > 0) {
+            if (launched.indexOf("1 year") !== -1) {
+              startDate.setFullYear(startDate.getFullYear() - 1);
+            }else if(launched.indexOf("6 months") !== -1) {
+              startDate.setMonth(startDate.getMonth() - 6);
+            }else if(launched.indexOf("3 months") !== -1) {
+              startDate.setMonth(startDate.getMonth() - 3);
+            }
+            pipeline[0]["$match"]["product_details.availableAt"] = {
+              $exists: true,
+              $gte: new Date(startDate),
             };
           }
         }
@@ -413,6 +430,12 @@ export const ProductService = {
           price: { $gt: +query.minPrice },
         },
       });
+      const threeMonthsBeforeDate = new Date();
+      const sixMonthsBeforeDate = new Date();
+      const oneYearBeforeDate = new Date();
+      threeMonthsBeforeDate.setMonth(threeMonthsBeforeDate.getMonth() - 3);
+      sixMonthsBeforeDate.setMonth(sixMonthsBeforeDate.getMonth() - 6);
+      oneYearBeforeDate.setFullYear(oneYearBeforeDate.getFullYear() - 1);
       const data = await ProductModel.aggregate([
         {
           $facet: {
@@ -540,6 +563,103 @@ export const ProductService = {
               // {
               //   $limit: 15,
               // },
+            ],
+            launchedWithinThreeMonths: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.availableAt": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                    $gte: threeMonthsBeforeDate,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: "3 months",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                  
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                },
+              },
+            ],
+            launchedWithinSixMonths: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.availableAt": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                    $gte: sixMonthsBeforeDate,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: "6 months",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                },
+              },
+            ],
+            launchedWithinOneYear: [
+              {
+                $match: {
+                  category_id: {
+                    $in: categoryIds,
+                  },
+                  "product_details.availableAt": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                    $ne: 0,
+                    $gte: oneYearBeforeDate,
+                  },
+                },
+              },
+              {
+                $group: {
+                  _id: "1 year",
+                  count: { $sum: 1 },
+                },
+              },
+              {
+                $addFields: {
+                  checked: false,
+                },
+              },
+              {
+                $sort: {
+                  count: -1,
+                },
+              },
             ],
             ipRatingCounts: [
               {
@@ -1542,6 +1662,22 @@ export const ProductService = {
       ]);
 
       if (data && data.length > 0) {
+        //Launched Filter Start
+        data[0].launchedCounts=[]
+        if(data[0].launchedWithinThreeMonths?.length>0){
+          data[0].launchedCounts.push(data[0].launchedWithinThreeMonths[0])
+          delete data[0].launchedWithinThreeMonths
+        }
+        if(data[0].launchedWithinSixMonths?.length>0){
+          data[0].launchedCounts.push(data[0].launchedWithinSixMonths[0])
+          delete data[0].launchedWithinSixMonths
+        }
+        if(data[0].launchedWithinOneYear?.length>0){
+          data[0].launchedCounts.push(data[0].launchedWithinOneYear[0])
+          delete data[0].launchedWithinOneYear
+        }
+        
+        //Launched Filter End
         let smartPhone = { _id: "smart phone", count: 0, checked: false };
         let featurePhone = { _id: "feature phone", count: 0, checked: false };
         let signleSim = { _id: "single sim", count: 0, checked: false };

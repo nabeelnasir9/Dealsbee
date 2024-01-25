@@ -7,7 +7,7 @@ const schema = mongoose.Schema(
     price: { type: Number, float: true },
     currency: { type: String },
     rating: { type: Number, float: true },
-    product_details: { type: Object },
+    product_details: { type: mongoose.Schema.Types.Mixed },
     store: { type: String },
     productId: { type: String },
     url: { type: String },
