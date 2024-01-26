@@ -1,4 +1,3 @@
-
 import { ProductModel, CategoryModel } from "../models/index.js";
 import mongoose from "mongoose";
 
@@ -34,9 +33,8 @@ export const ProductService = {
         osTypeCounts = [];
       if (query) {
         if (categories.length) {
-          
           categoryIds = categories.map((item) => {
-            return mongoose.Types.ObjectId(item._id);
+            return new mongoose.Types.ObjectId(item._id);
           });
           pipeline.push({
             $match: {
@@ -76,9 +74,9 @@ export const ProductService = {
           if (launched.length > 0) {
             if (launched.indexOf("1 year") !== -1) {
               startDate.setFullYear(startDate.getFullYear() - 1);
-            }else if(launched.indexOf("6 months") !== -1) {
+            } else if (launched.indexOf("6 months") !== -1) {
               startDate.setMonth(startDate.getMonth() - 6);
-            }else if(launched.indexOf("3 months") !== -1) {
+            } else if (launched.indexOf("3 months") !== -1) {
               startDate.setMonth(startDate.getMonth() - 3);
             }
             pipeline[0]["$match"]["product_details.availableAt"] = {
@@ -135,9 +133,6 @@ export const ProductService = {
             pipeline[0]["$match"]["product_details.available"] = {
               $in: availables.map((available) => new RegExp(available, "i")),
             };
-            pipeline[0]["$match"]["$or"] = [
-              { "product_details.available": { $exists: false } },
-            ];
           }
         }
 
@@ -575,7 +570,6 @@ export const ProductService = {
               {
                 $addFields: {
                   checked: false,
-                  
                 },
               },
               {
@@ -1250,10 +1244,11 @@ export const ProductService = {
                   category_id: {
                     $in: categoryIds,
                   },
-                  $or: [
-                    { "product_details.available": { $exists: true, $ne: "" } },
-                    { "product_details.available": { $exists: false } },
-                  ],
+                  "product_details.available": {
+                    $exists: true,
+                    $ne: null,
+                    $ne: "",
+                  },
                 },
               },
               {
@@ -1645,20 +1640,20 @@ export const ProductService = {
 
       if (data && data.length > 0) {
         //Launched Filter Start
-        data[0].launchedCounts=[]
-        if(data[0].launchedWithinThreeMonths?.length>0){
-          data[0].launchedCounts.push(data[0].launchedWithinThreeMonths[0])
-          delete data[0].launchedWithinThreeMonths
+        data[0].launchedCounts = [];
+        if (data[0].launchedWithinThreeMonths?.length > 0) {
+          data[0].launchedCounts.push(data[0].launchedWithinThreeMonths[0]);
+          delete data[0].launchedWithinThreeMonths;
         }
-        if(data[0].launchedWithinSixMonths?.length>0){
-          data[0].launchedCounts.push(data[0].launchedWithinSixMonths[0])
-          delete data[0].launchedWithinSixMonths
+        if (data[0].launchedWithinSixMonths?.length > 0) {
+          data[0].launchedCounts.push(data[0].launchedWithinSixMonths[0]);
+          delete data[0].launchedWithinSixMonths;
         }
-        if(data[0].launchedWithinOneYear?.length>0){
-          data[0].launchedCounts.push(data[0].launchedWithinOneYear[0])
-          delete data[0].launchedWithinOneYear
+        if (data[0].launchedWithinOneYear?.length > 0) {
+          data[0].launchedCounts.push(data[0].launchedWithinOneYear[0]);
+          delete data[0].launchedWithinOneYear;
         }
-        
+
         //Launched Filter End
         let smartPhone = { _id: "smart phone", count: 0, checked: false };
         let featurePhone = { _id: "feature phone", count: 0, checked: false };
@@ -1719,24 +1714,6 @@ export const ProductService = {
         }
         if (dualSim.count) {
           data[0].typeCounts.push(dualSim);
-        }
-        if (data[0]?.availableCounts?.length > 0) {
-          let emptyDataIndex;
-          data[0].availableCounts = data[0]?.availableCounts.map(
-            (item, index, self) => {
-              if (item._id == "available") {
-                const emptyData = self.filter((item) => !item._id);
-                if (emptyData?.length > 0) {
-                  item.count = item.count + emptyData[0].count;
-                  emptyDataIndex = self.indexOf(emptyData[0]);
-                }
-              }
-              return item;
-            }
-          );
-          if (emptyDataIndex?.toString() && emptyDataIndex > -1) {
-            data[0].availableCounts.splice(emptyDataIndex, 1);
-          }
         }
         let connectivityCounts = [];
         if (data[0].otgCounts?.length > 0 && data[0].otgCounts[0]?.count > 0) {

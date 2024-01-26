@@ -108,12 +108,12 @@ export const ScraperHelper = {
             }
           } catch (error) {}
         }
-        if(responseData.product_details.date_first_available){
-          try{
+        if (responseData.product_details.date_first_available) {
+          try {
             responseData.product_details.availableAt = new Date(
               responseData.product_details.date_first_available
             );
-          }catch(e){}
+          } catch (e) {}
         }
         let productData = {
           title: responseData.product_name,
