@@ -231,7 +231,7 @@ export const ProductService = {
             };
           }
         }
-        if (!query.minPrice?.toString()) {
+        if (!query.minPrice?.toString() && query.category_id!='mobile accessories') {
           query.minPrice = 5000;
         }
         if (query.minPrice || query.maxPrice) {
@@ -407,11 +407,13 @@ export const ProductService = {
           return false;
         }
       });
-      countPipline.push({
-        $match: {
-          price: { $gt: +query.minPrice },
-        },
-      });
+      if(query.minPrice){
+        countPipline.push({
+          $match: {
+            price: { $gt: +query.minPrice },
+          },
+        });
+      }
       const threeMonthsBeforeDate = new Date();
       const sixMonthsBeforeDate = new Date();
       const oneYearBeforeDate = new Date();
@@ -2147,6 +2149,8 @@ export const ProductService = {
           if (a._id > b._id) return -1;
           return 0;
         });
+
+        //Android Version Filter Start
         let android_11_versionAndAbove = 0,
           android_12_versionAndAbove = 0,
           android_13_versionAndAbove = 0,
@@ -2170,36 +2174,46 @@ export const ProductService = {
           }
         });
 
-        data[0].osVersionCounts = [
-          {
+        data[0].osVersionCounts = []
+        if(android_14_versionAndAbove>0){
+          data[0].osVersionCounts.push({
             _id: "14",
             count: android_14_versionAndAbove,
             checked: false,
-          },
-          {
+          })
+        }
+        if(android_13_versionAndAbove>0){
+          data[0].osVersionCounts.push({
             _id: "13",
             count: android_13_versionAndAbove,
             checked: false,
-          },
-          {
+          })
+        }
+        if(android_12_versionAndAbove>0){
+          data[0].osVersionCounts.push({
             _id: "12",
             count: android_12_versionAndAbove,
             checked: false,
-          },
-          {
+          })
+        }
+        if(android_11_versionAndAbove>0){
+          data[0].osVersionCounts.push({
             _id: "11",
             count: android_11_versionAndAbove,
             checked: false,
-          },
-        ];
+          })
+        }
+        if(data[0].osVersionCounts.length>0){
+          data[0].osCounts = data[0].osVersionCounts;
+        }
 
-        data[0].osCounts = data[0].osVersionCounts;
         delete data[0].osVersionCounts;
+        //Android Version Filter Start
         //Code for Android Filter
       }
 
       if (data && data.length > 0) {
-        data[0]["osTypeCounts"] = osTypeCounts;
+        // data[0]["osTypeCounts"] = osTypeCounts;
         return {
           status: 200,
           message: "Successfull",

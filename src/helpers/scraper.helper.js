@@ -115,6 +115,7 @@ export const ScraperHelper = {
             );
           } catch (e) {}
         }
+        responseData.product_details.available = "available";
         let productData = {
           title: responseData.product_name,
           productId: responseData.asin,
@@ -285,8 +286,12 @@ export const ScraperHelper = {
           "#container > div > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div > div:nth-child(4) > a"
         );
       }
-
-      const img_url = await getElementLink("ul li img");
+      let img_url;
+      try {
+        img_url = await getElementLink("img[loading='eager']");
+      } catch (error) {
+        img_url = await getElementLink("ul li img");
+      }
 
       const prodDetails = await page.$$eval("table tbody tr", (rows) => {
         return Array.from(rows, (row) => {
