@@ -400,7 +400,7 @@ export const ProductService = {
 
         pipeline.push({ $skip: +skip });
         pipeline.push({ $limit: +limit });
-        pipeline.push({ $sort: { rating: -1 } });
+        pipeline.unshift({ $sort: { rating: -1 } });
       }
 
       const countPipline = pipeline.filter((item) => {
