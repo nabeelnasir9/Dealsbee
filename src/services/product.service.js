@@ -231,7 +231,10 @@ export const ProductService = {
             };
           }
         }
-        if (!query.minPrice?.toString() && query.category_id!='mobile accessories') {
+        if (
+          !query.minPrice?.toString() &&
+          query.category_id != "mobile accessories"
+        ) {
           query.minPrice = 5000;
         }
         if (query.minPrice || query.maxPrice) {
@@ -407,7 +410,7 @@ export const ProductService = {
           return false;
         }
       });
-      if(query.minPrice){
+      if (query.minPrice) {
         countPipline.push({
           $match: {
             price: { $gt: +query.minPrice },
@@ -2174,36 +2177,36 @@ export const ProductService = {
           }
         });
 
-        data[0].osVersionCounts = []
-        if(android_14_versionAndAbove>0){
+        data[0].osVersionCounts = [];
+        if (android_14_versionAndAbove > 0) {
           data[0].osVersionCounts.push({
             _id: "14",
             count: android_14_versionAndAbove,
             checked: false,
-          })
+          });
         }
-        if(android_13_versionAndAbove>0){
+        if (android_13_versionAndAbove > 0) {
           data[0].osVersionCounts.push({
             _id: "13",
             count: android_13_versionAndAbove,
             checked: false,
-          })
+          });
         }
-        if(android_12_versionAndAbove>0){
+        if (android_12_versionAndAbove > 0) {
           data[0].osVersionCounts.push({
             _id: "12",
             count: android_12_versionAndAbove,
             checked: false,
-          })
+          });
         }
-        if(android_11_versionAndAbove>0){
+        if (android_11_versionAndAbove > 0) {
           data[0].osVersionCounts.push({
             _id: "11",
             count: android_11_versionAndAbove,
             checked: false,
-          })
+          });
         }
-        if(data[0].osVersionCounts.length>0){
+        if (data[0].osVersionCounts.length > 0) {
           data[0].osCounts = data[0].osVersionCounts;
         }
 
@@ -2214,6 +2217,450 @@ export const ProductService = {
 
       if (data && data.length > 0) {
         // data[0]["osTypeCounts"] = osTypeCounts;
+        return {
+          status: 200,
+          message: "Successfull",
+          response: "Record Fetched Successfully",
+          data: data[0],
+        };
+      }
+      return {
+        status: 200,
+        message: "Successfull",
+        response: "No Record Exits",
+        data: {},
+      };
+    } catch (error) {
+      throw {
+        status: 500,
+        message: "Internal Server Error",
+        response: "Database Error",
+      };
+    }
+  },
+  getProductsData: async ({ page = 1, limit = 10, ...query }) => {
+    try {
+      const skip = (page - 1) * limit;
+      let pipeline = [];
+      if (!query.category_id) {
+        query.category_id = "mobile";
+      } else {
+        query.category_id = query.category_id.replaceAll("_", " ");
+      }
+      let regex,
+        categories = [];
+      if (query.category_id.includes(",")) {
+        query.category_id = query.category_id.split(",");
+        for (let i = 0; i < query.category_id.length; i++) {
+          regex = new RegExp(query.category_id[i], "i");
+          const tempCategory = await CategoryModel.find({ name: regex });
+          if (tempCategory.length) {
+            categories = [...categories, ...tempCategory];
+          }
+        }
+      } else {
+        regex = new RegExp(query.category_id, "i");
+        categories =
+          query.category == "all"
+            ? await CategoryModel.find()
+            : await CategoryModel.find({ name: regex });
+      }
+      let categoryIds = [];
+      if (query) {
+        if (categories.length) {
+          categoryIds = categories.map((item) => {
+            return new mongoose.Types.ObjectId(item._id);
+          });
+          pipeline.push({
+            $match: {
+              category_id: {
+                $in: categoryIds,
+              },
+            },
+          });
+        }
+        if (query.brand?.length) {
+          let brands = query.brand.split(",");
+          if (brands.length > 0) {
+            pipeline[0]["$match"]["product_details.brand"] = {
+              $in: brands.map((brand) => new RegExp(brand, "i")),
+            };
+          }
+        }
+        if (query.store?.length) {
+          let stores = query.store.split(",");
+          if (stores.length > 0) {
+            pipeline[0]["$match"]["store"] = {
+              $in: stores.map((store) => new RegExp(store, "i")),
+            };
+          }
+        }
+        if (query.resolution?.length) {
+          let resolution = query.resolution.replaceAll(":", " ").split(",");
+          if (resolution.length > 0) {
+            pipeline[0]["$match"]["product_details.resolution"] = {
+              $in: resolution.map((resolution) => new RegExp(resolution, "i")),
+            };
+          }
+        }
+        if (query.launched?.length) {
+          let launched = query.launched.split(",");
+          const startDate = new Date();
+          if (launched.length > 0) {
+            if (launched.indexOf("1 year") !== -1) {
+              startDate.setFullYear(startDate.getFullYear() - 1);
+            } else if (launched.indexOf("6 months") !== -1) {
+              startDate.setMonth(startDate.getMonth() - 6);
+            } else if (launched.indexOf("3 months") !== -1) {
+              startDate.setMonth(startDate.getMonth() - 3);
+            }
+            pipeline[0]["$match"]["product_details.availableAt"] = {
+              $exists: true,
+              $gte: new Date(startDate),
+            };
+          }
+        }
+        if (query.type?.length) {
+          let types = query.type.split(",");
+          if (types.includes("dual sim")) {
+            pipeline[0]["$match"]["product_details.sim type"] = {
+              $in: [new RegExp("dual", "i")],
+            };
+          }
+          if (types.includes("single sim")) {
+            pipeline[0]["$match"]["product_details.sim type"] = {
+              $in: [new RegExp("single", "i")],
+            };
+          }
+          if (types.includes("smart phone")) {
+            pipeline[0]["$match"]["$or"] = [
+              {
+                "product_details.generic_name": {
+                  $in: [new RegExp("smart", "i")],
+                },
+              },
+              {
+                "product_details.browse type": {
+                  $in: [new RegExp("smart", "i")],
+                },
+              },
+            ];
+          }
+          if (types.includes("feature phone")) {
+            pipeline[0]["$match"]["$or"] = [
+              {
+                "product_details.generic_name": {
+                  $in: [new RegExp("feature", "i")],
+                },
+              },
+              {
+                "product_details.browse type": {
+                  $in: [new RegExp("feature", "i")],
+                },
+              },
+            ];
+          }
+        }
+        if (query.available?.length) {
+          let availables = query.available.split(",");
+
+          if (availables.length > 0) {
+            pipeline[0]["$match"]["product_details.available"] = {
+              $in: availables.map((available) => new RegExp(available, "i")),
+            };
+          }
+        }
+
+        if (query.aspectRatio?.length) {
+          let aspectRatios = query.aspectRatio.replaceAll("_", ":").split(",");
+          if (aspectRatios.length > 0) {
+            pipeline[0]["$match"]["product_details.aspect_ratio"] = {
+              $in: aspectRatios.map(
+                (aspectRatio) => new RegExp(aspectRatio, "i")
+              ),
+            };
+          }
+        }
+        if (query.core?.length) {
+          let core = query.core.replaceAll("-", " ").split(",");
+          if (core.length > 0) {
+            pipeline[0]["$match"]["product_details.processor core"] = {
+              $in: core.map((core) => new RegExp(core, "i")),
+            };
+          }
+        }
+        if (query.osType?.length) {
+          let osType = query.osType.replaceAll("-", " ").split(",");
+          if (osType.length > 0) {
+            pipeline[0]["$match"]["product_details.operating system"] = {
+              $in: osType.map((osType) => new RegExp(osType, "i")),
+            };
+          }
+        }
+        if (query.battery?.length) {
+          let battery = query.battery.replaceAll("-", " ").split(",");
+          if (battery.length > 0) {
+            pipeline[0]["$match"]["product_details.battery capacity"] = {
+              $in: battery.map((battery) => new RegExp(battery, "i")),
+            };
+          }
+        }
+        if (query.connectivity?.length) {
+          let connects = query.connectivity.split(",");
+          if (connects.indexOf("otg") != -1) {
+            pipeline[0]["$match"]["product_details.otg"] = true;
+          }
+          if (connects.indexOf("usb") != -1) {
+            pipeline[0]["$match"]["product_details.usb"] = true;
+          }
+          if (connects.indexOf("irBlaster") != -1) {
+            pipeline[0]["$match"]["product_details.irBlaster"] = true;
+          }
+          if (connects.indexOf("wifi") != -1) {
+            pipeline[0]["$match"]["product_details.wifi"] = true;
+          }
+          if (connects.indexOf("nfc") != -1) {
+            pipeline[0]["$match"]["product_details.nfc"] = true;
+          }
+          if (connects.indexOf("gps") != -1) {
+            pipeline[0]["$match"]["product_details.gps"] = true;
+          }
+          if (connects.indexOf("2G") != -1) {
+            pipeline[0]["$match"]["product_details.2G"] = true;
+          }
+          if (connects.indexOf("3G") != -1) {
+            pipeline[0]["$match"]["product_details.3G"] = true;
+          }
+          if (connects.indexOf("4G") != -1) {
+            pipeline[0]["$match"]["product_details.4G"] = true;
+          }
+          if (connects.indexOf("5G") != -1) {
+            pipeline[0]["$match"]["product_details.5G"] = true;
+          }
+        }
+        if (query.processorBrand?.length) {
+          let processorBrand = query.processorBrand
+            .replaceAll("-", " ")
+            .split(",");
+          if (processorBrand.length > 0) {
+            pipeline[0]["$match"]["product_details.processor brand"] = {
+              $in: processorBrand.map(
+                (processorBrand) => new RegExp(processorBrand, "i")
+              ),
+            };
+          }
+        }
+        if (query.ipRating?.length) {
+          let ipRatings = query.ipRating.split(",");
+          if (ipRatings.length > 0) {
+            pipeline[0]["$match"]["product_details.ip_rating"] = {
+              $in: ipRatings.map((ipRating) => +ipRating),
+            };
+          }
+        }
+        if (query.refreshRate?.length) {
+          let refreshRates = query.refreshRate.split(",");
+          if (refreshRates.length > 0) {
+            pipeline[0]["$match"]["product_details.refresh_rate"] = {
+              $in: refreshRates.map((refreshRate) => +refreshRate),
+            };
+          }
+        }
+        if (
+          !query.minPrice?.toString() &&
+          query.category_id != "mobile accessories"
+        ) {
+          query.minPrice = 5000;
+        }
+        if (query.minPrice || query.maxPrice) {
+          const priceFilter = {};
+          if (query.maxPrice) {
+            priceFilter.$lt = +query.maxPrice;
+          }
+          if (query.minPrice) {
+            priceFilter.$gt = +query.minPrice;
+          }
+
+          pipeline.push({
+            $match: {
+              price: priceFilter,
+            },
+          });
+        }
+        if (query.minRating || query.maxRating) {
+          const ratingFilter = {};
+          if (query.maxRating) {
+            ratingFilter.$lt = +query.maxRating;
+          }
+          if (query.minRating) {
+            ratingFilter.$gt = +query.minRating;
+          }
+
+          pipeline.push({
+            $match: {
+              rating: ratingFilter,
+            },
+          });
+        }
+
+        if (query.discount) {
+          let discountRange = {};
+          const discount = query.discount.split(",");
+
+          if (discount.indexOf("10") !== -1) {
+            discountRange = { $gte: 10 };
+          } else if (discount.indexOf("20") !== -1) {
+            discountRange = { $gte: 20 };
+          } else if (discount.indexOf("30") !== -1) {
+            discountRange = { $gte: 30 };
+          } else if (discount.indexOf("40") !== -1) {
+            discountRange = { $gte: 40 };
+          }
+          pipeline[0]["$match"]["product_details.discount_percentage"] =
+            discountRange;
+        }
+        if (query.ram) {
+          let ramRange = {};
+          const rams = query.ram.split(",");
+
+          if (rams.indexOf("2") !== -1) {
+            ramRange = { $gte: 2 };
+          } else if (rams.indexOf("3") !== -1) {
+            ramRange = { $gte: 3 };
+          } else if (rams.indexOf("4") !== -1) {
+            ramRange = { $gte: 4 };
+          } else if (rams.indexOf("6") !== -1) {
+            ramRange = { $gte: 6 };
+          } else if (rams.indexOf("8") !== -1) {
+            ramRange = { $gte: 8 };
+          } else if (rams.indexOf("12") !== -1) {
+            ramRange = { $gte: 12 };
+          }
+          pipeline[0]["$match"]["product_details.ram"] = ramRange;
+        }
+        if (query.rearCamera) {
+          let rearCameraRange = {};
+          const rearCameras = query.rearCamera.split(",");
+
+          if (rearCameras.indexOf("rear camera") !== -1) {
+            pipeline[0]["$match"]["product_details.rear_camera"] = true;
+          }
+          if (rearCameras.indexOf("rear camera dual") !== -1) {
+            pipeline[0]["$match"]["product_details.rear_camera_dual"] = true;
+          }
+
+          if (rearCameras.indexOf("5") !== -1) {
+            rearCameraRange = { $gte: 5 };
+          } else if (rearCameras.indexOf("8") !== -1) {
+            rearCameraRange = { $gte: 8 };
+          } else if (rearCameras.indexOf("12") !== -1) {
+            rearCameraRange = { $gte: 12 };
+          } else if (rearCameras.indexOf("16") !== -1) {
+            rearCameraRange = { $gte: 16 };
+          } else if (rearCameras.indexOf("32") !== -1) {
+            rearCameraRange = { $gte: 32 };
+          } else if (rearCameras.indexOf("12") !== -1) {
+            rearCameraRange = { $gte: 12 };
+          }
+          if (rearCameraRange?.$gte) {
+            pipeline[0]["$match"]["product_details.rear_camera_size"] =
+              rearCameraRange;
+          }
+        }
+        if (query.frontCamera) {
+          let frontCameraRange = {};
+          const frontCameras = query.frontCamera.split(",");
+
+          if (frontCameras.indexOf("front camera") !== -1) {
+            pipeline[0]["$match"]["product_details.front_camera"] = true;
+          }
+          if (frontCameras.indexOf("front camera dual") !== -1) {
+            pipeline[0]["$match"]["product_details.front_camera_dual"] = true;
+          }
+
+          if (frontCameras.indexOf("5") !== -1) {
+            frontCameraRange = { $gte: 5 };
+          } else if (frontCameras.indexOf("8") !== -1) {
+            frontCameraRange = { $gte: 8 };
+          } else if (frontCameras.indexOf("12") !== -1) {
+            frontCameraRange = { $gte: 12 };
+          } else if (frontCameras.indexOf("16") !== -1) {
+            frontCameraRange = { $gte: 16 };
+          } else if (frontCameras.indexOf("32") !== -1) {
+            frontCameraRange = { $gte: 32 };
+          }
+
+          if (frontCameraRange?.$gte) {
+            pipeline[0]["$match"]["product_details.front_camera_size"] =
+              frontCameraRange;
+          }
+        }
+        if (query.rom) {
+          let romRange = {};
+          const roms = query.rom.split(",");
+
+          if (roms.indexOf("32") !== -1) {
+            romRange = { $gte: 32 };
+          } else if (roms.indexOf("64") !== -1) {
+            romRange = { $gte: 64 };
+          } else if (roms.indexOf("128") !== -1) {
+            romRange = { $gte: 128 };
+          } else if (roms.indexOf("256") !== -1) {
+            romRange = { $gte: 256 };
+          } else if (roms.indexOf("512") !== -1) {
+            romRange = { $gte: 512 };
+          }
+          pipeline[0]["$match"]["product_details.rom"] = romRange;
+        }
+        if (query.os) {
+          let osRange = {};
+          const oss = query.os.split(",");
+
+          if (oss.indexOf("10") !== -1) {
+            osRange = { $gte: 10 };
+          } else if (oss.indexOf("11") !== -1) {
+            osRange = { $gte: 11 };
+          } else if (oss.indexOf("12") !== -1) {
+            osRange = { $gte: 12 };
+          } else if (oss.indexOf("13") !== -1) {
+            osRange = { $gte: 13 };
+          } else if (oss.indexOf("14") !== -1) {
+            osRange = { $gte: 14 };
+          }
+          pipeline[0]["$match"]["product_details.os_version"] = osRange;
+          pipeline[0]["$match"]["product_details.os_type"] = {
+            $regex: new RegExp("android", "i"),
+          };
+        }
+
+        pipeline.push({ $skip: +skip });
+        pipeline.push({ $limit: +limit });
+        pipeline.push({ $sort: { rating: -1 } });
+      }
+
+      const countPipline = pipeline.filter((item) => {
+        if (item?.["$match"]?.["category_id"] || item?.["$sort"]?.["rating"]) {
+          return true;
+        } else {
+          return false;
+        }
+      });
+      if (query.minPrice) {
+        countPipline.push({
+          $match: {
+            price: { $gt: +query.minPrice },
+          },
+        });
+      }
+      const data = await ProductModel.aggregate([
+        {
+          $facet: {
+            paginatedResults: pipeline,
+          },
+        },
+      ]);
+
+      if (data && data.length > 0) {
         return {
           status: 200,
           message: "Successfull",

@@ -13,6 +13,17 @@ const controller = {
       return httpResponse.INTERNAL_SERVER_ERROR(res, error);
     }
   },
+  getProductsData: async (req, res) => {
+    try {
+      const data = await ProductService.getProductsData(req.query);
+      return httpResponse.SUCCESS(res, data);
+    } catch (error) {
+      if (error.status == 400) {
+        return httpResponse.BAD_REQUEST(res, error.response);
+      }
+      return httpResponse.INTERNAL_SERVER_ERROR(res, error);
+    }
+  },
   getProductById: async (req, res) => {
     try {
       const data = await ProductService.getProductById(req.params.id);
