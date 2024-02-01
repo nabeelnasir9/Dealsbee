@@ -2,7 +2,7 @@ import { ProductModel, CategoryModel } from "../models/index.js";
 import mongoose from "mongoose";
 
 export const ProductService = {
-  getProducts: async ({ page = 1, limit = 10, ...query }) => {
+  getProducts: async ({ page = 1, limit = 20, ...query }) => {
     try {
       const skip = (page - 1) * limit;
       let pipeline = [];
@@ -2684,13 +2684,39 @@ export const ProductService = {
   },
   getProductById: async (id) => {
     try {
-      const data = await ProductModel.findById(id);
-      if (data) {
+      const product = await ProductModel.findById(id);
+      let duplicate_product = [];
+      let modelName = product?.product_details?.["model name"];
+      let condition = {};
+      if (modelName) {
+        condition = { "product_details.model name": modelName };
+      } else {
+        let title = new RegExp(product?.title, "i");
+        condition = { title: { $regex: title } };
+      }
+      if (condition?.title || condition?.["product_details.model name"]) {
+        duplicate_product = await ProductModel.find({
+          $and: [
+            condition,
+            { _id: { $ne: product._id } },
+            { productId: { $ne: product.productId } },
+            { store: { $ne: product.store } },
+          ],
+        });
+        if (duplicate_product?.length > 0) {
+          duplicate_product = [duplicate_product[0]];
+        }
+      }
+
+      if (product) {
         return {
           status: 200,
           message: "Successfull",
           response: "Product Fetched Successfully",
-          data,
+          data: {
+            product,
+            duplicate_product,
+          },
         };
       }
       return {
