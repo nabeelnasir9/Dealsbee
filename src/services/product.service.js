@@ -2700,6 +2700,7 @@ export const ProductService = {
             condition,
             { _id: { $ne: product._id } },
             { productId: { $ne: product.productId } },
+            { store: { $ne: product.store } },
           ],
         });
         if (duplicate_product?.length > 0) {
