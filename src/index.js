@@ -5,6 +5,8 @@ import config from "./config/index.js";
 import thread from "./thread/index.js";
 import cron from "node-cron";
 import { ScraperService } from "./services/index.js";
+import userRoutes from './routes/userRoutes.js';
+
 
 cron.schedule(
   `${config.env.cronMinute} ${config.env.cronHour} ${config.env.cronDayOfMonth} ${config.env.cronMonth} ${config.env.cronDayOfWeek}`,
@@ -41,6 +43,8 @@ async function startServer() {
       process.exit(1);
     });
   });
+  app.use('/api/users', userRoutes);
+
 }
 
 await startServer();
