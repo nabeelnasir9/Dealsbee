@@ -5,18 +5,23 @@ const router = Router();
 
 // SignUp
 router.post('/signup', async (req, res) => {
-  try {
-    await createUser(req.body.username, req.body.password);
-    res.status(201).json({ message: 'User created successfully' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+    try {
+      const { fullName, email, password } = req.body;
+      await createUser(fullName, email, password);
+      res.status(201).json({ message: 'User created successfully' });
+    } catch (error) {
+      if (error.code === 11000) {
+        return res.status(400).json({ message: 'Email already exists.' });
+      }
+      res.status(500).json({ message: error.message });
+    }
+  });
 
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const token = await authenticateUser(req.body.username, req.body.password);
+    const { email, password } = req.body;
+    const token = await authenticateUser(email, password);
     res.json({ token });
   } catch (error) {
     res.status(401).json({ message: error.message });
