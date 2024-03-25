@@ -10,6 +10,7 @@ const schema = mongoose.Schema(
     product_details: { type: mongoose.Schema.Types.Mixed },
     store: { type: String },
     productId: { type: String },
+    likeRate :{ type: Number, float:true , default:0}, 
     url: { type: String },
     img_url: {
       type: mongoose.Schema.Types.Array,

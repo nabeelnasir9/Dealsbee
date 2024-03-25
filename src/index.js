@@ -5,14 +5,12 @@ import config from "./config/index.js";
 import thread from "./thread/index.js";
 import cron from "node-cron";
 import { ScraperService } from "./services/index.js";
-import userRoutes from './routes/userRoutes.js';
-
+import userRoutes from "./routes/userRoutes.js";
+import commentRoutes from "./routes/commentRoutes.js";
 
 cron.schedule(
   `${config.env.cronMinute} ${config.env.cronHour} ${config.env.cronDayOfMonth} ${config.env.cronMonth} ${config.env.cronDayOfWeek}`,
-  async () => {
-    // await thread();
-  }
+  async () => {}
 );
 cron.schedule("0 0 * * *", async () => {
   await ScraperService.scrapeAmazonProductList();
@@ -43,8 +41,10 @@ async function startServer() {
       process.exit(1);
     });
   });
-  app.use('/api/users', userRoutes);
-
+  app.use("/api/users", userRoutes);
+  console.log("Registering routes...");
+  app.use("/api", commentRoutes);
+  console.log("Routes registered.");
 }
 
 await startServer();
