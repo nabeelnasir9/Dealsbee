@@ -7,6 +7,7 @@ import cron from "node-cron";
 import { ScraperService } from "./services/index.js";
 import userRoutes from "./routes/userRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
+import productsRoute from "./routes/products.js"
 
 cron.schedule(
   `${config.env.cronMinute} ${config.env.cronHour} ${config.env.cronDayOfMonth} ${config.env.cronMonth} ${config.env.cronDayOfWeek}`,
@@ -44,7 +45,9 @@ async function startServer() {
   app.use("/api/users", userRoutes);
   console.log("Registering routes...");
   app.use("/api", commentRoutes);
+  app.use('/api/products', productsRoute);
   console.log("Routes registered.");
+
 }
 
 await startServer();
