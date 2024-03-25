@@ -4,6 +4,7 @@ import { ProductModel } from "../models/product.model.js";
 
 const router = express.Router();
 
+// Existing endpoint to post a comment on a product
 router.post("/products/:productId/comments", async (req, res) => {
   try {
     const { content } = req.body;
@@ -23,6 +24,7 @@ router.post("/products/:productId/comments", async (req, res) => {
   }
 });
 
+// Existing endpoint to get all comments for a product
 router.get("/products/:productId/comments", async (req, res) => {
   try {
     const { productId } = req.params;
@@ -36,19 +38,30 @@ router.get("/products/:productId/comments", async (req, res) => {
   }
 });
 
-router.put('/products/:productId/comments/:commentId', async (req, res) => {
-  const { content } = req.body;
-  const { productId, commentId } = req.params;
-  
-  // Authorization logic here (ensure the requestor is the comment's author)
-
-  try {
-    const updatedComment = await CommentModel.findByIdAndUpdate(commentId, { content }, { new: true });
-    res.json(updatedComment);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+// Endpoint to like a comment
+router.post("/comments/:commentId/like", async (req, res) => {
+    try {
+        const comment = await CommentModel.findByIdAndUpdate(req.params.commentId, { $inc: { likes: 1 } }, { new: true });
+        if (!comment) {
+            return res.status(404).json({ message: "Comment not found" });
+        }
+        res.json(comment);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
+// Endpoint to dislike a comment
+router.post("/comments/:commentId/dislike", async (req, res) => {
+    try {
+        const comment = await CommentModel.findByIdAndUpdate(req.params.commentId, { $inc: { dislikes: 1 } }, { new: true });
+        if (!comment) {
+            return res.status(404).json({ message: "Comment not found" });
+        }
+        res.json(comment);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 export default router;
