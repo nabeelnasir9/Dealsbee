@@ -8,8 +8,8 @@ const commentSchema = new mongoose.Schema(
       ref: "Product",
       required: true,
     },
-    likes: { type: Number, default: 0 }, // Added likes count with a default value of 0
-    dislikes: { type: Number, default: 0 }, // Added dislikes count with a default value of 0
+    likes: { type: Number, default: 0 }, 
+    dislikes: { type: Number, default: 0 },
   },
   {
     timestamps: true,
