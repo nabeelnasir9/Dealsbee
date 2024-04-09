@@ -8,6 +8,7 @@ import { ScraperService } from "./services/index.js";
 import userRoutes from "./routes/userRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import productsRoute from "./routes/products.js"
+import blogsRouter from "./routes/blogs.js";
 
 cron.schedule(
   `${config.env.cronMinute} ${config.env.cronHour} ${config.env.cronDayOfMonth} ${config.env.cronMonth} ${config.env.cronDayOfWeek}`,
@@ -46,6 +47,7 @@ async function startServer() {
   console.log("Registering routes...");
   app.use("/api", commentRoutes);
   app.use('/api/products', productsRoute);
+  app.use(blogsRouter);
   console.log("Routes registered.");
 
 }
