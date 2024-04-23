@@ -15,7 +15,7 @@
   "license": "MIT",
   "dependencies": {
     "apify-client": "^2.8.4",
-    "axios": "^1.4.0",
+    "axios": "^1.6.8",
     "bcryptjs": "^2.4.3",
     "child_process": "^1.0.2",
     "chrome-launcher": "^1.1.0",
@@ -24,10 +24,14 @@
     "dotenv": "^10.0.0",
     "express": "^4.18.3",
     "helmet": "^4.6.0",
+    "install": "^0.13.0",
     "joi": "^17.5.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^8.2.2",
+    "mongoose-slug-generator": "^1.0.4",
+    "mongoose-slug-updater": "^3.3.0",
     "node-cron": "^3.0.3",
+    "npm": "^10.5.2",
     "password-hash": "^1.2.2",
     "puppeteer": "^13.7.0"
   },
