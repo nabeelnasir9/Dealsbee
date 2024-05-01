@@ -9,7 +9,8 @@ import userRoutes from "./routes/userRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import productsRoute from "./routes/products.js";
 import blogsRouter from "./routes/blogs.js";
-import smartphoneRoutes from "./routes/smartphone/index.js";
+import smartphoneRouter from './routes/smartphone/index.js';
+
 cron.schedule(
   `${config.env.cronMinute} ${config.env.cronHour} ${config.env.cronDayOfMonth} ${config.env.cronMonth} ${config.env.cronDayOfWeek}`,
   async () => {}
@@ -48,7 +49,7 @@ async function startServer() {
   app.use("/api", commentRoutes);
   app.use("/api/products", productsRoute);
   app.use(blogsRouter);
-  app.use(smartphoneRoutes);
+  app.use('/api/smartphones', smartphoneRouter);
   console.log("Routes registered.");
 }
 
