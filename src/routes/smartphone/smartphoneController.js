@@ -1,4 +1,4 @@
-import * as smartphoneService from '../../services/smartphone.service.js';
+import * as smartphoneService from "../../services/smartphone.service.js";
 
 export const getSmartphones = async (req, res) => {
   try {
@@ -12,7 +12,9 @@ export const getSmartphones = async (req, res) => {
       capacity: req.query.capacity,
       network: req.query.network,
       mobiletype: req.query.mobiletype,
-      osType: req.query.osType,
+      refreshRate: req.query.refreshRate,
+      cameraType: req.query.cameraType,
+      numOfCores: req.query.numOfCores,
     };
     const smartphones = await smartphoneService.getAllSmartphones(filters);
     res.json(smartphones);
@@ -21,15 +23,13 @@ export const getSmartphones = async (req, res) => {
   }
 };
 
-  
-
 export const getSmartphoneById = async (req, res) => {
   try {
     const smartphone = await smartphoneService.getSmartphoneById(req.params.id);
     if (smartphone) {
       res.json(smartphone);
     } else {
-      res.status(404).send('Smartphone not found');
+      res.status(404).send("Smartphone not found");
     }
   } catch (error) {
     res.status(500).send(error.message);
@@ -47,11 +47,14 @@ export const createSmartphone = async (req, res) => {
 
 export const updateSmartphone = async (req, res) => {
   try {
-    const updatedSmartphone = await smartphoneService.updateSmartphone(req.params.id, req.body);
+    const updatedSmartphone = await smartphoneService.updateSmartphone(
+      req.params.id,
+      req.body
+    );
     if (updatedSmartphone) {
       res.json(updatedSmartphone);
     } else {
-      res.status(404).send('Smartphone not found');
+      res.status(404).send("Smartphone not found");
     }
   } catch (error) {
     res.status(500).send(error.message);
@@ -64,7 +67,7 @@ export const deleteSmartphone = async (req, res) => {
     if (result) {
       res.status(204).send();
     } else {
-      res.status(404).send('Smartphone not found');
+      res.status(404).send("Smartphone not found");
     }
   } catch (error) {
     res.status(500).send(error.message);

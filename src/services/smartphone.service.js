@@ -11,7 +11,9 @@ export const getAllSmartphones = (filters) => {
     capacity,
     network,
     mobiletype,
-    osType,
+    refreshRate,
+    cameraType,
+    numOfCores
   } = filters;
 
   const query = {};
@@ -44,10 +46,18 @@ export const getAllSmartphones = (filters) => {
   if (network) {
     query.Network = { $regex: new RegExp(network, "i") };
   }
-  if (osType) {
-    query["Internal Storage"] = osType;
+
+  if(refreshRate){
+    query['Display Refresh Rate'] = refreshRate;
+  }
+  
+  if(cameraType){
+    query['Rear camera setup'] = cameraType;
   }
 
+  if(numOfCores){
+    query['No Of Cores']= numOfCores;
+  }
   const options = {
     skip: (page - 1) * limit,
     limit: parseInt(limit),
