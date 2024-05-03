@@ -18,16 +18,13 @@
 
 // export default router;
 
-
-
-
-import { Router } from 'express';
-import { ProductModel } from '../models/product.model.js';
-import { ObjectId } from 'mongodb';
+import { Router } from "express";
+import { ProductModel } from "../models/product.model.js";
+import { ObjectId } from "mongodb";
 
 const router = Router();
 
-router.get('/search', async (req, res) => {
+router.get("/search", async (req, res) => {
   try {
     const { q: searchQuery, category } = req.query;
     let queryOptions = { $text: { $search: searchQuery } };
@@ -37,7 +34,7 @@ router.get('/search', async (req, res) => {
     }
 
     const products = await ProductModel.find(queryOptions).sort({
-      score: { $meta: "textScore" }
+      score: { $meta: "textScore" },
     });
 
     res.json(products);
