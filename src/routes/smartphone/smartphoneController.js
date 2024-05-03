@@ -1,14 +1,26 @@
 import * as smartphoneService from '../../services/smartphone.service.js';
 
 export const getSmartphones = async (req, res) => {
-    try {
-      const { limit, page } = req.query;
-      const smartphones = await smartphoneService.getAllSmartphones({ limit, page });
-      res.json(smartphones);
-    } catch (error) {
-      res.status(500).send(error.message);
-    }
-  };
+  try {
+    const filters = {
+      limit: req.query.limit,
+      page: req.query.page,
+      minPrice: req.query.minPrice,
+      maxPrice: req.query.maxPrice,
+      RAM: req.query.RAM,
+      operatingSystem: req.query.operatingSystem,
+      capacity: req.query.capacity,
+      network: req.query.network,
+      mobiletype: req.query.mobiletype,
+      osType: req.query.osType,
+    };
+    const smartphones = await smartphoneService.getAllSmartphones(filters);
+    res.json(smartphones);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
   
 
 export const getSmartphoneById = async (req, res) => {

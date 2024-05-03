@@ -1,15 +1,60 @@
-import { Smartphone } from '../models/Phones.js';
+import { Smartphone } from "../models/Phones.js";
 
-export const getAllSmartphones = ({ limit = 20, page = 1}) => {
+export const getAllSmartphones = (filters) => {
+  const {
+    limit = 20,
+    page = 1,
+    minPrice,
+    maxPrice,
+    RAM,
+    operatingSystem,
+    capacity,
+    network,
+    mobiletype,
+    osType,
+  } = filters;
+
   const query = {};
+
+  if (minPrice || maxPrice) {
+    if (minPrice) query["variants.0.price"] = { $gte: `₹${minPrice}` };
+    if (maxPrice)
+      query["variants.0.price"] = {
+        ...query["variants.0.price"],
+        $lte: `₹${maxPrice}`,
+      };
+  }
+
+  if (RAM) {
+    query.RAM = RAM;
+  }
+
+  if (operatingSystem) {
+    query["Operating System"] = operatingSystem;
+  }
+
+  if (capacity) {
+    query.Capacity = capacity;
+  }
+
+  if (mobiletype) {
+    query["Mobile Type"] = mobiletype;
+  }
+
+  if (network) {
+    query.Network = { $regex: new RegExp(network, "i") };
+  }
+  if (osType) {
+    query["Internal Storage"] = osType;
+  }
+
   const options = {
     skip: (page - 1) * limit,
     limit: parseInt(limit),
   };
-  
+
   return Smartphone.find(query, null, options);
 };
-
 
 export const getSmartphoneById = (id) => {
   return Smartphone.findById(id);
