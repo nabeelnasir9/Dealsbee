@@ -13,7 +13,8 @@ export const getAllSmartphones = (filters) => {
     mobiletype,
     refreshRate,
     cameraType,
-    numOfCores
+    numOfCores,
+    expertScore
   } = filters;
 
   const query = {};
@@ -47,17 +48,22 @@ export const getAllSmartphones = (filters) => {
     query.Network = { $regex: new RegExp(network, "i") };
   }
 
-  if(refreshRate){
-    query['Display Refresh Rate'] = refreshRate;
-  }
-  
-  if(cameraType){
-    query['Rear camera setup'] = cameraType;
+  if (refreshRate) {
+    query["Display Refresh Rate"] = refreshRate;
   }
 
-  if(numOfCores){
-    query['No Of Cores']= numOfCores;
+  if (cameraType) {
+    query["Rear camera setup"] = cameraType;
   }
+
+  if (numOfCores) {
+    query["No Of Cores"] = numOfCores;
+  }
+
+  if (expertScore) {
+    query["Expert Score"] = expertScore;
+  }
+
   const options = {
     skip: (page - 1) * limit,
     limit: parseInt(limit),
