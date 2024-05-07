@@ -34,7 +34,7 @@ export const getAllTablets = (filters) => {
   }
 
   if (storage) {
-    query["Storage"] = storage;
+    query["Internal Memory"] = storage;
   }
 
   if (network) {
@@ -50,7 +50,7 @@ export const getAllTablets = (filters) => {
   }
 
   if (cameraType) {
-    query["Camera Type"] = cameraType;
+    query["Rear"] = cameraType;
   }
 
   if (numOfCores) {

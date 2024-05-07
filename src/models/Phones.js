@@ -98,4 +98,4 @@ const SmartphoneSchema = new mongoose.Schema({
   "Expert Score": String,
 });
 
-export const Smartphone = mongoose.model("new_smartphones", SmartphoneSchema);
+export const Smartphone = mongoose.model("smartprice_smartphones__", SmartphoneSchema);
