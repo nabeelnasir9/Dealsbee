@@ -7,6 +7,7 @@ export const getAllLaptops = (filters) => {
     minPrice,
     maxPrice,
     RAM,
+    Capacity,
     operatingSystem,
     storage,
     network,
@@ -15,6 +16,7 @@ export const getAllLaptops = (filters) => {
     cameraType,
     numOfCores,
     expertScore,
+    SSDCapacity,
   } = filters;
 
   const query = {};
@@ -28,13 +30,19 @@ export const getAllLaptops = (filters) => {
   if (RAM) {
     query.RAM = RAM;
   }
+  if (SSDCapacity) {
+    query["SSD Capacity"] = SSDCapacity;
+  }
+  if (Capacity) {
+    query.Capacity = Capacity;
+  }
 
   if (operatingSystem) {
     query["Operating System"] = operatingSystem;
   }
 
   if (storage) {
-    query["Internal Memory"] = storage;
+    query["SSD Capacity"] = storage;
   }
 
   if (network) {

@@ -17,6 +17,8 @@ export const getLaptops = async (req, res) => {
       cameraType: req.query.cameraType,
       numOfCores: req.query.numOfCores,
       expertScore: req.query.expertScore,
+      Capacity: req.query.Capacity,
+      SSDCapacity: req.query["SSD Capacity"],
     };
     const laptops = await laptopService.getAllLaptops(filters);
     res.json(laptops);
