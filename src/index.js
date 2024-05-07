@@ -9,8 +9,9 @@ import userRoutes from "./routes/userRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import productsRoute from "./routes/products.js";
 import blogsRouter from "./routes/blogs.js";
-import smartphoneRouter from './routes/smartphone/index.js';
-import tabletRouter from './routes/tablet/index.js';
+import smartphoneRouter from "./routes/smartphone/index.js";
+import tabletRouter from "./routes/tablet/index.js";
+import laptopRouter from "./routes/laptop/index.js";
 
 cron.schedule(
   `${config.env.cronMinute} ${config.env.cronHour} ${config.env.cronDayOfMonth} ${config.env.cronMonth} ${config.env.cronDayOfWeek}`,
@@ -50,8 +51,9 @@ async function startServer() {
   app.use("/api", commentRoutes);
   app.use("/api/products", productsRoute);
   app.use(blogsRouter);
-  app.use('/api/smartphones', smartphoneRouter);
-  app.use('/api/tablets', tabletRouter);
+  app.use("/api/smartphones", smartphoneRouter);
+  app.use("/api/tablets", tabletRouter);
+  app.use("/api/laptops", laptopRouter);
 
   console.log("Routes registered.");
 }
