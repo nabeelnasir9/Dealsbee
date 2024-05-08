@@ -17,6 +17,8 @@ export const getAllLaptops = (filters) => {
     numOfCores,
     expertScore,
     SSDCapacity,
+    ramType,
+    processorBrand,
   } = filters;
 
   const query = {};
@@ -26,12 +28,19 @@ export const getAllLaptops = (filters) => {
     if (minPrice) query["variants.0.price"].$gte = `₹${minPrice}`;
     if (maxPrice) query["variants.0.price"].$lte = `₹${maxPrice}`;
   }
-
+  if (ramType) {
+    query["RAM Type"] = ramType?.split(",");
+  }
   if (RAM) {
     query.RAM = RAM;
   }
   if (SSDCapacity) {
     query["SSD Capacity"] = SSDCapacity;
+  }
+  if (processorBrand) {
+    // query["Processor"] = processorBrand?.split(",");
+    const regexPattern = new RegExp(processorBrand.split(",").join("|")); // 'i' for case-insensitive
+    query["Processor"] = { $regex: regexPattern };
   }
   if (Capacity) {
     query.Capacity = Capacity;
