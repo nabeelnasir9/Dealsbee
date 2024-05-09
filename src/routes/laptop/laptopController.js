@@ -19,6 +19,7 @@ export const getLaptops = async (req, res) => {
       expertScore: req.query.expertScore,
       Capacity: req.query.Capacity,
       SSDCapacity: req.query["SSD Capacity"],
+      brands: req.query.brands,
       ramType: req.query.ramType,
       processorBrand: req.query.processorBrand,
     };

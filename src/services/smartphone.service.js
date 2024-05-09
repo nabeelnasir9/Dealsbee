@@ -14,7 +14,14 @@ export const getAllSmartphones = (filters) => {
     refreshRate,
     cameraType,
     numOfCores,
-    expertScore
+    expertScore,
+    brands,
+    chipSet,
+    graphics,
+    resolution,
+    screenSize,
+    stores,
+    camera
   } = filters;
 
   const query = {};
@@ -64,6 +71,32 @@ export const getAllSmartphones = (filters) => {
     query["Expert Score"] = expertScore;
   }
 
+  if (brands) {
+    query.brand = brands;
+  }
+
+  if (chipSet) {
+    query.Chipset = chipSet;
+  }
+
+  if (graphics) {
+    query.Graphics = graphics;
+  }
+
+  if (resolution) {
+    query.Resolution = resolution;
+  }
+
+  if(screenSize){
+    query["Screen Size"] = screenSize;
+  }
+  if(stores){
+    query.stores=stores;
+  }
+
+  if(camera){
+    query["Rear Camera"]= camera;
+  }
   const options = {
     skip: (page - 1) * limit,
     limit: parseInt(limit),

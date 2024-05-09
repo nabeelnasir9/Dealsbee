@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 const SmartphoneSchema = new mongoose.Schema({
   _id: mongoose.Schema.Types.ObjectId,
   name: String,
+  brand: String,
   "Processor Chipset": String,
   RAM: String,
   "Rear Camera": String,

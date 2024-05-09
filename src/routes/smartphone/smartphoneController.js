@@ -15,7 +15,15 @@ export const getSmartphones = async (req, res) => {
       refreshRate: req.query.refreshRate,
       cameraType: req.query.cameraType,
       numOfCores: req.query.numOfCores,
-      expertScore: req.query.expertScore
+      expertScore: req.query.expertScore,
+      brands: req.query.brands,
+      chipSet: req.query.chipSet,
+      graphics: req.query.graphics,
+      resolution: req.query.resolution,
+      screenSize: req.query.screenSize,
+      stores: req.query.stores,
+      camera: req.query.camera
+
     };
     const smartphones = await smartphoneService.getAllSmartphones(filters);
     res.json(smartphones);

@@ -17,6 +17,11 @@ export const getTablets = async (req, res) => {
       cameraType: req.query.cameraType,
       numOfCores: req.query.numOfCores,
       expertScore: req.query.expertScore,
+      brands: req.query.brands,
+      screenSize: req.query.screenSize,
+      stores: req.query.stores,
+      resolution: req.query.resolution,
+      chipset:req.query.chipset
     };
     const tablets = await tabletService.getAllTablets(filters);
     res.json(tablets);
