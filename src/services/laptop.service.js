@@ -17,6 +17,7 @@ export const getAllLaptops = (filters) => {
     numOfCores,
     expertScore,
     SSDCapacity,
+    brands
   } = filters;
 
   const query = {};
@@ -69,10 +70,15 @@ export const getAllLaptops = (filters) => {
     query["Expert Score"] = expertScore;
   }
 
+  if(brands) {
+    query["Brand"] = brands
+  }
+
   const options = {
     skip: (page - 1) * limit,
     limit: parseInt(limit),
   };
+
 
   return Laptops.find(query, null, options);
 };

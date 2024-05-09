@@ -15,6 +15,11 @@ export const getAllTablets = (filters) => {
     cameraType,
     numOfCores,
     expertScore,
+    brands,
+    screenSize,
+    stores,
+    resolution,
+    chipset
   } = filters;
 
   const query = {};
@@ -59,6 +64,24 @@ export const getAllTablets = (filters) => {
 
   if (expertScore) {
     query["Expert Score"] = expertScore;
+  }
+
+  if(brands){
+    query.brand=brands;
+  }
+
+  if(screenSize){
+    query["Screen Size"]=screenSize;
+  }
+  if(stores){
+    query.stores =stores;
+  }
+
+  if(resolution){
+    query.Resolution=resolution;
+  }
+  if(chipset){
+    query["Processor Chipset"]=chipset;
   }
 
   const options = {
