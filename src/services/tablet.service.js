@@ -19,7 +19,8 @@ export const getAllTablets = (filters) => {
     screenSize,
     stores,
     resolution,
-    chipset
+    chipset,
+    availability
   } = filters;
 
   const query = {};
@@ -84,6 +85,10 @@ export const getAllTablets = (filters) => {
     query["Processor Chipset"]=chipset;
   }
 
+  if(availability){
+    query.availability=availability;
+  }
+
   const options = {
     skip: (page - 1) * limit,
     limit: parseInt(limit),
@@ -92,8 +97,34 @@ export const getAllTablets = (filters) => {
   return Tablets.find(query, null, options);
 };
 
-export const getTabletById = (id) => {
-  return Tablets.findById(id);
+export const getTabletById = async (id) => {
+  // return Tablets.findById(id);
+  try {
+    const tablet = await Tablets.findById(id);
+    if (!tablet) return null;  // Returns null if the smartphone is not found
+
+    // Extract the price of the first variant
+    const price = parseInt(tablet.variants[0].price.replace(/₹/, ''));
+
+    // Calculate 10% range for similar price search
+    const lowerBound = price * 0.9;
+    const upperBound = price * 1.1;
+
+    // Find similar priced smartphones
+    const similarTablets = await Tablets.find({
+      "variants.0.price": {
+        $gte: `₹${Math.floor(lowerBound)}`,
+        $lte: `₹${Math.ceil(upperBound)}`
+      },
+      _id: { $ne: id }  // Exclude the current smartphone
+    }).limit(8);  // Limit to 6 similar smartphones
+
+    return { tablet, similarTablets };
+  } catch (error) {
+    console.error("Failed to fetch smartphone by ID with error:", error);
+    throw error;
+  }
+
 };
 
 export const createTablet = (data) => {

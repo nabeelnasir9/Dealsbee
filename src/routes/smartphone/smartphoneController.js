@@ -22,7 +22,13 @@ export const getSmartphones = async (req, res) => {
       resolution: req.query.resolution,
       screenSize: req.query.screenSize,
       stores: req.query.stores,
-      camera: req.query.camera
+      camera: req.query.camera,
+      internalMemory: req.query.internalMemory,
+      aspectRatio: req.query.aspectRatio,
+      discounts: req.query.discounts,
+      display_type: req.query.display_type,
+      frontCamera: req.query.frontCamera,
+      availability: req.query.availability
 
     };
     const smartphones = await smartphoneService.getAllSmartphones(filters);
@@ -32,11 +38,24 @@ export const getSmartphones = async (req, res) => {
   }
 };
 
+// export const getSmartphoneById = async (req, res) => {
+//   try {
+//     const smartphone = await smartphoneService.getSmartphoneById(req.params.id);
+//     if (smartphone) {
+//       res.json(smartphone);
+//     } else {
+//       res.status(404).send("Smartphone not found");
+//     }
+//   } catch (error) {
+//     res.status(500).send(error.message);
+//   }
+// };
+
 export const getSmartphoneById = async (req, res) => {
   try {
-    const smartphone = await smartphoneService.getSmartphoneById(req.params.id);
+    const { smartphone, similarSmartphones } = await smartphoneService.getSmartphoneById(req.params.id);
     if (smartphone) {
-      res.json(smartphone);
+      res.json({ smartphone, similarSmartphones });
     } else {
       res.status(404).send("Smartphone not found");
     }
@@ -44,6 +63,10 @@ export const getSmartphoneById = async (req, res) => {
     res.status(500).send(error.message);
   }
 };
+
+// Modify this in your smartphoneController.js
+
+
 
 export const createSmartphone = async (req, res) => {
   try {

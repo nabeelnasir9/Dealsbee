@@ -21,7 +21,8 @@ export const getTablets = async (req, res) => {
       screenSize: req.query.screenSize,
       stores: req.query.stores,
       resolution: req.query.resolution,
-      chipset:req.query.chipset
+      chipset:req.query.chipset,
+      availability: req.query.availability
     };
     const tablets = await tabletService.getAllTablets(filters);
     res.json(tablets);
@@ -32,9 +33,9 @@ export const getTablets = async (req, res) => {
 
 export const getTabletById = async (req, res) => {
   try {
-    const tablet = await tabletService.getTabletById(req.params.id);
+    const {tablet, similarTablets} = await tabletService.getTabletById(req.params.id);
     if (tablet) {
-      res.json(tablet);
+      res.json({tablet, similarTablets});
     } else {
       res.status(404).send("Tablet not found");
     }

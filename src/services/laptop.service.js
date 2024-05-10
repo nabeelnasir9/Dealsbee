@@ -92,8 +92,33 @@ export const getAllLaptops = (filters) => {
   return Laptops.find(query, null, options);
 };
 
-export const getLaptopById = (id) => {
-  return Laptops.findById(id);
+export const getLaptopById = async (id) => {
+  // return Laptops.findById(id);
+  try {
+    const laptop = await Laptops.findById(id);
+    if (!laptop) return null;  // Returns null if the smartphone is not found
+
+    // Extract the price of the first variant
+    const price = parseInt(laptop.variants[0].price.replace(/₹/, ''));
+
+    // Calculate 10% range for similar price search
+    const lowerBound = price * 0.9;
+    const upperBound = price * 1.1;
+
+    // Find similar priced smartphones
+    const similarLaptops = await Laptops.find({
+      "variants.0.price": {
+        $gte: `₹${Math.floor(lowerBound)}`,
+        $lte: `₹${Math.ceil(upperBound)}`
+      },
+      _id: { $ne: id }  // Exclude the current smartphone
+    }).limit(8);  // Limit to 6 similar smartphones
+
+    return { laptop, similarLaptops };
+  } catch (error) {
+    console.error("Failed to fetch smartphone by ID with error:", error);
+    throw error;
+  }
 };
 
 export const createLaptop = (data) => {

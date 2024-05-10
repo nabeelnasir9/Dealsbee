@@ -32,9 +32,9 @@ export const getLaptops = async (req, res) => {
 
 export const getLaptopById = async (req, res) => {
   try {
-    const laptop = await laptopService.getLaptopById(req.params.id);
+    const {laptop, similarLaptops} = await laptopService.getLaptopById(req.params.id);
     if (laptop) {
-      res.json(laptop);
+      res.json({laptop, similarLaptops});
     } else {
       res.status(404).send("laptop not found");
     }
