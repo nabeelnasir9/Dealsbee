@@ -20,7 +20,8 @@ export const getAllTablets = (filters) => {
     stores,
     resolution,
     chipset,
-    availability
+    availability,
+    discounts,
   } = filters;
 
   const query = {};
@@ -61,6 +62,10 @@ export const getAllTablets = (filters) => {
 
   if (numOfCores) {
     query["Number of Cores"] = numOfCores;
+  }
+
+  if (discounts) {
+    query.discounts = discounts;
   }
 
   if (expertScore) {

@@ -12,6 +12,9 @@ import blogsRouter from "./routes/blogs.js";
 import smartphoneRouter from "./routes/smartphone/index.js";
 import tabletRouter from "./routes/tablet/index.js";
 import laptopRouter from "./routes/laptop/index.js";
+import tvRouter from "./routes/tv/index.js";
+import acRouter from "./routes/ac/index.js";
+import washingMachineRouter from "./routes/washing/index.js";
 
 cron.schedule(
   `${config.env.cronMinute} ${config.env.cronHour} ${config.env.cronDayOfMonth} ${config.env.cronMonth} ${config.env.cronDayOfWeek}`,
@@ -54,6 +57,9 @@ async function startServer() {
   app.use("/api/smartphones", smartphoneRouter);
   app.use("/api/tablets", tabletRouter);
   app.use("/api/laptops", laptopRouter);
+  app.use("/api/televisions", tvRouter);
+  app.use("/api/airconditioners", acRouter);
+  app.use("/api/washingmachines", washingMachineRouter);
 
   console.log("Routes registered.");
 }
