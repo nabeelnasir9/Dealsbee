@@ -20,6 +20,7 @@ export const getAllLaptops = (filters) => {
     brands,
     ramType,
     processorBrand,
+    discounts,
   } = filters;
 
   const query = {};
@@ -73,6 +74,10 @@ export const getAllLaptops = (filters) => {
 
   if (numOfCores) {
     query["Number of Cores"] = numOfCores;
+  }
+
+  if (discounts) {
+    query.discounts = discounts;
   }
 
   if (expertScore) {

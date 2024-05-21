@@ -22,7 +22,8 @@ export const getTablets = async (req, res) => {
       stores: req.query.stores,
       resolution: req.query.resolution,
       chipset:req.query.chipset,
-      availability: req.query.availability
+      availability: req.query.availability,
+      discounts: req.query.discounts,
     };
     const tablets = await tabletService.getAllTablets(filters);
     res.json(tablets);
