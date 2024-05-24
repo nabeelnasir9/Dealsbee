@@ -15,6 +15,11 @@ import laptopRouter from "./routes/laptop/index.js";
 import tvRouter from "./routes/tv/index.js";
 import acRouter from "./routes/ac/index.js";
 import washingMachineRouter from "./routes/washing/index.js";
+import earbudRouter from "./routes/earbud/index.js";
+import earphoneRouter from "./routes/earphone/index.js";
+import headphoneRouter from "./routes/headphone/index.js";
+import refrigeratorRouter from "./routes/refrigerator/index.js";
+import smartwatchRouter from "./routes/watch/index.js";
 
 cron.schedule(
   `${config.env.cronMinute} ${config.env.cronHour} ${config.env.cronDayOfMonth} ${config.env.cronMonth} ${config.env.cronDayOfWeek}`,
@@ -60,6 +65,11 @@ async function startServer() {
   app.use("/api/televisions", tvRouter);
   app.use("/api/airconditioners", acRouter);
   app.use("/api/washingmachines", washingMachineRouter);
+  app.use("/api/earbuds", earbudRouter);
+  app.use("/api/earphones", earphoneRouter);
+  app.use("/api/headphones", headphoneRouter);
+  app.use("/api/refrigerators", refrigeratorRouter);
+  app.use("/api/smartwatches", smartwatchRouter);
 
   console.log("Routes registered.");
 }
