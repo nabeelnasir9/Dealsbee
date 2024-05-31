@@ -20,6 +20,10 @@ import earphoneRouter from "./routes/earphone/index.js";
 import headphoneRouter from "./routes/headphone/index.js";
 import refrigeratorRouter from "./routes/refrigerator/index.js";
 import smartwatchRouter from "./routes/watch/index.js";
+import fitnessBandRouter from "./routes/fitnessband/index.js";
+import powerBankRouter from "./routes/powerbank/index.js";
+import airPurifierRouter from "./routes/airpurifier/index.js";
+import microwaveRouter from "./routes/microwave/index.js";
 
 cron.schedule(
   `${config.env.cronMinute} ${config.env.cronHour} ${config.env.cronDayOfMonth} ${config.env.cronMonth} ${config.env.cronDayOfWeek}`,
@@ -70,6 +74,10 @@ async function startServer() {
   app.use("/api/headphones", headphoneRouter);
   app.use("/api/refrigerators", refrigeratorRouter);
   app.use("/api/smartwatches", smartwatchRouter);
+  app.use("/api/fitnessbands", fitnessBandRouter);
+  app.use("/api/powerbanks", powerBankRouter);
+  app.use("/api/airpurifiers", airPurifierRouter);
+  app.use("/api/microwaves", microwaveRouter);
 
   console.log("Routes registered.");
 }
