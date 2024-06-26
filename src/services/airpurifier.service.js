@@ -79,7 +79,7 @@ export const getAllAirPurifiers = (filters) => {
   }
 
   if (brands) {
-    query.Brand = brands;
+    query.brand = brands;
   }
 
   if (stores) {

@@ -56,7 +56,7 @@ export const getAllWashingMachines = (filters) => {
     }
   
     if (brands) {
-      query.Brand = brands;
+      query["Brand"] = brands;
     }
   
     if(stores){

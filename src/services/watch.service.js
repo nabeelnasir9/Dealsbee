@@ -90,7 +90,7 @@ export const getAllSmartwatches = (filters) => {
   }
 
   if (brands) {
-    query.Brand = brands;
+    query["Brand"] = brands;
   }
 
   if (discounts) {

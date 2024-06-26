@@ -81,7 +81,7 @@ export const getAllHeadphones = (filters) => {
   }
 
   if (brands) {
-    query.Brand = brands;
+    query.brand = brands;
   }
 
   if (stores) {

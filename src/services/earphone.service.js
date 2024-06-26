@@ -37,7 +37,7 @@ export const getAllEarphones = (filters) => {
   }
 
   if (brands) {
-    query.Brand = brands;
+    query.brand = brands;
   }
 
   if (Type) {
