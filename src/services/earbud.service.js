@@ -79,7 +79,7 @@ export const getAllEarbuds = (filters) => {
   }
 
   if (brands) {
-    query.Brand = brands;
+    query.brand = brands;
   }
 
   if (stores) {

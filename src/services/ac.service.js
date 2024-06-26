@@ -46,7 +46,7 @@ export const getAllAirConditioners = (filters) => {
   }
 
   if (brands) {
-    query["Brand"] = brands;
+    query.brand = brands;
   }
 
   if(stores){
