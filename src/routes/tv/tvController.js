@@ -7,7 +7,7 @@ export const getTVs = async (req, res) => {
       page: req.query.page,
       minPrice: req.query.minPrice,
       maxPrice: req.query.maxPrice,
-      brand: req.query.brand,
+      brands: req.query.Brand,
       resolution: req.query.resolution,
       screenSize: req.query.screenSize,
       stores: req.query.stores,

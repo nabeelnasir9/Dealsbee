@@ -1,11 +1,152 @@
 import { Smartphone } from "../models/Phones.js";
 
+// export const getAllSmartphones = (filters) => {
+//   const {
+//     limit = 20,
+//     page = 1,
+//     minPrice,
+//     maxPrice,
+//     RAM,
+//     operatingSystem,
+//     capacity,
+//     network,
+//     mobiletype,
+//     refreshRate,
+//     cameraType,
+//     numOfCores,
+//     expertScore,
+//     brands,
+//     chipSet,
+//     graphics,
+//     resolution,
+//     screenSize,
+//     stores,
+//     camera,
+//     internalMemory,
+//     aspectRatio,
+//     discounts,
+//     display_type,
+//     frontCamera,
+//     availability
+//   } = filters;
+
+//   const query = {};
+
+//   if (minPrice || maxPrice) {
+//     if (minPrice) query["variants.0.price"] = { $gte: `₹${minPrice}` };
+//     if (maxPrice)
+//       query["variants.0.price"] = {
+//         ...query["variants.0.price"],
+//         $lte: `₹${maxPrice}`,
+//       };
+//   }
+
+//   if (RAM) {
+//     query.RAM = RAM;
+//   }
+
+//   if (operatingSystem) {
+//     query["Operating System"] = operatingSystem;
+//   }
+
+//   if (capacity) {
+//     query.Capacity = capacity;
+//   }
+
+//   if (mobiletype) {
+//     query["Mobile Type"] = mobiletype;
+//   }
+
+//   if (network) {
+//     query.Network = { $regex: new RegExp(network, "i") };
+//   }
+
+//   if (refreshRate) {
+//     query["Display Refresh Rate"] = refreshRate;
+//   }
+
+//   if (cameraType) {
+//     query["Rear camera setup"] = cameraType;
+//   }
+
+//   if (numOfCores) {
+//     query["No Of Cores"] = numOfCores;
+//   }
+
+//   if (expertScore) {
+//     query["Expert Score"] = expertScore;
+//   }
+
+//   if (brands) {
+//     query.brand = brands;
+//   }
+
+//   if (chipSet) {
+//     query.Chipset = chipSet;
+//   }
+
+//   if (graphics) {
+//     query.Graphics = graphics;
+//   }
+
+//   if (resolution) {
+//     query.Resolution = resolution;
+//   }
+
+//   if (screenSize) {
+//     query["Screen Size"] = screenSize;
+//   }
+//   if (stores) {
+//     query.stores = stores;
+//   }
+
+//   if (camera) {
+//     query["Rear Camera"] = camera;
+//   }
+
+//   if (internalMemory) {
+//     query["Internal Memory"] = internalMemory;
+//   }
+
+//   if (aspectRatio) {
+//     query["Aspect ratio"] = aspectRatio;
+//   }
+
+//   if (discounts) {
+//     query.discounts = discounts;
+//   }
+
+//   if (display_type) {
+//     query.display_type = display_type;
+//   }
+
+//   if (frontCamera) {
+//     query.frontCamera = frontCamera;
+//   }
+
+//   if (availability) {
+//     query.availability = availability;
+//   }
+
+//   const options = {
+//     skip: (page - 1) * limit,
+//     limit: parseInt(limit),
+//   };
+
+//   return Smartphone.find(query, null, options);
+// };
+
+
+
 export const getAllSmartphones = (filters) => {
   const {
     limit = 20,
     page = 1,
     minPrice,
     maxPrice,
+    brands,
+    availability,
+    // Keep existing filters
     RAM,
     operatingSystem,
     capacity,
@@ -15,7 +156,6 @@ export const getAllSmartphones = (filters) => {
     cameraType,
     numOfCores,
     expertScore,
-    brands,
     chipSet,
     graphics,
     resolution,
@@ -27,19 +167,18 @@ export const getAllSmartphones = (filters) => {
     discounts,
     display_type,
     frontCamera,
-    availability
   } = filters;
 
   const query = {};
 
   if (minPrice || maxPrice) {
-    if (minPrice) query["variants.0.price"] = { $gte: `₹${minPrice}` };
-    if (maxPrice)
-      query["variants.0.price"] = {
-        ...query["variants.0.price"],
-        $lte: `₹${maxPrice}`,
-      };
+    query["variants.0.price"] = {};
+    if (minPrice) query["variants.0.price"].$gte = `₹${minPrice}`;
+    if (maxPrice) query["variants.0.price"].$lte = `₹${maxPrice}`;
   }
+
+  if (brands) query.brand = { $in: brands.split(",") };
+  if (availability) query.availability = { $in: availability.split(",") };
 
   if (RAM) {
     query.RAM = RAM;
@@ -75,10 +214,6 @@ export const getAllSmartphones = (filters) => {
 
   if (expertScore) {
     query["Expert Score"] = expertScore;
-  }
-
-  if (brands) {
-    query.brand = brands;
   }
 
   if (chipSet) {
@@ -124,10 +259,6 @@ export const getAllSmartphones = (filters) => {
     query.frontCamera = frontCamera;
   }
 
-  if (availability) {
-    query.availability = availability;
-  }
-
   const options = {
     skip: (page - 1) * limit,
     limit: parseInt(limit),
@@ -135,6 +266,7 @@ export const getAllSmartphones = (filters) => {
 
   return Smartphone.find(query, null, options);
 };
+
 
 // export const getSmartphoneById = (id) => {
 //   return Smartphone.findById(id);

@@ -23,6 +23,7 @@ export const getLaptops = async (req, res) => {
       ramType: req.query.ramType,
       processorBrand: req.query.processorBrand,
       discounts: req.query.discounts,
+      availability: req.query.availability
     };
     const laptops = await laptopService.getAllLaptops(filters);
     res.json(laptops);

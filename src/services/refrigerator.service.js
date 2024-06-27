@@ -29,16 +29,15 @@ export const getAllRefrigerators = (filters) => {
     if (maxPrice) query["variants.0.price"].$lte = `₹${maxPrice}`;
   }
 
+  if (brands) query["Brand"] = { $in: brands.split(",") };
+  if (availability) query.availability = { $in: availability.split(",") };
+
   if (capacity) {
     query.Capacity = capacity;
   }
 
   if (energyRating) {
     query.EnergyRating = energyRating;
-  }
-
-  if (brands) {
-    query.Brand = brands;
   }
 
   if (color) {

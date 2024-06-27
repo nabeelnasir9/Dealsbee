@@ -25,6 +25,9 @@ export const getAllAirConditioners = (filters) => {
     if (maxPrice) query["variants.0.price"].$lte = `₹${maxPrice}`;
   }
 
+  if (brands) query["Brand"] = { $in: brands.split(",") };
+  if (availability) query["availability"] = { $in: availability.split(",") };
+
   if (starRating) {
     query["Star Rating"] = starRating;
   }
@@ -45,9 +48,9 @@ export const getAllAirConditioners = (filters) => {
     query["Expert Score"] = expertScore;
   }
 
-  if (brands) {
-    query.brand = brands;
-  }
+  // if (brands) {
+  //   query.brand = brands;
+  // }
 
   if(stores){
     query.stores =stores;

@@ -37,6 +37,9 @@ export const getAllSmartwatches = (filters) => {
     if (maxPrice) query["variants.0.price"].$lte = `₹${maxPrice}`;
   }
 
+  if (brands) query["Brand"] = { $in: brands.split(",") };
+  if (availability) query["availability"] = { $in: availability.split(",") };
+
   if (size) {
     query.Size = size;
   }
@@ -89,9 +92,9 @@ export const getAllSmartwatches = (filters) => {
     query.Capacity = capacity;
   }
 
-  if (brands) {
-    query["Brand"] = brands;
-  }
+  // if (brands) {
+  //   query["Brand"] = brands;
+  // }
 
   if (discounts) {
     query.discounts = discounts;

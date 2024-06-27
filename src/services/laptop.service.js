@@ -21,6 +21,7 @@ export const getAllLaptops = (filters) => {
     ramType,
     processorBrand,
     discounts,
+    availability,
   } = filters;
 
   const query = {};
@@ -30,11 +31,14 @@ export const getAllLaptops = (filters) => {
     if (minPrice) query["variants.0.price"].$gte = `₹${minPrice}`;
     if (maxPrice) query["variants.0.price"].$lte = `₹${maxPrice}`;
   }
+
+  if (brands) query["Brand"] = { $in: brands.split(",") };
+  if (availability) query.availability = { $in: availability.split(",") };
   if (ramType) {
     query["RAM Type"] = ramType?.split(",");
   }
   if (RAM) {
-    query.RAM = RAM;
+    query["RAM"] = RAM;
   }
   if (SSDCapacity) {
     query["SSD Capacity"] = SSDCapacity;
@@ -45,7 +49,7 @@ export const getAllLaptops = (filters) => {
     query["Processor"] = { $regex: regexPattern };
   }
   if (Capacity) {
-    query.Capacity = Capacity;
+    query["Capacity"] = Capacity;
   }
 
   if (operatingSystem) {
@@ -77,22 +81,21 @@ export const getAllLaptops = (filters) => {
   }
 
   if (discounts) {
-    query.discounts = discounts;
+    query["discounts"] = discounts;
   }
 
   if (expertScore) {
     query["Expert Score"] = expertScore;
   }
 
-  if(brands) {
-    query["Brand"] = brands
-  }
+  // if(brands) {
+  //   query["Brand"] = brands
+  // }
 
   const options = {
     skip: (page - 1) * limit,
     limit: parseInt(limit),
   };
-
 
   return Laptops.find(query, null, options);
 };
@@ -101,10 +104,10 @@ export const getLaptopById = async (id) => {
   // return Laptops.findById(id);
   try {
     const laptop = await Laptops.findById(id);
-    if (!laptop) return null;  // Returns null if the smartphone is not found
+    if (!laptop) return null; // Returns null if the smartphone is not found
 
     // Extract the price of the first variant
-    const price = parseInt(laptop.variants[0].price.replace(/₹/, ''));
+    const price = parseInt(laptop.variants[0].price.replace(/₹/, ""));
 
     // Calculate 10% range for similar price search
     const lowerBound = price * 0.9;
@@ -114,10 +117,10 @@ export const getLaptopById = async (id) => {
     const similarLaptops = await Laptops.find({
       "variants.0.price": {
         $gte: `₹${Math.floor(lowerBound)}`,
-        $lte: `₹${Math.ceil(upperBound)}`
+        $lte: `₹${Math.ceil(upperBound)}`,
       },
-      _id: { $ne: id }  // Exclude the current smartphone
-    }).limit(8);  // Limit to 6 similar smartphones
+      _id: { $ne: id }, // Exclude the current smartphone
+    }).limit(8); // Limit to 6 similar smartphones
 
     return { laptop, similarLaptops };
   } catch (error) {
