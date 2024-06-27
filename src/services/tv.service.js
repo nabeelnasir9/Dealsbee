@@ -6,7 +6,7 @@ export const getAllTVs = (filters) => {
     page = 1,
     minPrice,
     maxPrice,
-    brand,
+    brands,
     resolution,
     screenSize,
     stores,
@@ -25,9 +25,12 @@ export const getAllTVs = (filters) => {
     if (maxPrice) query["variants.0.price"].$lte = `₹${maxPrice}`;
   }
 
-  if (brand) {
-    query["Brand"] = brand;
-  }
+  if (brands) query["Brand"] = { $in: brands.split(",") };
+  if (availability) query["availability"] = { $in: availability.split(",") };
+
+  // if (brand) {
+  //   query["Brand"] = brand;
+  // }
 
   if (resolution) {
     query["Resolution"] = resolution;
@@ -46,7 +49,7 @@ export const getAllTVs = (filters) => {
   }
 
   if(stores){
-    query.stores =stores;
+    query["stores"] =stores;
   }
 
   if (discounts) {
@@ -57,9 +60,9 @@ export const getAllTVs = (filters) => {
     query["Expert Score"] = expertScore;
   }
 
-  if (availability) {
-    query["variants.availability"] = availability;
-  }
+  // if (availability) {
+  //   query["variants.availability"] = availability;
+  // }
 
   const options = {
     skip: (page - 1) * limit,

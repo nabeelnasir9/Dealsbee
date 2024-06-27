@@ -26,6 +26,9 @@ export const getAllMicrowaveOvens = (filters) => {
     if (maxPrice) query["variants.0.price"].$lte = `₹${maxPrice}`;
   }
 
+  if (brands) query["Brand"] = { $in: brands.split(",") };
+  if (availability) query["availability"] = { $in: availability.split(",") };
+
   if (capacity) {
     query.Capacity = capacity;
   }
@@ -46,9 +49,9 @@ export const getAllMicrowaveOvens = (filters) => {
     query.Child_Lock = childLock;
   }
 
-  if (brands) {
-    query.Brand = brands;
-  }
+  // if (brands) {
+  //   query.Brand = brands;
+  // }
 
   if (stores) {
     query.stores = stores;

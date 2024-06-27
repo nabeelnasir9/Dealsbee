@@ -24,6 +24,9 @@ import fitnessBandRouter from "./routes/fitnessband/index.js";
 import powerBankRouter from "./routes/powerbank/index.js";
 import airPurifierRouter from "./routes/airpurifier/index.js";
 import microwaveRouter from "./routes/microwave/index.js";
+import newProductRoutes from "./routes/newProducts/newProducts.js"
+import PopularProductRoutes from "./routes/popularProducts/popularProducts.js"
+
 
 cron.schedule(
   `${config.env.cronMinute} ${config.env.cronHour} ${config.env.cronDayOfMonth} ${config.env.cronMonth} ${config.env.cronDayOfWeek}`,
@@ -78,6 +81,10 @@ async function startServer() {
   app.use("/api/powerbanks", powerBankRouter);
   app.use("/api/airpurifiers", airPurifierRouter);
   app.use("/api/microwaves", microwaveRouter);
+  app.use('/api/new-products', newProductRoutes);
+  app.use('/api/popular-products', PopularProductRoutes);
+
+
 
   console.log("Routes registered.");
 }

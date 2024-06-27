@@ -32,6 +32,9 @@ export const getAllTablets = (filters) => {
     if (maxPrice) query["variants.0.price"].$lte = `₹${maxPrice}`;
   }
 
+  if (brands) query["brand"] = { $in: brands.split(",") };
+  if (availability) query.availability = { $in: availability.split(",") };
+
   if (RAM) {
     query.RAM = RAM;
   }
@@ -72,9 +75,9 @@ export const getAllTablets = (filters) => {
     query["Expert Score"] = expertScore;
   }
 
-  if(brands){
-    query.brand=brands;
-  }
+  // if(brands){
+  //   query.brand=brands;
+  // }
 
   if(screenSize){
     query["Screen Size"]=screenSize;
@@ -90,9 +93,9 @@ export const getAllTablets = (filters) => {
     query["Processor Chipset"]=chipset;
   }
 
-  if(availability){
-    query.availability=availability;
-  }
+  // if(availability){
+  //   query.availability=availability;
+  // }
 
   const options = {
     skip: (page - 1) * limit,

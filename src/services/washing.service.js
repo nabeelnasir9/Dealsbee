@@ -27,6 +27,9 @@ export const getAllWashingMachines = (filters) => {
       if (maxPrice) query["variants.0.price"].$lte = `₹${maxPrice}`;
     }
   
+    if (brands) query["Brand"] = { $in: brands.split(",") };
+    if (availability) query["availability"] = { $in: availability.split(",") };
+  
     if (capacity) {
       query.Capacity = capacity;
     }
@@ -55,9 +58,9 @@ export const getAllWashingMachines = (filters) => {
       query["Expert Score"] = expertScore;
     }
   
-    if (brands) {
-      query["Brand"] = brands;
-    }
+    // if (brands) {
+    //   query["Brand"] = brands;
+    // }
   
     if(stores){
       query.stores =stores;
