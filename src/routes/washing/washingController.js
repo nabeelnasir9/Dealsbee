@@ -18,6 +18,7 @@ export const getWashingMachines = async (req, res) => {
         expertScore: req.query.expertScore,
         warranty: req.query.warranty,
         discounts: req.query.discounts,
+        availability: req.query.availability
       };
       const washingMachines = await washingMachineService.getAllWashingMachines(filters);
       res.json(washingMachines);

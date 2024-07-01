@@ -17,6 +17,7 @@ export const getAllWashingMachines = (filters) => {
       stores,
       warranty,
       discounts,
+      availability
     } = filters;
   
     const query = {};
